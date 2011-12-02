@@ -97,7 +97,7 @@ var CallQueue = (function() {
 
 var NowSerialize = (function() {
     NowSerialize = {}
-    NowSerialize.serialize = function(pivot, add_links_dict) {
+    NowSerialize.serialize = function(nowroot, pivot, add_links_dict) {
         var typ = typeOf(pivot);
         var result;
         switch(typ) {
@@ -110,7 +110,7 @@ var NowSerialize = (function() {
                     var tmp = {};
                     for (pos in pivot) {
                         var val = pivot[pos];
-                        tmp[pos] = NowSerialize.serialize(val, add_links_dict);
+                        tmp[pos] = NowSerialize.serialize(nowroot, val, add_links_dict);
                     }
                     result = ['list', tmp];
                 }
@@ -119,7 +119,7 @@ var NowSerialize = (function() {
                 var tmp = [];
                 for (pos in pivot) {
                     var val = pivot[pos];
-                    tmp.push(NowSerialize.serialize(val, add_links_dict));
+                    tmp.push(NowSerialize.serialize(nowroot, val, add_links_dict));
                 }
                 result = ['list', tmp];
                 break;
@@ -128,6 +128,14 @@ var NowSerialize = (function() {
                 break;
             case 'number':
                 result = ['float', pivot];
+                break;
+            case 'function':
+                var wrap = function(){};
+                wrap.handle_remote_call = pivot;
+                var ref = nowroot.register_service(wrap);
+                var target = ref.render_ref();
+                add_links_dict[ target['ref'][0] ] = true;
+                result = ['now', target ];
                 break;
             case 'null':
                 result = ['none', null];
@@ -333,7 +341,7 @@ var Now = (function() {
             Now.execute_local( [pathchain.slice(1), command_args] );
         } else {
             var add_links_dict = {};
-            var serargskwargs = [NowSerialize.serialize(command_args, add_links_dict), ['dict', {}] ];
+            var serargskwargs = [NowSerialize.serialize(Now, command_args, add_links_dict), ['dict', {}] ];
             var packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
             // console.log('serialized', packet, 'add_links', add_links_dict);
             if (named) {
@@ -380,7 +388,12 @@ ref = now.register_service(hello, 'hello');
 
 // now('local.hello.greet')();
 
-now('webpull.fetch_url')( 'http://slashdot.org/', hello);
+now('webpull.fetch_url')( 'http://slashdot.org/', function(msg, callback) {
+    console.log('MOEP', msg);
+    callback('frob');
+});
+
+// now('webpull.fetch_url')( 'http://slashdot.org/', hello);
 
 // hello.foo()
 
