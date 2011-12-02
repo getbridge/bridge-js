@@ -45,11 +45,11 @@ var getKeys = function(obj){
    return keys;
 }
 
-var NowPath = (function(_nowroot, _pathchain) {
+var NowPath = (function(_nowroot, _pathchain, _named) {
     function NowPath() {
         /* __call__ */
-        var args = [NowPath.pathchain].concat( [].slice.apply(arguments) );
-        NowPath.nowroot.nowpath_called.apply(NowPath.nowroot, args);
+        var args = [].slice.apply(arguments);
+        NowPath.nowroot.nowpath_called(NowPath.pathchain, NowPath.named, args);
     };
     NowPath.get_local_name = function() {
         return NowPath.pathchain[1];
@@ -64,6 +64,7 @@ var NowPath = (function(_nowroot, _pathchain) {
         /* constructor */
         NowPath.nowroot = _nowroot;
         NowPath.pathchain = _pathchain;
+        NowPath.named = _named;
     })();
     return NowPath;
 });
@@ -263,7 +264,7 @@ var Now = (function() {
     function Now(pathstr) {
         /* __call__ */
         var pathchain = pathstr.split('.');
-        return new NowPath(Now, pathchain);
+        return new NowPath(Now, pathchain, true);
     };
     Now.connection_ready = function () {
         console.log('connected');
@@ -321,7 +322,8 @@ var Now = (function() {
     };
     Now.execute = function(args) {
         var pathchain = args[0];
-        var command_args = args[1];
+        var named = args[1];
+        var command_args = args[2];
 
         if (pathchain[0] == 'system') {
             Now.execute_system(args);
@@ -334,12 +336,12 @@ var Now = (function() {
             var serargskwargs = [NowSerialize.serialize(command_args, add_links_dict), ['dict', {}] ];
             var packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
             // console.log('serialized', packet, 'add_links', add_links_dict);
-            if (pathchain[0] == 'webpull') {
+            if (named) {
                 var routing_key = 'N.' + pathchain[0];
             } else {
                 var routing_key = pathchain[0];
             }
-            Now.connection.send( routing_key , JSON.stringify(packet), getKeys( add_links_dict ) )
+            Now.connection.send( routing_key, JSON.stringify(packet), getKeys( add_links_dict ) )
         }
     };
     Now.command_queue_callback = function() {
@@ -350,11 +352,8 @@ var Now = (function() {
             console.log('UNKNOWN QUEUED COMMAND');
         }
     };
-    Now.nowpath_called = function() {
-        var args = [].slice.apply(arguments);
-        var pathchain = args[0];
-        var command_args =  args.slice(1);
-        Now.cq.queue_or_execute('execute', pathchain, command_args);
+    Now.nowpath_called = function(pathchain, named, command_args) {
+        Now.cq.queue_or_execute('execute', pathchain, named, command_args);
     };
     (function(){
         /* constructor */
