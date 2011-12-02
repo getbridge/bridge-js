@@ -124,7 +124,6 @@ var NowConnection = (function() {
         console.log('received blah', message, headers);
     }
     NowConnection.prototype.client_ready = function() {
-        this.send('N.webpull', 'hello');
         this.ready_callback();
     }
     NowConnection.prototype.send = function(routingKey, message) {
@@ -175,8 +174,10 @@ var NowObject = (function(config) {
         if (args[0] == 'send') {
             pathchain = args[1];
             command_args = args[2];
-            var serialized = NowSerialize(command_args);
-            console.log('serialized', serialized);
+            var serargskwargs = [NowSerialize(command_args), ['dict', {}] ];
+            packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
+            console.log('serialized', packet);
+            NowObject.connection.send( 'N.' + pathchain[0], JSON.stringify(packet) )
         } else {
             console.log('UNKNOWN QUEUED COMMAND');
         }
@@ -197,4 +198,4 @@ var NowObject = (function(config) {
 
 var now = new NowObject(4);
 
-now('webpull.fetch_url')( {url: 'http://slashdot.org/'}, 'hase', 5, null )
+now('webpull.fetch_url')( 'http://slashdot.org/', null )
