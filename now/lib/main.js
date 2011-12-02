@@ -1,6 +1,18 @@
 var util = require('util');
 var amqp = require('amqp');
 
+var __hasProp = Object.prototype.hasOwnProperty;
+__extends = function(child, parent) { 
+    for (var key in parent) { 
+        if (__hasProp.call(parent, key)) child[key] = parent[key];
+    }
+    function ctor() { this.constructor = child; }
+    ctor.prototype = parent.prototype; 
+    child.prototype = new ctor; 
+    child.__super__ = parent.prototype; 
+    return child;
+};
+
 guidgenerator = function() {
     var S4;
     S4 = function() {
@@ -25,18 +37,35 @@ function typeOf(value) {
     return s;
 }
 
-var NowRef = (function(nowroot, pathchain) {
-    function NowRef() {
+var getKeys = function(obj){
+   var keys = [];
+   for(var key in obj){
+      keys.push(key);
+   }
+   return keys;
+}
+
+var NowPath = (function(_nowroot, _pathchain) {
+    function NowPath() {
         /* __call__ */
-        var args = [NowRef.pathchain].concat( [].slice.apply(arguments) );
-        NowRef.nowroot.execute.apply(NowRef.nowroot, args);
+        var args = [NowPath.pathchain].concat( [].slice.apply(arguments) );
+        NowPath.nowroot.nowpath_called.apply(NowPath.nowroot, args);
+    };
+    NowPath.get_local_name = function() {
+        return NowPath.pathchain[1];
+    };
+    NowPath.render_ref = function() {
+        if (NowPath.pathchain[0] == 'local') {
+            NowPath.pathchain[0] = NowPath.nowroot.get_public_name();
+        }
+        return {'ref': NowPath.pathchain};
     };
     (function(){
         /* constructor */
-        NowRef.nowroot = nowroot;
-        NowRef.pathchain = pathchain;
+        NowPath.nowroot = _nowroot;
+        NowPath.pathchain = _pathchain;
     })();
-    return NowRef;
+    return NowPath;
 });
 
 var CallQueue = (function() {
@@ -56,26 +85,31 @@ var CallQueue = (function() {
         }
     }
     CallQueue.prototype.process_queue = function() {
-        for (var x in this.queue) {
-            this.callback.apply(null, this.queue[x]);
+        var qcopy = this.queue;
+        this.queue = [];
+        for (var x in qcopy) {
+            this.callback.apply(null, qcopy[x]);
         }
     }
     return CallQueue;
 })();
 
 var NowSerialize = (function() {
-    function NowSerialize(pivot) {
-        typ = typeOf(pivot);
+    NowSerialize = {}
+    NowSerialize.serialize = function(pivot, add_links_dict) {
+        var typ = typeOf(pivot);
         var result;
         switch(typ) {
             case 'object':
-                if (pivot._get_now_ref) {
-                    result = ['now', pivot._get_now_ref()];
+                if (pivot._now_ref) {
+                    var target = pivot._now_ref.render_ref();
+                    add_links_dict[ target['ref'][0] ] = true;
+                    result = ['now', target ];
                 } else {
                     var tmp = {};
                     for (pos in pivot) {
                         var val = pivot[pos];
-                        tmp[pos] = NowSerialize(val);
+                        tmp[pos] = NowSerialize.serialize(val, add_links_dict);
                     }
                     result = ['list', tmp];
                 }
@@ -84,7 +118,7 @@ var NowSerialize = (function() {
                 var tmp = [];
                 for (pos in pivot) {
                     var val = pivot[pos];
-                    tmp.push(NowSerialize(val));
+                    tmp.push(NowSerialize.serialize(val, add_links_dict));
                 }
                 result = ['list', tmp];
                 break;
@@ -102,15 +136,54 @@ var NowSerialize = (function() {
         }
         return result;
     };
+    NowSerialize.unserialize = function(nowroot, tup) {
+        var typ = tup[0];
+        var pivot = tup[1];
+        var result;
+        switch(typ) {
+            case "list":
+                var tmp = [];
+                for (pos in pivot) {
+                    tmp.push( NowSerialize.unserialize(nowroot, pivot[pos] ) );
+                }
+                result = tmp;
+                break;
+            case "dict":
+                var tmp = {};
+                for (pos in pivot) {
+                    tmp[pos] = NowSerialize.unserialize(nowroot, pivot[pos] );
+                }
+                result = tmp;
+                break;
+            case "str":
+                result = pivot;
+                break;
+            case "float":
+                result = pivot;
+                break;
+            case "now":
+                result = new NowPath(nowroot, pivot['ref']);
+                break;
+            case "none":
+                break;
+            default:
+                console.log('Unknown', pivot, typ)
+        }
+        return result;
+    }
     return NowSerialize;
 })();
 
 var NowConnection = (function() {
-    function NowConnection(ready_callback) {
+    function NowConnection(ready_callback, message_received) {
         this.ready_callback = ready_callback;
+        this.message_received = message_received;
         this.client = amqp.createConnection({ host: 'localhost' });
+
         this.connection_ready = this.connection_ready.bind(this);
         this.client_ready = this.client_ready.bind(this);
+        this.datagram_received = this.datagram_received.bind(this);
+
         this.client.on('ready', this.connection_ready);
         this.DEFAULT_EXCHANGE = 'D_DEFAULT';
     }
@@ -121,31 +194,60 @@ var NowConnection = (function() {
         return 'T_' + this.public_name;
     }
     NowConnection.prototype.datagram_received = function(message, headers, deliveryInfo) {
-        console.log('received blah', message, headers);
+        var message = JSON.parse(message.data);
+        for (key in headers) {
+            var tmax = 0;
+            var cnt = 0;
+            var already = false;
+            if (key.substring(0,5) == 'link_') {
+                tmax += 1;
+                var q = this.client.queue('C_' + headers[key], {});
+                q.on('queueBindOk', (function() {
+                    if ( (cnt == tmax) && (!already) ) {
+                        already = true;
+                        this.message_received(message);
+                    } else {
+                        cnt += 1;
+                    }
+                }).bind(this));
+                q.bind(this.get_exchange_name(), headers[key]);
+            }
+        }
+        if ( (cnt == tmax) && (!already) ) {
+            already = true;
+            this.message_received(message);
+        } else {
+            cnt += 1;
+        }
     }
     NowConnection.prototype.client_ready = function() {
         this.ready_callback();
     }
-    NowConnection.prototype.send = function(routingKey, message) {
-        console.log('sending', this.myexc.name, routingKey, message)
-        this.myexc.publish(routingKey, message);
+    NowConnection.prototype.send = function(routingKey, message, add_links) {
+        console.log('sending', this.myexc.name, routingKey, message, add_links);
+        var headers = {};
+        for (x in add_links) {
+            headers['link_' + x] = add_links[x];
+        }
+        this.myexc.publish(routingKey, message, {
+            headers: headers
+        });
     }
     NowConnection.prototype.connection_ready = function() {
-        console.log('on the way');
         this.public_name = guidgenerator();
         var q = this.client.queue( this.get_queue_name(), {}, (function(myq) {
-            console.log('queue created', this.get_queue_name());
+            // console.log('queue created', this.get_queue_name());
             q.subscribe(this.datagram_received);
 
             this.myq = q;
 
-            console.log('trying to start exchange', this.get_exchange_name());
+            // console.log('trying to start exchange', this.get_exchange_name());
             this.client.exchange(this.get_exchange_name(), {autoDelete: false, type:'topic'},  (function (myexc) {
                 this.client.exchange(this.DEFAULT_EXCHANGE, {autoDelete: false, type:'direct'},  (function (defexc) {
                   this.myexc = myexc;
                   this.defexc = defexc;
 
-                  console.log('defined', myq.name, myexc.name, defexc.name);
+                  // console.log('defined', myq.name, myexc.name, defexc.name);
                   defexc.on('exchangeBindOk', (function(){
                     this.client_ready();
                   }).bind(this));
@@ -157,45 +259,133 @@ var NowConnection = (function() {
     return NowConnection;
 })();
 
-        // NowObject.public_name = guidgenerator();
-
-var NowObject = (function(config) {
-    function NowObject(pathstr) {
+var Now = (function() {
+    function Now(pathstr) {
         /* __call__ */
         var pathchain = pathstr.split('.');
-        return new NowRef(NowObject, pathchain);
+        return new NowPath(Now, pathchain);
     };
-    NowObject.connection_ready = function () {
+    Now.connection_ready = function () {
         console.log('connected');
-        NowObject.cq.on_ready();
+        Now.cq.on_ready();
     };
-    NowObject.execute_from_queue = function() {
+    Now.message_received = function(message) {
+        console.log('message received', message);
+        var pathchain = message.pathchain;
+        var serargskwargs = message.serargskwargs;
+        var command_args = NowSerialize.unserialize( Now, serargskwargs[0] );
+        var command_kwargs = NowSerialize.unserialize( Now, serargskwargs[1] );
+
+        var nowref = new NowPath(Now, pathchain);
+        nowref.apply(null, command_args);
+    }
+    Now.get_public_name = function() {
+        return Now.connection.public_name;
+    };
+    Now.execute_local = function(args) {
+        var pathchain = args[0];
+        // if (pathchain[0])
+        var command_args = args[1];
+        var targetobj = Now.children[pathchain[0]];
+
+        if (pathchain.length > 1) {
+        } else {
+            pathchain.push('remote_call');
+        }
+        var targetfun = targetobj[ 'handle_' + pathchain[1] ];
+        if (targetfun) {
+            targetfun.apply( targetobj, command_args );
+        } else {
+            console.log('No Handler', pathchain);
+        }
+    };
+    Now.execute_system = function(args) {
+        console.log('Execute system', args);
+    };
+    Now.register_service = function(service, name) {
+        // console.log('registering service', service, name);
+        if (!service._now_ref) {
+            if (!name) {
+                name = guidgenerator();
+            }
+            service._now_ref = new NowPath(Now, [ 'local', name ])
+        } else {
+            if (name) {
+                throw("Service can't be renamed!")
+            } else {
+                name = service._now_ref.get_local_name()
+            }
+        }
+        Now.children[name] = service;
+        return service._now_ref;
+    };
+    Now.execute = function(args) {
+        var pathchain = args[0];
+        var command_args = args[1];
+
+        if (pathchain[0] == 'system') {
+            Now.execute_system(args);
+        }
+        if ( (pathchain[0] == Now.get_public_name()) || (pathchain[0] == 'local') ) {
+            // console.log('HANDING TO LOCAL', pathchain, pathchain.slice(1));
+            Now.execute_local( [pathchain.slice(1), command_args] );
+        } else {
+            var add_links_dict = {};
+            var serargskwargs = [NowSerialize.serialize(command_args, add_links_dict), ['dict', {}] ];
+            var packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
+            // console.log('serialized', packet, 'add_links', add_links_dict);
+            if (pathchain[0] == 'webpull') {
+                var routing_key = 'N.' + pathchain[0];
+            } else {
+                var routing_key = pathchain[0];
+            }
+            Now.connection.send( routing_key , JSON.stringify(packet), getKeys( add_links_dict ) )
+        }
+    };
+    Now.command_queue_callback = function() {
         var args = [].slice.apply(arguments);
-        if (args[0] == 'send') {
-            pathchain = args[1];
-            command_args = args[2];
-            var serargskwargs = [NowSerialize(command_args), ['dict', {}] ];
-            packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
-            console.log('serialized', packet);
-            NowObject.connection.send( 'N.' + pathchain[0], JSON.stringify(packet) )
+        if (args[0] == 'execute') {
+            Now.execute( args.slice(1) );
         } else {
             console.log('UNKNOWN QUEUED COMMAND');
         }
     };
-    NowObject.execute = function() {
+    Now.nowpath_called = function() {
         var args = [].slice.apply(arguments);
-        pathchain = args[0];
-        command_args =  args.slice(1);
-        NowObject.cq.queue_or_execute('send', pathchain, command_args);
+        var pathchain = args[0];
+        var command_args =  args.slice(1);
+        Now.cq.queue_or_execute('execute', pathchain, command_args);
     };
     (function(){
         /* constructor */
-        NowObject.cq = new CallQueue(NowObject.execute_from_queue);
-        NowObject.connection = new NowConnection(NowObject.connection_ready);
+        Now.cq = new CallQueue(Now.command_queue_callback);
+        Now.connection = new NowConnection(Now.connection_ready, Now.message_received);
+        Now.children = {};
     })();
-    return NowObject;
+    return Now;
 });
 
-var now = new NowObject(4);
+var now = new Now();
 
-now('webpull.fetch_url')( 'http://slashdot.org/', null )
+HelloService = (function() {
+    function HelloService() {}
+    HelloService.prototype.handle_remote_call = function(msg, callback) {
+        console.log("GREETING", msg);
+        callback('lala');
+    }
+    return HelloService;
+})();
+
+hello = new HelloService();
+ref = now.register_service(hello, 'hello');
+
+// now('local.hello.greet')();
+
+now('webpull.fetch_url')( 'http://slashdot.org/', hello);
+
+// hello.foo()
+
+
+// now('webpull.fetch_url')( 'http://slashdot.org/', function(body) {
+//     console.log('received body', body);
+// } );
