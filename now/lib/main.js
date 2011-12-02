@@ -69,12 +69,16 @@ var NowSerialize = (function() {
         var result;
         switch(typ) {
             case 'object':
-                var tmp = {};
-                for (pos in pivot) {
-                    var val = pivot[pos];
-                    tmp[pos] = NowSerialize(val);
+                if (pivot._get_now_ref) {
+                    result = ['now', pivot._get_now_ref()];
+                } else {
+                    var tmp = {};
+                    for (pos in pivot) {
+                        var val = pivot[pos];
+                        tmp[pos] = NowSerialize(val);
+                    }
+                    result = ['list', tmp];
                 }
-                result = ['list', tmp];
                 break;
             case 'array':
                 var tmp = [];
@@ -101,16 +105,71 @@ var NowSerialize = (function() {
     return NowSerialize;
 })();
 
+var NowConnection = (function() {
+    function NowConnection(ready_callback) {
+        this.ready_callback = ready_callback;
+        this.client = amqp.createConnection({ host: 'localhost' });
+        this.connection_ready = this.connection_ready.bind(this);
+        this.client_ready = this.client_ready.bind(this);
+        this.client.on('ready', this.connection_ready);
+        this.DEFAULT_EXCHANGE = 'D_DEFAULT';
+    }
+    NowConnection.prototype.get_queue_name = function() {
+        return 'C_' + this.public_name;
+    }
+    NowConnection.prototype.get_exchange_name = function() {
+        return 'T_' + this.public_name;
+    }
+    NowConnection.prototype.datagram_received = function(message, headers, deliveryInfo) {
+        console.log('received blah', message, headers);
+    }
+    NowConnection.prototype.client_ready = function() {
+        this.send('N.webpull', 'hello');
+        this.ready_callback();
+    }
+    NowConnection.prototype.send = function(routingKey, message) {
+        console.log('sending', this.myexc.name, routingKey, message)
+        this.myexc.publish(routingKey, message);
+    }
+    NowConnection.prototype.connection_ready = function() {
+        console.log('on the way');
+        this.public_name = guidgenerator();
+        var q = this.client.queue( this.get_queue_name(), {}, (function(myq) {
+            console.log('queue created', this.get_queue_name());
+            q.subscribe(this.datagram_received);
+
+            this.myq = q;
+
+            console.log('trying to start exchange', this.get_exchange_name());
+            this.client.exchange(this.get_exchange_name(), {autoDelete: false, type:'topic'},  (function (myexc) {
+                this.client.exchange(this.DEFAULT_EXCHANGE, {autoDelete: false, type:'direct'},  (function (defexc) {
+                  this.myexc = myexc;
+                  this.defexc = defexc;
+
+                  console.log('defined', myq.name, myexc.name, defexc.name);
+                  defexc.on('exchangeBindOk', (function(){
+                    this.client_ready();
+                  }).bind(this));
+                  defexc.bind(myexc, "N.*");
+                }).bind(this));
+            }).bind(this));
+        }).bind(this));
+    }
+    return NowConnection;
+})();
+
+        // NowObject.public_name = guidgenerator();
+
 var NowObject = (function(config) {
     function NowObject(pathstr) {
         /* __call__ */
         var pathchain = pathstr.split('.');
         return new NowRef(NowObject, pathchain);
     };
-    NowObject.connection_ready = (function () {
+    NowObject.connection_ready = function () {
         console.log('connected');
         NowObject.cq.on_ready();
-    });
+    };
     NowObject.execute_from_queue = function() {
         var args = [].slice.apply(arguments);
         if (args[0] == 'send') {
@@ -122,26 +181,16 @@ var NowObject = (function(config) {
             console.log('UNKNOWN QUEUED COMMAND');
         }
     };
+    NowObject.execute = function() {
+        var args = [].slice.apply(arguments);
+        pathchain = args[0];
+        command_args =  args.slice(1);
+        NowObject.cq.queue_or_execute('send', pathchain, command_args);
+    };
     (function(){
         /* constructor */
-
-        NowObject.connection = amqp.createConnection({ host: 'localhost' });
-        NowObject.connection.on('ready', NowObject.connection_ready);
-
         NowObject.cq = new CallQueue(NowObject.execute_from_queue);
-
-        NowObject.public_name = guidgenerator();
-        NowObject.execute = function() {
-            var args = [].slice.apply(arguments);
-            pathchain = args[0];
-            command_args =  args.slice(1);
-            if (pathchain[0] == NowObject.public_name) {
-                console.log('LOCAL', NowObject.public_name, pathchain, command_args)
-            } else {
-                console.log('REMOTE', args);
-                NowObject.cq.queue_or_execute('send', pathchain, command_args);
-            }
-        }
+        NowObject.connection = new NowConnection(NowObject.connection_ready);
     })();
     return NowObject;
 });
