@@ -132,7 +132,7 @@ var NowSerialize = (function() {
             case 'function':
                 var wrap = function(){};
                 wrap.handle_remote_call = pivot;
-                var ref = nowroot.register_service(wrap);
+                var ref = nowroot.do_register_service(wrap);
                 var target = ref.render_ref();
                 add_links_dict[ target['ref'][0] ] = true;
                 result = ['now', target ];
@@ -187,11 +187,13 @@ var NowConnection = (function() {
     function NowConnection(ready_callback, message_received) {
         this.ready_callback = ready_callback;
         this.message_received = message_received;
-        this.client = amqp.createConnection({ host: 'localhost' });
 
         this.connection_ready = this.connection_ready.bind(this);
         this.client_ready = this.client_ready.bind(this);
         this.datagram_received = this.datagram_received.bind(this);
+        this.join_workerpool = this.join_workerpool.bind(this);
+
+        this.client = amqp.createConnection({ host: 'localhost' });
 
         this.client.on('ready', this.connection_ready);
         this.DEFAULT_EXCHANGE = 'D_DEFAULT';
@@ -243,11 +245,11 @@ var NowConnection = (function() {
         });
     }
     NowConnection.prototype.join_workerpool = function(name) {
-        console.log('joining workerpool', name);
         var pool_queue_name = 'W_' + name;
         this.client.queue( pool_queue_name, {}, (function(poolq) {
-            // poolq.subscribe(this.datagram_received);
-            // poolq.bind(this.DEFAULT_EXCHANGE, 'N.' + name);
+            console.log('joined workerpool', name);
+            poolq.subscribe(this.datagram_received);
+            poolq.bind(this.DEFAULT_EXCHANGE, 'N.' + name);
         }).bind(this) );
     }
     NowConnection.prototype.connection_ready = function() {
@@ -289,6 +291,10 @@ var Now = (function() {
     Now.message_received = function(message) {
         console.log('message received', message);
         var pathchain = message.pathchain;
+
+        if ( (pathchain[0] != Now.get_public_name()) && (pathchain[0] != 'local') ) {
+            pathchain.unshift(Now.get_public_name());
+        }
         var serargskwargs = message.serargskwargs;
         var command_args = NowSerialize.unserialize( Now, serargskwargs[0] );
         var command_kwargs = NowSerialize.unserialize( Now, serargskwargs[1] );
@@ -320,7 +326,9 @@ var Now = (function() {
         console.log('Execute system', args);
     };
     Now.register_service = function(service, name) {
-        // console.log('registering service', service, name);
+        Now.cq.queue_or_execute('register_service', service, name);
+    }
+    Now.do_register_service = function(service, name) {
         if (!service._now_ref) {
             if (!name) {
                 name = guidgenerator();
@@ -366,6 +374,8 @@ var Now = (function() {
         var args = [].slice.apply(arguments);
         if (args[0] == 'execute') {
             Now.execute( args.slice(1) );
+        } else if (args[0] == 'register_service') {
+            Now.do_register_service(args[1], args[2]);
         } else {
             console.log('UNKNOWN QUEUED COMMAND');
         }
@@ -394,13 +404,12 @@ HelloService = (function() {
 })();
 
 hello = new HelloService();
-ref = now.register_service(hello, 'hello');
+now.register_service(hello, 'hello');
 
 // now('local.hello.greet')();
 
-now('webpull.fetch_url')( 'http://slashdot.org/', function(msg, callback) {
+now('hello')( 'http://slashdot.org/', function(msg) {
     console.log('MOEP', msg);
-    callback('frob');
 });
 
 // now('webpull.fetch_url')( 'http://slashdot.org/', hello);
