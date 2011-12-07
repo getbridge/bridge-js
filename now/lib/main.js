@@ -242,6 +242,14 @@ var NowConnection = (function() {
             headers: headers
         });
     }
+    NowConnection.prototype.join_workerpool = function(name) {
+        console.log('joining workerpool', name);
+        var pool_queue_name = 'W_' + name;
+        this.client.queue( pool_queue_name, {}, (function(poolq) {
+            // poolq.subscribe(this.datagram_received);
+            // poolq.bind(this.DEFAULT_EXCHANGE, 'N.' + name);
+        }).bind(this) );
+    }
     NowConnection.prototype.connection_ready = function() {
         this.public_name = guidgenerator();
         var q = this.client.queue( this.get_queue_name(), {}, (function(myq) {
@@ -316,6 +324,8 @@ var Now = (function() {
         if (!service._now_ref) {
             if (!name) {
                 name = guidgenerator();
+            } else {
+                Now.connection.join_workerpool(name);
             }
             service._now_ref = new NowPath(Now, [ 'local', name ])
         } else {
