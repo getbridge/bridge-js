@@ -296,8 +296,8 @@ var Now = (function() {
             pathchain.unshift(Now.get_public_name());
         }
         var serargskwargs = message.serargskwargs;
-        var command_args = NowSerialize.unserialize( Now, serargskwargs[0] );
-        var command_kwargs = NowSerialize.unserialize( Now, serargskwargs[1] );
+        var command_args = NowSerialize.unserialize( Now, ["list", serargskwargs[0]] );
+        var command_kwargs = NowSerialize.unserialize( Now, ["dict", serargskwargs[1]] );
 
         var nowref = new NowPath(Now, pathchain);
         nowref.apply(null, command_args);
@@ -359,7 +359,7 @@ var Now = (function() {
             Now.execute_local( [pathchain.slice(1), command_args] );
         } else {
             var add_links_dict = {};
-            var serargskwargs = [NowSerialize.serialize(Now, command_args, add_links_dict), ['dict', {}] ];
+            var serargskwargs = [NowSerialize.serialize(Now, command_args, add_links_dict)[1], {} ];
             var packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
             // console.log('serialized', packet, 'add_links', add_links_dict);
             if (named) {
