@@ -11,6 +11,8 @@
   "engines": {
     "node": "~0.6.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "amqp": "https://github.com/enki/node-amqp/tarball/master"
+  },
   "devDependencies": {}
 }

@@ -392,31 +392,30 @@ var Now = (function() {
     return Now;
 });
 
-var now = new Now();
+if (!module.parent) {
+  // this is the main module
+    var now = new Now();
 
-HelloService = (function() {
-    function HelloService() {}
-    HelloService.prototype.handle_remote_call = function(msg, callback) {
-        console.log("GREETING", msg);
-        callback('lala');
-    }
-    return HelloService;
-})();
+    HelloService = (function() {
+        function HelloService() {}
+        HelloService.prototype.handle_remote_call = function(msg, callback) {
+            console.log("GREETING", msg);
+            callback('lala');
+        }
+        return HelloService;
+    })();
 
-hello = new HelloService();
-now.register_service(hello, 'hello');
+    hello = new HelloService();
+    now.register_service(hello, 'hello');
 
-// now('local.hello.greet')();
+    // now('local.hello.greet')();
 
-now('hello')( 'http://slashdot.org/', function(msg) {
-    console.log('MOEP', msg);
-});
+    now('hello')( 'http://slashdot.org/', function(msg) {
+        console.log('MOEP', msg);
+    });
+    // now('webpull.fetch_url')( 'http://slashdot.org/', function(body) {
+    //     console.log('received body', body);
+    // } );
+}
 
-// now('webpull.fetch_url')( 'http://slashdot.org/', hello);
 
-// hello.foo()
-
-
-// now('webpull.fetch_url')( 'http://slashdot.org/', function(body) {
-//     console.log('received body', body);
-// } );
