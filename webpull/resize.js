@@ -8,6 +8,7 @@ ResizeService = (function() {
     ResizeService.prototype.handle_resize = function(file, x, y, callback) {
         console.log('GOT RESIZE FILE', file.render_ref() );
         file('get_localpath').call( function(result) {
+            console.log('RESIZING', result);
             var path = temp.path({suffix: '.png'});
             gm(result).resize(x, y).noProfile().write( path, function(err) {
                 if (err) {
