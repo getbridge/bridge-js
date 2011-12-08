@@ -10,7 +10,9 @@ ResizeService = (function() {
         file('get_localpath').call( function(result) {
             var path = temp.path({suffix: '.png'});
             gm(result).resize(x, y).noProfile().write( path, function(err) {
-                console.log('ERROR', err);
+                if (err) {
+                    console.log('ERROR', err);
+                }
             });
             var file = new nowfile.NowFile();
             now.register_service(file);
