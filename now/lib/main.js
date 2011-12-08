@@ -139,10 +139,15 @@ var NowSerialize = (function() {
                 result = ['float', pivot];
                 break;
             case 'function':
-                var wrap = function(){};
-                wrap.handle_remote_call = pivot;
-                var ref = nowroot.do_register_service(wrap);
-                var target = ref.render_ref();
+                var target;
+                if ( pivot.render_ref ) {
+                    target = pivot.render_ref();
+                } else {
+                    var wrap = function WrapDummy(){};
+                    wrap.handle_remote_call = pivot;
+                    var ref = nowroot.do_register_service(wrap);
+                    target = ref.render_ref();
+                }
                 add_links_dict[ target['ref'][0] ] = true;
                 result = ['now', target ];
                 break;
@@ -355,6 +360,7 @@ var Now = (function() {
                 name = service._now_ref.get_local_name()
             }
         }
+        // console.log('REGISTER', name, service);
         Now.children[name] = service;
         return service._now_ref;
     };

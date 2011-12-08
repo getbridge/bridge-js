@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "now": "../now",
-    "request": ""
+    "temp": "",
+    "node-get": "https://github.com/developmentseed/node-get/tarball/master"
   },
   "devDependencies": {}
 }
