@@ -48,9 +48,17 @@ var getKeys = function(obj){
 var NowPath = (function(_nowroot, _pathchain, _named) {
     function NowPath() {
         /* __call__ */
-        var args = [].slice.apply(arguments);
-        NowPath.nowroot.nowpath_called(NowPath.pathchain, NowPath.named, args);
+        // var args = [].slice.apply(arguments);
+        // NowPath.nowroot.nowpath_called(NowPath.pathchain, NowPath.named, args);
+        // console.log('DONT CALL', NowPath.pathchain, arguments);
+        var pathchain = arguments[0].split('.');
+        return NowPath.nowroot.get_nowpath( NowPath.pathchain.concat(pathchain), NowPath.named );
     };
+    NowPath.call = function() {
+        var args = [].slice.apply(arguments);
+        // console.log('CALL', NowPath.pathchain, args);
+        NowPath.nowroot.nowpath_called(NowPath.pathchain, NowPath.named, args);                        
+    }
     NowPath.get_local_name = function() {
         return NowPath.pathchain[1];
     };
@@ -100,6 +108,7 @@ var NowSerialize = (function() {
     NowSerialize.serialize = function(nowroot, pivot, add_links_dict) {
         var typ = typeOf(pivot);
         var result;
+        // console.log('PIVOT', pivot, 'TYPE', typ);
         switch(typ) {
             case 'object':
                 if (pivot._now_ref) {
@@ -282,8 +291,11 @@ var Now = (function() {
     function Now(pathstr) {
         /* __call__ */
         var pathchain = pathstr.split('.');
-        return new NowPath(Now, pathchain, true);
+        return Now.get_nowpath( pathchain, true );
     };
+    Now.get_nowpath = function(pathchain, named) {
+        return new NowPath(Now, pathchain, named);
+    }
     Now.connection_ready = function () {
         console.log('connected');
         Now.cq.on_ready();
@@ -300,7 +312,7 @@ var Now = (function() {
         var command_kwargs = NowSerialize.unserialize( Now, ["dict", serargskwargs[1]] );
 
         var nowref = new NowPath(Now, pathchain);
-        nowref.apply(null, command_args);
+        nowref.call.apply(null, command_args);
     }
     Now.get_public_name = function() {
         return Now.connection.public_name;
@@ -410,12 +422,14 @@ if (!module.parent) {
 
     // now('local.hello.greet')();
 
-    now('hello')( 'http://slashdot.org/', function(msg) {
+    now('hello').call( 'http://slashdot.org/', function(msg) {
         console.log('MOEP', msg);
     });
-    // now('webpull.fetch_url')( 'http://slashdot.org/', function(body) {
+    // now('webpull.fetch_url').call( 'http://slashdot.org/', function(body) {
     //     console.log('received body', body);
     // } );
+} else {
+    exports.Now = Now;
 }
 
 

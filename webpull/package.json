@@ -1,0 +1,19 @@
+{
+  "author": "",
+  "name": "now-webpull",
+  "description": "Webpull for Now",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Flotype/mqb-prototype.git"
+  },
+  "main": "webpull.js",
+  "engines": {
+    "node": "~0.6.1"
+  },
+  "dependencies": {
+    "now": "../now",
+    "request": ""
+  },
+  "devDependencies": {}
+}
