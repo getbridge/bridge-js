@@ -12,7 +12,7 @@ WebpullService = (function() {
             if (!err) {
                 var file = new nowfile.NowFile();
                 file.store_data(data);
-                now.register_service(file);
+                now.registerService(file);
                 callback.call(file);
             }
         });
@@ -21,5 +21,5 @@ WebpullService = (function() {
 })();
 
 webpull = new WebpullService();
-now.register_service(webpull, 'webpull');
+now.registerService(webpull, 'webpull');
 

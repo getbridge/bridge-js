@@ -6,7 +6,7 @@ var temp = require('temp');
 ResizeService = (function() {
     function ResizeService() {}
     ResizeService.prototype.handle_resize = function(file, x, y, callback) {
-        console.log('GOT RESIZE FILE', file.render_ref() );
+        console.log('GOT RESIZE FILE', file.getRef() );
         file('get_localpath').call( function(result) {
             console.log('RESIZING', result);
             var path = temp.path({suffix: '.png'});
@@ -16,7 +16,7 @@ ResizeService = (function() {
                 }
             });
             var file = new nowfile.NowFile();
-            now.register_service(file);
+            now.registerService(file);
             file.filepath = path;
             callback.call(file);
         } ) ;
@@ -25,5 +25,5 @@ ResizeService = (function() {
 })();
 
 resize = new ResizeService();
-now.register_service(resize, 'resize');
+now.registerService(resize, 'resize');
 
