@@ -7,7 +7,7 @@
     "type": "git",
     "url": "git://github.com/Flotype/mqb-prototype.git"
   },
-  "main": "lib/main.js",
+  "main": "lib/now.js",
   "engines": {
     "node": "~0.6.1"
   },
