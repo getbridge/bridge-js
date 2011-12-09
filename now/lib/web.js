@@ -1,5 +1,5 @@
 var defaultOptions = {
-  host: '192.168.2.109'
+  host: 'http://192.168.2.109:8080'
 }
 
 function WebConnection(onReady, onMessage, options) {
@@ -46,7 +46,7 @@ WebConnection.prototype.send = function(routingKey, message, links) {
 
 WebConnection.prototype.joinWorkerPool = function(name) {
   util.info('Joined worker pool', name);
-  this.sock.send(util.stringify({type: joinWorkerPool, name: name}));
+  this.sock.send(util.stringify({type: 'joinWorkerPool', name: name}));
 }
 
 var NowConnection = WebConnection;

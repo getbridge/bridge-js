@@ -40,7 +40,8 @@ var base = [
   , 'callqueue.js'
   , 'nowpath.js'
   , 'nowserialize.js'
-  , 'nowconnection_ws.js'
+  , 'connection.js'
+  , 'web.js'
   , 'now.js'
 ];
 
