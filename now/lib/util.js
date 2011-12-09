@@ -44,6 +44,12 @@ var util = {
     return keys;
   },
   
+  inherit: function (ctor, ctor2) {
+    function f() {};
+    f.prototype = ctor2.prototype;
+    ctor.prototype = new f;
+  },
+  
   stringify: JSON.stringify,
   parse: JSON.parse,
   
