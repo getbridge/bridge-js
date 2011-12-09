@@ -1,5 +1,7 @@
+// if node
 var util = require('./util.js');
 var NowPath = require('./nowpath.js');
+// end node
 
 var NowSerialize = {
   serialize: function(nowRoot, pivot, links) {
@@ -92,4 +94,6 @@ var NowSerialize = {
   }
 }
 
+// if node
 module.exports = NowSerialize;
+// end node

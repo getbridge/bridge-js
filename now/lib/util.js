@@ -54,4 +54,6 @@ var util = {
   info: log
 }
 
+// if node
 module.exports = util;
+// end node

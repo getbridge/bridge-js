@@ -1,10 +1,11 @@
+// if node
 var util = require('./util.js');
 
 var CallQueue = require('./callqueue.js');
 var NowConnection = require('./nowconnection_amqp.js');
 var NowSerialize = require('./nowserialize.js');
 var NowPath = require('./nowpath.js');
-
+// end node
 
 var Now = (function() {
     function Now(pathStr) {
@@ -138,7 +139,7 @@ var Now = (function() {
     return Now;
 });
 
-
+// if node
 if (!module.parent) {
 // this is the main module
   var now = new Now();
@@ -166,5 +167,4 @@ if (!module.parent) {
 } else {
   exports.Now = Now;
 }
-
-
+// end node

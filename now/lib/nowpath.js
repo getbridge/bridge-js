@@ -26,4 +26,6 @@ var NowPath = function(nowRoot, pathChain, named) {
     return NowPath;
 };
 
+// if node
 module.exports = NowPath;
+// end node

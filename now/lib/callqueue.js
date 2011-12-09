@@ -21,4 +21,6 @@ CallQueue.prototype.process = function() {
   }
 }
 
+// if node
 module.exports = CallQueue;
+// end node
