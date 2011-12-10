@@ -1,2 +1,3 @@
 build:
-	@node ./bin/builder.js
+	@node ./bin/builder.js;
+	cp ./dist/*.js ./examples/helloworld/public/js

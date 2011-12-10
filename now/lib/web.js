@@ -1,5 +1,5 @@
 var defaultOptions = {
-  host: 'http://192.168.2.109:8080'
+  url: 'http://192.168.2.109:8080/mqb'
 }
 
 function WebConnection(onReady, onMessage, options) {
@@ -9,13 +9,13 @@ function WebConnection(onReady, onMessage, options) {
   
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
-  
+ 
   this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
   this.sock.onopen = function() {
-    self.clientId = this.sock._connid;
+    self.clientId = self.sock._connid;
     onReady();
   };
-  this.sock.onmessage = self.onData;
+  this.sock.onmessage = self.onData.bind(self);
   this.sock.onclose = function() {
     util.warn("WebConnection closed");
   };
@@ -26,7 +26,7 @@ util.inherit(WebConnection, Connection);
 WebConnection.prototype.onData = function(message) {
   var self = this;
   try {
-    var message = util.parse(message);    
+    var message = util.parse(message.data);    
     self.onMessage(message);
   } catch (e) {
     util.error("Message parsing failed: ", e.message, e.stack);

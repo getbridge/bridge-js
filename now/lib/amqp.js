@@ -19,7 +19,7 @@ function AMQPConnection(onReady, onMessage, options) {
     self.clientId = util.generateGuid();
     
     // Create default queue
-    self.client.queue( self.getQueueName(), {}, function(queue) {
+    self.client.queue( self.getQueueName(), {autoDelete: false}, function(queue) {
       self.queue = queue;    
       // Consume from queue
       queue.subscribe(self.onData.bind(self));  
@@ -58,7 +58,7 @@ AMQPConnection.prototype.onData = function(message, headers, deliveryInfo) {
         total += 1;
         splitheader = headers[key].split('.');
         console.log('HI C_' + splitheader[0]);
-        queue = this.client.queue('C_' + splitheader[0], {}, function(){
+        queue = this.client.queue('C_' + splitheader[0], {autoDelete: false}, function(){
           current += 1;
           if (current === total) {
             // All queues have been created, callback!
@@ -92,7 +92,7 @@ AMQPConnection.prototype.send = function(routingKey, message, links) {
 AMQPConnection.prototype.joinWorkerPool = function(name) {
   var self = this;
   var poolQueueName = 'W_' + name;
-  this.client.queue(poolQueueName, {}, function(queue) {
+  this.client.queue(poolQueueName, {autoDelete: false}, function(queue) {
     util.info('Joined worker pool', name);
     queue.subscribe(self.onData.bind(self));
     // Bind messages targetted at pool
