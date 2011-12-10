@@ -49,4 +49,9 @@ WebConnection.prototype.joinWorkerPool = function(name) {
   this.sock.send(util.stringify({type: 'joinWorkerPool', name: name}));
 }
 
+// TODO: Implement join channel callback
+WebConnection.prototype.joinChannel = function(name) {
+  this.sock.send(util.stringify({type: 'joinChannel', name: name}));
+}
+
 var NowConnection = WebConnection;
