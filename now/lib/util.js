@@ -1,4 +1,13 @@
-var log = console.log;
+// if node
+var window = global;
+// end node
+var log;
+if(window.console && console.log) {
+  log = function () { console.log.apply(console, arguments); };
+} else {
+  log = function noop () {};
+}
+
 
 var util = {
   hasProp: function (obj, prop) {
