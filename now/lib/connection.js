@@ -2,7 +2,7 @@ function Connection() {
   /* Connection base class */
 }
 
-Connection.prototype.DEFAULT_EXCHANGE = 'D_DEFAULT';
+Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
 
 Connection.prototype.getQueueName = function() {
   return 'C_' + this.clientId;

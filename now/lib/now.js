@@ -56,6 +56,9 @@ var Now = (function() {
     Now.registerService = function(service, name) {
       Now.callQueue.push('register_service', service, name);
     };
+    Now.joinChannel = function(name, channel_handler) {
+      Now.callQueue.push('join_channel', name, channel_handler);
+    };
     Now.doRegisterService = function(service, name) {
       if (!service._nowRef) {
         if (!name) {
@@ -75,6 +78,13 @@ var Now = (function() {
       return service._nowRef;
     };
     
+    Now.doJoinChannel = function(name, channel_handler) {
+      Now.registerService(channel_handler, 'channel:' + name);
+      Now.connection.joinChannel(name, function() {
+        var ref = Now.getPathObj( ['channel', name], false );
+        channel_handler.joined.bind(channel_handler)(ref);
+      });
+    }
     
     Now.execute = function(args) {
       
@@ -84,11 +94,14 @@ var Now = (function() {
       // System call
       if (pathChain[0] == 'system') {
         Now.executeSystem(commandArgs);
-      }
-      
+      }      
       if ((pathChain[0] == Now.getClientId()) || (pathChain[0] == 'local') ) {
         // Local function call
-        Now.executeLocal([pathChain.slice(1), commandArgs] );
+        if (pathChain[1] == 'channel') {
+          Now.executeLocal([ ['channel:' + pathChain[2]].concat( pathChain.slice(3) ) , commandArgs] );
+        } else {
+          Now.executeLocal([pathChain.slice(1), commandArgs] );
+        }
       } else {
         var links = {};
         var serargskwargs = [NowSerialize.serialize(Now, commandArgs, links)[1], {} ];
@@ -96,9 +109,9 @@ var Now = (function() {
         
         // Set proper routing keys
         if (named) {
-          var routingKey = 'N.' + pathChain[0];
+          var routingKey = 'N.' + pathChain.join('.');
         } else {
-          var routingKey = pathChain[0];
+          var routingKey = pathChain.join('.');
         }
         Now.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
       }
@@ -110,6 +123,8 @@ var Now = (function() {
       if (args[0] == 'execute') {
         // Execute remote call
         Now.execute( args.slice(1) );
+      } else if (args[0] == 'join_channel') {
+        Now.doJoinChannel(args[1], args[2]);
       } else if (args[0] == 'register_service') {
         // Register a service
         Now.doRegisterService(args[1], args[2]);

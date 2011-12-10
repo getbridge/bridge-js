@@ -11,7 +11,7 @@ var NowSerialize = {
       case 'object':
         if (pivot._nowRef) {
           var target = pivot._nowRef.getRef();
-          links[ target['ref'][0] ] = true;
+          links[ target['ref'].join('.') ] = true;
           result = ['now', target ];
         } else {
           var tmp = {};
@@ -46,7 +46,7 @@ var NowSerialize = {
           var ref = nowRoot.doRegisterService(wrap);
           target = ref.getRef();
         }
-        links[ target['ref'][0] ] = true;
+        links[ target['ref'].join('.') ] = true;
         result = ['now', target ];
         break;
       case 'null':

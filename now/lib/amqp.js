@@ -3,7 +3,7 @@ var amqp = require('amqp');
 var Connection = require('./connection.js');
 
 var defaultOptions = {
-  host: '192.168.2.109'
+  host: '127.0.0.1'
 }
 
 function AMQPConnection(onReady, onMessage, options) {
@@ -27,7 +27,7 @@ function AMQPConnection(onReady, onMessage, options) {
     
     // Create default exchange
     self.client.exchange(self.getExchangeName(), {autoDelete: false, type:'topic'},  function (exchange) {
-      self.client.exchange(self.DEFAULT_EXCHANGE, {autoDelete: false, type:'direct'}, function (defaultExchange) {
+      self.client.exchange(self.DEFAULT_EXCHANGE, {autoDelete: false, type:'topic'}, function (defaultExchange) {
         self.exchange = exchange;
         self.defaultExchange = defaultExchange;
         // Exchange binding callback
@@ -35,7 +35,7 @@ function AMQPConnection(onReady, onMessage, options) {
           onReady();
         });
         // Bind exchange to default exchange
-        defaultExchange.bind(exchange, "N.*");
+        defaultExchange.bind(exchange, "N.#");
       });
     })
   });
@@ -56,14 +56,16 @@ AMQPConnection.prototype.onData = function(message, headers, deliveryInfo) {
     for (key in headers) {
       if (key.substring(0,5) == 'link_') {
         total += 1;
-        queue = this.client.queue('C_' + headers[key], {}, function(){
+        splitheader = headers[key].split('.');
+        console.log('HI C_' + splitheader[0]);
+        queue = this.client.queue('C_' + splitheader[0], {}, function(){
           current += 1;
           if (current === total) {
             // All queues have been created, callback!
             self.onMessage(message);
           }
         });
-        queue.bind(self.getExchangeName(), headers[key]);
+        queue.bind(self.getExchangeName(), headers[key] + '.#');
       }
     }
     if (total === 0) {
@@ -75,7 +77,7 @@ AMQPConnection.prototype.onData = function(message, headers, deliveryInfo) {
 }
 
 AMQPConnection.prototype.send = function(routingKey, message, links) {
-  util.info('Sending', this.exchange.name, routingKey, message, links);
+  util.info('Sending', this.exchange.name, 'routing key', routingKey, message, links);
   // Adding links that need to be established to headers
   var headers = {};
   for (x in links) {
@@ -94,7 +96,27 @@ AMQPConnection.prototype.joinWorkerPool = function(name) {
     util.info('Joined worker pool', name);
     queue.subscribe(self.onData.bind(self));
     // Bind messages targetted at pool
-    queue.bind(self.DEFAULT_EXCHANGE, 'N.' + name);
+    console.log('listening to', 'N.' + name + '.#');
+    queue.bind(self.DEFAULT_EXCHANGE, 'N.' + name + '.#');
+  });
+}
+
+AMQPConnection.prototype.joinChannel = function(name, callback) {
+  var self = this;
+  var channelExchangeName = 'F_' + name;
+  self.client.queue( self.getQueueName(), {}, function(client_queue) {
+    self.client.exchange(self.getExchangeName(), {autoDelete: false, type:'topic'},  function (client_exchange) {
+      self.client.exchange(channelExchangeName, {autoDelete: false, type:'fanout'},  function (channel_exchange) {
+        client_queue.on('queueBindOk', function(){
+          callback();
+          console.log('JOINED');
+        });
+        channel_exchange.on('exchangeBindOk', function(){
+          client_queue.bind(channel_exchange, '#');
+        });
+        channel_exchange.bind(client_exchange, 'channel.' + name + '.#');
+      });
+    });
   });
 }
 
