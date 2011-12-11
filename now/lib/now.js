@@ -10,44 +10,44 @@ var NowPath = require('./nowpath.js');
 var Now = (function() {
     function Now(pathStr) {
       /* __call__ */
-      var pathChain = pathStr.split('.');
-      return Now.getPathObj( pathChain, true );
+      var pathchain = pathStr.split('.');
+      return Now.getPathObj( pathchain, true );
     };
-    Now.getPathObj = function(pathChain, named) {
-      return new NowPath(Now, pathChain, named);
+    Now.getPathObj = function(pathchain, named) {
+      return new NowPath(Now, pathchain, named);
     }
     Now.onMessage = function(message) {
       util.info('Message received: ', message);
-      var pathChain = message.pathChain;
+      var pathchain = message.pathchain;
 
-      if ( (pathChain[0] != Now.getClientId()) && (pathChain[0] != 'local') ) {
-        pathChain.unshift(Now.getClientId());
+      if ( (pathchain[0] != Now.getClientId()) && (pathchain[0] != 'local') ) {
+        pathchain.unshift(Now.getClientId());
       }
       var serargskwargs = message.serargskwargs;
       var commandArgs = NowSerialize.unserialize( Now, ["list", serargskwargs[0]] );
       var command_kwargs = NowSerialize.unserialize( Now, ["dict", serargskwargs[1]] );
 
-      var ref = new NowPath(Now, pathChain);
+      var ref = new NowPath(Now, pathchain);
       ref.call.apply(null, commandArgs);
     }
     Now.getClientId = function() {
       return Now.connection.clientId;
     };
     Now.executeLocal = function(args) {
-      var pathChain = args[0];
-      // if (pathChain[0])
+      var pathchain = args[0];
+      // if (pathchain[0])
       var commandArgs = args[1];
-      var targetobj = Now.children[pathChain[0]];
+      var targetobj = Now.children[pathchain[0]];
 
-      if (pathChain.length > 1) {
+      if (pathchain.length > 1) {
       } else {
-        pathChain.push('remote_call');
+        pathchain.push('remote_call');
       }
-      var targetfun = targetobj[ 'handle_' + pathChain[1] ];
+      var targetfun = targetobj[ 'handle_' + pathchain[1] ];
       if (targetfun) {
         targetfun.apply( targetobj, commandArgs );
       } else {
-        util.warn('No Handler', pathChain);
+        util.warn('No Handler', pathchain);
       }
     };
     Now.executeSystem = function(args) {
@@ -88,30 +88,30 @@ var Now = (function() {
     
     Now.execute = function(args) {
       
-      var pathChain = args[0];
+      var pathchain = args[0];
       var named = args[1];
       var commandArgs = args[2];
       // System call
-      if (pathChain[0] == 'system') {
+      if (pathchain[0] == 'system') {
         Now.executeSystem(commandArgs);
       }      
-      if ((pathChain[0] == Now.getClientId()) || (pathChain[0] == 'local') ) {
+      if ((pathchain[0] == Now.getClientId()) || (pathchain[0] == 'local') ) {
         // Local function call
-        if (pathChain[1] == 'channel') {
-          Now.executeLocal([ ['channel:' + pathChain[2]].concat( pathChain.slice(3) ) , commandArgs] );
+        if (pathchain[1] == 'channel') {
+          Now.executeLocal([ ['channel:' + pathchain[2]].concat( pathchain.slice(3) ) , commandArgs] );
         } else {
-          Now.executeLocal([pathChain.slice(1), commandArgs] );
+          Now.executeLocal([pathchain.slice(1), commandArgs] );
         }
       } else {
         var links = {};
         var serargskwargs = [NowSerialize.serialize(Now, commandArgs, links)[1], {} ];
-        var packet = {'serargskwargs': serargskwargs, 'pathChain': pathChain};
+        var packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
         
         // Set proper routing keys
         if (named) {
-          var routingKey = 'N.' + pathChain.join('.');
+          var routingKey = 'N.' + pathchain.join('.');
         } else {
-          var routingKey = pathChain.join('.');
+          var routingKey = pathchain.join('.');
         }
         Now.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
       }
@@ -134,9 +134,9 @@ var Now = (function() {
     };
     
     // Handle function calls
-    Now.funcCall = function(pathChain, named, args) {
+    Now.funcCall = function(pathchain, named, args) {
       // Add execute action to queue
-      Now.callQueue.push('execute', pathChain, named, args);
+      Now.callQueue.push('execute', pathchain, named, args);
     };
     
     // Create queue instance
