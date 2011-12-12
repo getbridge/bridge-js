@@ -1,0 +1,38 @@
+<html>
+<head>
+
+<script src="http://cdn.sockjs.org/sockjs-0.1.2.min.js"></script>
+<script src="/js/now.js"></script>
+
+<script>
+
+var now = new Now();
+var name = prompt('Name?');
+
+var chatserver = now.getService('chat');
+
+var handler = {
+  receive: function(name, message) {
+    console.log(name + ': ' + message);
+  }
+};
+
+now.joinService('default', handler);
+
+now.ready(function(){
+  chatserver('join').call(name, now.getClientId());
+});
+
+function send(message) {
+  chatserver('message').call(name, message);
+}
+
+</script>
+
+
+</head>
+
+<body>
+</body>
+
+</html>
