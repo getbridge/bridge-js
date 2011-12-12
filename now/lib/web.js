@@ -50,7 +50,8 @@ WebConnection.prototype.joinWorkerPool = function(name) {
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.joinChannel = function(name) {
+WebConnection.prototype.addToChannel = function(name) {
+  // Adding other client is not supported
   this.sock.send(util.stringify({type: 'joinChannel', name: name}));
 }
 

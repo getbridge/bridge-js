@@ -1,3 +1,7 @@
+
+
+/* not working with new api */
+
 var now = new require('now').Now();
 
 ChannelHandler = (function() {

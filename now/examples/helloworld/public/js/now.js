@@ -67,32 +67,30 @@ var util = {
   info: log
 }
 
-function CallQueue(callback){
+function CallQueue(Now){
+  this._nowref = Now;
   this.ready = false;
   this.queue = [];
-  this.callback = callback;
 };
-CallQueue.prototype.onReady = function() {
-  this.ready = true;
-  this.process();
-}
-CallQueue.prototype.push = function() {
-  this.queue.push( [].slice.apply(arguments) );
+CallQueue.prototype.push = function(callback, args) {
   if (this.ready) {
-    this.process();
-  }
-}
-CallQueue.prototype.process = function() {
-  var oldQueue = this.queue;
-  this.queue = [];
-  for (var x in oldQueue) {
-    this.callback.apply(null, oldQueue[x]);
+    callback.apply(this._nowref, args);
+  } else {
+    this.queue.push( {callback: callback, args: args} );
   }
 }
 
+CallQueue.prototype.process = function() {
+  this.ready = true;
+  for (var i = 0, ii = this.queue.length; i < ii; i++) {
+    this.queue[i].callback.apply(this._nowref, this.queue[i].args);
+  }
+  this.queue = [];
+}
+
 var NowPath = function(nowRoot, pathchain, named) {
-    function NowPath() {
-      var pathchain = arguments[0].split('.');
+    function NowPath(path) {
+      var pathchain = path.split('.');
       return NowPath.nowRoot.getPathObj( NowPath.pathchain.concat(pathchain), NowPath.named );
     };
     NowPath.call = function() {
@@ -158,8 +156,8 @@ var NowSerialize = {
           target = pivot.getRef();
         } else {
           var wrap = function WrapDummy(){};
-          wrap.handle_remote_call = pivot;
-          var ref = nowRoot.doRegisterService(wrap);
+          wrap.default = pivot;
+          var ref = nowRoot.doJoinService(wrap);
           target = ref.getRef();
         }
         links[ target['ref'].join('.') ] = true;
@@ -276,156 +274,189 @@ WebConnection.prototype.joinWorkerPool = function(name) {
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.joinChannel = function(name) {
+WebConnection.prototype.addToChannel = function(name) {
+  // Adding other client is not supported
   this.sock.send(util.stringify({type: 'joinChannel', name: name}));
 }
 
 var NowConnection = WebConnection;
 
-var Now = (function() {
-    function Now(pathStr) {
-      /* __call__ */
-      var pathchain = pathStr.split('.');
-      return Now.getPathObj( pathchain, true );
-    };
-    Now.getPathObj = function(pathchain, named) {
-      return new NowPath(Now, pathchain, named);
+
+function Now(options) {
+  var self = this;
+  this.children = {};
+
+  this.callQueue = new CallQueue(this);
+  // Communication layer
+  this.connection = new NowConnection(function(){
+    util.info('Connected');
+    // Start processing queue
+    self.callQueue.process();
+  }, this.onMessage.bind(this), options); 
+};
+
+Now.prototype.getPathObj = function(pathchain, named) {
+  return new NowPath(this, pathchain, named);
+}
+
+Now.prototype.onMessage = function(message) {
+  util.info('Message received: ', message);
+  var pathchain = message.pathchain;
+
+  // Add client Id so execute() treats the call as local
+  if ((pathchain[0] != this.getClientId()) && (pathchain[0] != 'local')) {
+    pathchain.unshift(this.getClientId());
+  }
+  
+  var args = NowSerialize.unserialize( this, ["list", message.args] );
+  
+  var ref = new NowPath(this, pathchain);
+  ref.call.apply(null, args);
+};
+
+Now.prototype.getClientId = function() {
+  return this.connection.clientId;
+};
+
+Now.prototype.executeLocal = function(pathchain, args) {
+  console.log(pathchain, '*************');
+  
+    // Default catch all
+  if (pathchain.length == 1) {
+    
+    if(util.hasProp(this.children, pathchain[0])) {
+      // Is a callback
+      pathchain.push('default');
+    } else {
+      // Is a method of default handler
+      pathchain.unshift('default');
     }
-    Now.onMessage = function(message) {
-      util.info('Message received: ', message);
-      var pathchain = message.pathchain;
+  } else if (pathchain.length == 0) {
+    pathchain = ['default', 'default'];
+  }
+  
+  var targetobj = this.children[pathchain[0]];
 
-      if ( (pathchain[0] != Now.getClientId()) && (pathchain[0] != 'local') ) {
-        pathchain.unshift(Now.getClientId());
-      }
-      var serargskwargs = message.serargskwargs;
-      var commandArgs = NowSerialize.unserialize( Now, ["list", serargskwargs[0]] );
-      var command_kwargs = NowSerialize.unserialize( Now, ["dict", serargskwargs[1]] );
 
-      var ref = new NowPath(Now, pathchain);
-      ref.call.apply(null, commandArgs);
+  
+  var func = targetobj[pathchain[1]];
+  
+  if (func) {
+    func.apply( targetobj, args );
+  } else {
+    util.warn('No Handler', pathchain);
+  }
+};
+
+Now.prototype.executeSystem = function(args) {
+  util.info('Execute system', args);
+};
+
+Now.prototype.joinService = function(name, service) {
+  this.callQueue.push(this.doJoinService, [name, service]);
+};
+
+Now.prototype.joinChannel = function(name, clientId) {
+  this.callQueue.push(this.doJoinChannel, [name, clientId]);
+};
+
+Now.prototype.doJoinService = function(name, service) {
+  
+  if(typeof name !== "string" && typeof name !== "number") {
+    service = name;
+    name = undefined;
+  }
+  
+  if (!service._nowRef) {
+    if (!name) {
+      name = util.generateGuid();
+    } else {
+      this.connection.joinWorkerPool(name);
     }
-    Now.getClientId = function() {
-      return Now.connection.clientId;
-    };
-    Now.executeLocal = function(args) {
-      var pathchain = args[0];
-      // if (pathchain[0])
-      var commandArgs = args[1];
-      var targetobj = Now.children[pathchain[0]];
-
-      if (pathchain.length > 1) {
-      } else {
-        pathchain.push('remote_call');
-      }
-      var targetfun = targetobj[ 'handle_' + pathchain[1] ];
-      if (targetfun) {
-        targetfun.apply( targetobj, commandArgs );
-      } else {
-        util.warn('No Handler', pathchain);
-      }
-    };
-    Now.executeSystem = function(args) {
-      util.info('Execute system', args);
-    };
-    Now.registerService = function(service, name) {
-      Now.callQueue.push('register_service', service, name);
-    };
-    Now.joinChannel = function(name, channel_handler) {
-      Now.callQueue.push('join_channel', name, channel_handler);
-    };
-    Now.doRegisterService = function(service, name) {
-      if (!service._nowRef) {
-        if (!name) {
-          name = util.generateGuid();
-        } else {
-          Now.connection.joinWorkerPool(name);
-        }
-        service._nowRef = new NowPath(Now, [ 'local', name ])
-      } else {
-        if (name) {
-          util.error("Service can't be renamed!")
-        } else {
-          name = service._nowRef.getLocalName()
-        }
-      }
-      Now.children[name] = service;
-      return service._nowRef;
-    };
-    
-    Now.doJoinChannel = function(name, channel_handler) {
-      Now.registerService(channel_handler, 'channel:' + name);
-      Now.connection.joinChannel(name, function() {
-        var ref = Now.getPathObj( ['channel', name], false );
-        channel_handler.joined.bind(channel_handler)(ref);
-      });
+    service._nowRef = new NowPath(this, [ 'local', name ])
+  } else {
+    if (name) {
+      util.error("Service can't be renamed!")
+    } else {
+      name = service._nowRef.getLocalName()
     }
-    
-    Now.execute = function(args) {
-      
-      var pathchain = args[0];
-      var named = args[1];
-      var commandArgs = args[2];
-      // System call
-      if (pathchain[0] == 'system') {
-        Now.executeSystem(commandArgs);
-      }      
-      if ((pathchain[0] == Now.getClientId()) || (pathchain[0] == 'local') ) {
-        // Local function call
-        if (pathchain[1] == 'channel') {
-          Now.executeLocal([ ['channel:' + pathchain[2]].concat( pathchain.slice(3) ) , commandArgs] );
-        } else {
-          Now.executeLocal([pathchain.slice(1), commandArgs] );
-        }
-      } else {
-        var links = {};
-        var serargskwargs = [NowSerialize.serialize(Now, commandArgs, links)[1], {} ];
-        var packet = {'serargskwargs': serargskwargs, 'pathchain': pathchain};
-        
-        // Set proper routing keys
-        if (named) {
-          var routingKey = 'N.' + pathchain.join('.');
-        } else {
-          var routingKey = pathchain.join('.');
-        }
-        Now.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
-      }
-    };
-    
-    // Callback to handle queued commands
-    Now.queueCallback = function() {
-      var args = [].slice.apply(arguments);
-      if (args[0] == 'execute') {
-        // Execute remote call
-        Now.execute( args.slice(1) );
-      } else if (args[0] == 'join_channel') {
-        Now.doJoinChannel(args[1], args[2]);
-      } else if (args[0] == 'register_service') {
-        // Register a service
-        Now.doRegisterService(args[1], args[2]);
-      } else {
-        util.warn('UNKNOWN QUEUED COMMAND');
-      }
-    };
-    
-    // Handle function calls
-    Now.funcCall = function(pathchain, named, args) {
-      // Add execute action to queue
-      Now.callQueue.push('execute', pathchain, named, args);
-    };
-    
-    // Create queue instance
-    Now.callQueue = new CallQueue(Now.queueCallback);
-    
-    // Communication layer
-    Now.connection = new NowConnection(function(){
-      util.info('Connected');
-      // Start processing queue
-      Now.callQueue.onReady();
-    }, Now.onMessage);
-    
-    Now.children = {};
+  }
+  this.children[name] = service;
+  return service._nowRef;
+};
 
-    return Now;
-});
+Now.prototype.doJoinChannel = function(name, clientId) {
+  var self = this;
+  if(!clientId) {
+    clientId = this.getClientId();
+  }
+  this.connection.joinChannel(name, clientId);
+};
 
+Now.prototype.execute = function(pathchain, named, args) {
+  
+  // System call
+  if (pathchain[0] == 'system') {
+    this.executeSystem(commandArgs);
+  }
+  if ((pathchain[0] == this.getClientId()) || (pathchain[0] == 'local') ) {
+    // Local function call
+    if (pathchain[1] == 'channel') {
+      console.log(pathchain);
+      this.executeLocal(pathchain.slice(3), args);
+    } else {
+      this.executeLocal(pathchain.slice(1), args);
+    }
+  } else {
+    // Construct remote function
+    var links = {};
+    // Index 1 to get the value. Index 0 is the type (list)
+    var serargs = NowSerialize.serialize(this, args, links)[1];
+    var packet = {'args': serargs, 'pathchain': pathchain};
+    
+    // Set proper routing keys
+    if (named) {
+      var routingKey = 'N.' + pathchain.join('.');
+    } else {
+      var routingKey = pathchain.join('.');
+    }
+   this.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
+  }
+};
+
+
+// Handle function calls
+Now.prototype.funcCall = function(pathchain, named, args) {
+  // Add execute action to queue
+  this.callQueue.push(this.execute, [pathchain, named, args]);
+};
+
+/* Public APIs */
+Now.prototype.ready = function(func) {
+  this.callQueue.push(func, []);
+};
+
+Now.prototype.get = function(pathStr)  {
+  var pathchain = pathStr.split('.');
+  return this.getPathObj(pathchain, true);
+};
+
+Now.prototype.getService = function(name) {
+  return this.getPathObj([name], true);
+};
+
+Now.prototype.getClient = function(name) {
+  return this.getPathObj([name], false);
+};
+
+Now.prototype.getChannel = function(name) {
+  return this.getPathObj(['channel', name], false);
+};
+  
+
+
+
+
+
+
+  //}

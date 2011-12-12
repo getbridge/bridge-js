@@ -1,6 +1,6 @@
 var NowPath = function(nowRoot, pathchain, named) {
-    function NowPath() {
-      var pathchain = arguments[0].split('.');
+    function NowPath(path) {
+      var pathchain = path.split('.');
       return NowPath.nowRoot.getPathObj( NowPath.pathchain.concat(pathchain), NowPath.named );
     };
     NowPath.call = function() {

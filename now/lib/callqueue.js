@@ -1,24 +1,22 @@
-function CallQueue(callback){
+function CallQueue(Now){
+  this._nowref = Now;
   this.ready = false;
   this.queue = [];
-  this.callback = callback;
 };
-CallQueue.prototype.onReady = function() {
-  this.ready = true;
-  this.process();
-}
-CallQueue.prototype.push = function() {
-  this.queue.push( [].slice.apply(arguments) );
+CallQueue.prototype.push = function(callback, args) {
   if (this.ready) {
-    this.process();
+    callback.apply(this._nowref, args);
+  } else {
+    this.queue.push( {callback: callback, args: args} );
   }
 }
+
 CallQueue.prototype.process = function() {
-  var oldQueue = this.queue;
-  this.queue = [];
-  for (var x in oldQueue) {
-    this.callback.apply(null, oldQueue[x]);
+  this.ready = true;
+  for (var i = 0, ii = this.queue.length; i < ii; i++) {
+    this.queue[i].callback.apply(this._nowref, this.queue[i].args);
   }
+  this.queue = [];
 }
 
 // if node

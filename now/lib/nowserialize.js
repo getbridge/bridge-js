@@ -42,8 +42,8 @@ var NowSerialize = {
           target = pivot.getRef();
         } else {
           var wrap = function WrapDummy(){};
-          wrap.handle_remote_call = pivot;
-          var ref = nowRoot.doRegisterService(wrap);
+          wrap.default = pivot;
+          var ref = nowRoot.doJoinService(wrap);
           target = ref.getRef();
         }
         links[ target['ref'].join('.') ] = true;
