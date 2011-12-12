@@ -114,7 +114,7 @@ AMQPConnection.prototype.joinChannel = function(name, callback) {
         channel_exchange.on('exchangeBindOk', function(){
           client_queue.bind(channel_exchange, '#');
         });
-        channel_exchange.bind(client_exchange, 'channel.' + name + '.#');
+        channel_exchange.bind(client_exchange, 'N.channel.' + name + '.#');
       });
     });
   });

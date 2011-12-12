@@ -8,14 +8,25 @@
 
 now = new Now();
 
-now('webpull.fetch_url').call( 'http://flotype.com/images/shipyard.png', function(downloaded_file) {
-    now('resize.resize').call( downloaded_file, 2000, 2300, function(resized_file) {
-            resized_file('get_localpath').call(function(result) {
-                console.log('PATH', result);
-            });
-        }
-    );
-} );
+ChannelHandler = (function() {
+    function ChannelHandler(channel_name) {
+        this.channel_name = channel_name;
+    }
+
+    ChannelHandler.prototype.joined = function(channel_ref) {
+        this.channel_ref = channel_ref;
+        this.channel_ref.call('foo');
+    }
+
+    ChannelHandler.prototype.handle_remote_call = function(foo) {
+        console.log('LA', foo);
+    }
+
+    return ChannelHandler;
+})();
+
+var lobby = new ChannelHandler('lobby');
+
 
 </script>
 
