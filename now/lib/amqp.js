@@ -3,7 +3,7 @@ var amqp = require('amqp');
 var Connection = require('./connection.js');
 
 var defaultOptions = {
-  host: '192.168.2.109'
+  host: '127.0.0.1'
 }
 
 function AMQPConnection(onReady, onMessage, options) {

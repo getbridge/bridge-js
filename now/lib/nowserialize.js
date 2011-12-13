@@ -19,7 +19,7 @@ var NowSerialize = {
             var val = pivot[pos];
             tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
           }
-          result = ['list', tmp];
+          result = ['dict', tmp];
         }
         break;
       case 'array':
@@ -52,6 +52,12 @@ var NowSerialize = {
       case 'null':
         result = ['none', null];
         break;
+      case 'undefined':
+        result = ['none', null];
+        break;
+      case 'boolean':
+        result = ['bool', pivot];
+        break;
       default:
         util.warn('Unknown', pivot, typ);
     }
@@ -82,10 +88,14 @@ var NowSerialize = {
       case "float":
         result = pivot;
         break;
+      case "bool":
+        result = Boolean(pivot);
+        break;
       case "now":
         result = new NowPath(nowRoot, pivot['ref']);
         break;
       case "none":
+        result = null;
         break;
       default:
         util.warn('Unknown', pivot, typ)
