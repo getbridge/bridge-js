@@ -12,7 +12,7 @@ var name = prompt('Name?');
 var chatserver = now.getService('chat');
 
 var handler = {
-  receive: function(name, message) {
+  handle_receive: function(name, message) {
     console.log(name + ': ' + message);
   }
 };

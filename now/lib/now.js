@@ -58,11 +58,9 @@ Now.prototype.executeLocal = function(pathchain, args) {
     pathchain = ['default', 'default'];
   }
   
-  var targetobj = this.children[pathchain[0]];
-
-
+  var targetobj = this.children[pathchain[0]] || this.children['default'];
   
-  var func = targetobj[pathchain[1]];
+  var func = targetobj['handle_' + pathchain[1]];
   
   if (func) {
     func.apply( targetobj, args );
@@ -79,8 +77,8 @@ Now.prototype.joinService = function(name, service) {
   this.callQueue.push(this.doJoinService, [name, service]);
 };
 
-Now.prototype.joinChannel = function(name, clientId) {
-  this.callQueue.push(this.doJoinChannel, [name, clientId]);
+Now.prototype.joinChannel = function(name, clientId, handler) {
+  this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
 };
 
 Now.prototype.doJoinService = function(name, service) {
@@ -96,7 +94,7 @@ Now.prototype.doJoinService = function(name, service) {
     } else {
       this.connection.joinWorkerPool(name);
     }
-    service._nowRef = new NowPath(this, [ 'local', name ])
+    service._nowRef = new NowPath(this, [ 'local', name ]);
   } else {
     if (name) {
       util.error("Service can't be renamed!")
@@ -108,12 +106,22 @@ Now.prototype.doJoinService = function(name, service) {
   return service._nowRef;
 };
 
-Now.prototype.doJoinChannel = function(name, clientId) {
+Now.prototype.doJoinChannel = function(name, clientId, handler) {
   var self = this;
   if(!clientId) {
     clientId = this.getClientId();
   }
-  this.connection.joinChannel(name, clientId);
+  
+  if(typeof clientId !== 'string' && typeof clientId !== 'number') {
+    handler = clientId;
+    clientId = this.getClientId();
+  }
+  
+  if(handler) {
+    this.joinService('channel:' + name, handler);
+  }
+  
+  this.connection.joinChannel(name, clientId, handler);
 };
 
 Now.prototype.execute = function(pathchain, named, args) {
@@ -125,7 +133,7 @@ Now.prototype.execute = function(pathchain, named, args) {
   if ((pathchain[0] == this.getClientId()) || (pathchain[0] == 'local') ) {
     // Local function call
     if (pathchain[1] == 'channel') {
-      this.executeLocal(pathchain.slice(3), args);
+      this.executeLocal(['channel:' + pathchain[2]].concat( pathchain.slice(3) ), args);
     } else {
       this.executeLocal(pathchain.slice(1), args);
     }
