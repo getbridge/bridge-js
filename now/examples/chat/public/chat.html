@@ -17,14 +17,15 @@ var handler = {
   }
 };
 
-now.joinService('default', handler);
+//now.joinService('default', handler);
 
 now.ready(function(){
-  chatserver('join').call(name, now.getClientId());
+  //chatserver('join').call(name, now.getClientId());
+  now.joinChannel('lobby', handler);
 });
 
 function send(message) {
-  chatserver('message').call(name, message);
+  now.getChannel('lobby')('receive').call(name, message);
 }
 
 </script>
