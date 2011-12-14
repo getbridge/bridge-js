@@ -9,18 +9,13 @@
 var now = new Now();
 var name = prompt('Name?');
 
-var chatserver = now.getService('chat');
-
 var handler = {
   handle_receive: function(name, message) {
     console.log(name + ': ' + message);
   }
 };
 
-//now.joinService('default', handler);
-
 now.ready(function(){
-  //chatserver('join').call(name, now.getClientId());
   now.joinChannel('lobby', handler);
 });
 
