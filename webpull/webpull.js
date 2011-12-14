@@ -6,7 +6,7 @@ var util = require('util');
 var now = new Now();
 
 var WebpullService = {
-  fetch_url: function(url, callback) {
+  handle_fetch_url: function(url, callback) {
     var dl = new get({ uri: url });
     dl.asBuffer( function (err, data) {
         console.log('FETCH RESULT', err);

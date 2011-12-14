@@ -42,7 +42,7 @@ var NowSerialize = {
           target = pivot.getRef();
         } else {
           var wrap = function WrapDummy(){};
-          wrap.default = pivot;
+          wrap.handle_default = pivot;
           var ref = nowRoot.doJoinService(wrap);
           target = ref.getRef();
         }

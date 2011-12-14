@@ -156,7 +156,7 @@ var NowSerialize = {
           target = pivot.getRef();
         } else {
           var wrap = function WrapDummy(){};
-          wrap.default = pivot;
+          wrap.handle_default = pivot;
           var ref = nowRoot.doJoinService(wrap);
           target = ref.getRef();
         }
@@ -223,7 +223,7 @@ Connection.prototype.getExchangeName = function() {
 }
 
 var defaultOptions = {
-  url: 'http://192.168.2.109:8080/mqb'
+  url: 'http://localhost:8080/mqb'
 }
 
 function WebConnection(onReady, onMessage, options) {

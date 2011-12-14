@@ -12,10 +12,10 @@ exports.NowFile = NowFile = (function() {
             this.filepath = info.path;
         }).bind(this) );
     }
-    NowFile.prototype.get_localpath = function(callback) {
+    NowFile.prototype.handle_get_localpath = function(callback) {
         callback.call(this.filepath);
     }
-    NowFile.prototype.get_data = function(callback) {
+    NowFile.prototype.handle_get_data = function(callback) {
         fs.readFile(this.filepath, function(err, data) {
             if (err) {
                 throw err;

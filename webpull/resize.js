@@ -7,7 +7,7 @@ var temp = require('temp');
 var now = new Now();
 
 var ResizeService = {
-  resize: function(file, x, y, callback) {
+  handle_resize: function(file, x, y, callback) {
     console.log('GOT RESIZE FILE', file.getRef() );
     file('get_localpath').call( function(result) {
       console.log('RESIZING', result);
