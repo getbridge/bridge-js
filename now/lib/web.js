@@ -1,5 +1,5 @@
 var defaultOptions = {
-  url: 'http://localhost:8080/mqb'
+  url: 'http://192.168.2.109:8080/mqb'
 }
 
 function WebConnection(onReady, onMessage, options) {
@@ -50,7 +50,7 @@ WebConnection.prototype.joinWorkerPool = function(name) {
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.addToChannel = function(name) {
+WebConnection.prototype.joinChannel = function(name) {
   // Adding other client is not supported
   this.sock.send(util.stringify({type: 'joinChannel', name: name}));
 }
