@@ -35,18 +35,21 @@ function AMQPConnection(onReady, onMessage, options) {
           onReady();
         });
         // Bind exchange to default exchange
-        defaultExchange.bind(exchange, "N.#");
+        defaultExchange.bind(exchange, "N.#");          
       });
     })
   });
   Connection.apply(this);
 }
 
+AMQPConnection.prototype.SUPPORTS_JOIN_CALLBACK = true;
+
 util.inherit(AMQPConnection, Connection);
 
 AMQPConnection.prototype.onData = function(message, headers, deliveryInfo) {
   var self = this;
   try {
+    console.log('RAWWW', message.data.toString());
     var message = util.parse(message.data);    
     // Keep track of total number of links
     var total = 0;
@@ -75,38 +78,56 @@ AMQPConnection.prototype.onData = function(message, headers, deliveryInfo) {
   }
 }
 
-AMQPConnection.prototype.send = function(routingKey, message, links) {
-  util.info('Sending', this.exchange.name, 'routing key', routingKey, message, links);
+AMQPConnection.prototype.send = function(routingKey, message, links, inject) {
+  var used_exchange;
+  if (inject) {
+    used_exchange = this.client;
+  } else {
+    used_exchange = this.exchange;
+  }
+  util.info('Sending', this.exchange.name, 'routing key', routingKey, message, links, inject);
   // Adding links that need to be established to headers
   var headers = {};
   for (x in links) {
     headers['link_' + x] = links[x];
   }
   // Push message
-  this.exchange.publish(routingKey, message, {
+  used_exchange.publish(routingKey, message, {
     headers: headers
   });
 }
 
-AMQPConnection.prototype.joinWorkerPool = function(name) {
+AMQPConnection.prototype.joinWorkerPool = function(name, callback) {
   var self = this;
   var poolQueueName = 'W_' + name;
   this.client.queue(poolQueueName, {autoDelete: false}, function(queue) {
     util.info('Joined worker pool', name);
     queue.subscribe(self.onData.bind(self));
     // Bind messages targetted at pool
+    queue.on('queueBindOk', function(){
+      if (callback) {
+        callback(name);
+      }
+    });
     queue.bind(self.DEFAULT_EXCHANGE, 'N.' + name + '.#');
   });
 }
 
-AMQPConnection.prototype.joinChannel = function(name, clientId) {
+AMQPConnection.prototype.joinChannel = function(name, clientId, callback) {
   var self = this;
   var channelExchangeName = 'F_' + name;
   self.client.queue( 'C_' + clientId, {autoDelete: false}, function(client_queue) {
     self.client.exchange('T_' + clientId, {autoDelete: false, type:'topic'},  function (client_exchange) {
       self.client.exchange(channelExchangeName, {autoDelete: false, type:'fanout'},  function (channel_exchange) {
+        client_queue.on('queueBindOk', function(){
+          if (callback) {
+            callback(name);
+          }
+        });
+        channel_exchange.on('exchangeBindOk', function(){
+          client_queue.bind(channel_exchange, '#');
+        });
         channel_exchange.bind(client_exchange, 'channel.' + name + '.#');
-        client_queue.bind(channel_exchange, '#');
       });
     });
   });

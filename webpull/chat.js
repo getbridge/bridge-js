@@ -2,7 +2,7 @@
 
 /* not working with new api */
 
-var now = new require('now').Now();
+var now = new (require('now').Now)();
 
 ChannelHandler = (function() {
     function ChannelHandler(channel_name) {

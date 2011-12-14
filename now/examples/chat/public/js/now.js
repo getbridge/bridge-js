@@ -129,11 +129,23 @@ var NowSerialize = {
           result = ['now', target ];
         } else {
           var tmp = {};
+          var needs_wrap = false;
           for (pos in pivot) {
             var val = pivot[pos];
+            if ( (pos.indexOf('handle_') ==0) && (util.typeOf(val) == 'function') ) {
+              needs_wrap = true;
+              break;
+            }
             tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
           }
-          result = ['list', tmp];
+          if (needs_wrap) {
+            var ref = nowRoot.doJoinService(pivot);
+            var target = ref.getRef();
+            links[ target['ref'].join('.') ] = true;
+            result = ['now', target ];
+          } else {
+            result = ['dict', tmp];            
+          }
         }
         break;
       case 'array':
@@ -166,6 +178,12 @@ var NowSerialize = {
       case 'null':
         result = ['none', null];
         break;
+      case 'undefined':
+        result = ['none', null];
+        break;
+      case 'boolean':
+        result = ['bool', pivot];
+        break;
       default:
         util.warn('Unknown', pivot, typ);
     }
@@ -196,10 +214,14 @@ var NowSerialize = {
       case "float":
         result = pivot;
         break;
+      case "bool":
+        result = Boolean(pivot);
+        break;
       case "now":
         result = new NowPath(nowRoot, pivot['ref']);
         break;
       case "none":
+        result = null;
         break;
       default:
         util.warn('Unknown', pivot, typ)
@@ -274,7 +296,7 @@ WebConnection.prototype.joinWorkerPool = function(name) {
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.addToChannel = function(name) {
+WebConnection.prototype.joinChannel = function(name) {
   // Adding other client is not supported
   this.sock.send(util.stringify({type: 'joinChannel', name: name}));
 }
@@ -319,20 +341,31 @@ Now.prototype.getClientId = function() {
 };
 
 Now.prototype.executeLocal = function(pathchain, args) {
+  var self = this;
   if (pathchain.length == 1) {
-    
     if(util.hasProp(this.children, pathchain[0])) {
-      // Is a callback
+      // Have a reference for
       pathchain.push('default');
     } else {
-      // Is a method of default handler
+      // Call on default handler
       pathchain.unshift('default');
     }
   } else if (pathchain.length == 0) {
     pathchain = ['default', 'default'];
   }
   
+  if (pathchain[0] === "system") {
+    console.log('system message', pathchain.slice(1), args[0]);
+    if (pathchain[1] == 'hook_channel_handler') {
+      self.children['channel:' + args[0]] = self.children[args[1].getRef()['ref'][1]];
+    }
+    return;
+  }
+
   var targetobj = this.children[pathchain[0]] || this.children['default'];
+  if (!targetobj) {
+    throw new Error("No registered handler and no Default Handler!");
+  }
   
   var func = targetobj['handle_' + pathchain[1]];
   
@@ -356,7 +389,6 @@ Now.prototype.joinChannel = function(name, clientId, handler) {
 };
 
 Now.prototype.doJoinService = function(name, service) {
-  
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
@@ -371,7 +403,7 @@ Now.prototype.doJoinService = function(name, service) {
     service._nowRef = new NowPath(this, [ 'local', name ]);
   } else {
     if (name) {
-      util.error("Service can't be renamed!")
+      throw Error("Service can't be renamed! " + name + ' old ' +  service._nowRef.getLocalName() );
     } else {
       name = service._nowRef.getLocalName()
     }
@@ -388,14 +420,34 @@ Now.prototype.doJoinChannel = function(name, clientId, handler) {
   
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
-    clientId = this.getClientId();
+    var links = {};
+    var foo = NowSerialize.serialize(this, handler, links);
+    clientId = foo[1]['ref'][0];
   }
   
-  if(handler) {
-    this.joinService('channel:' + name, handler);
+  if ( handler && (!self.connection.SUPPORTS_JOIN_CALLBACK) ) {
+    self.children['channel:' + name] = handler;
   }
-  
-  this.connection.joinChannel(name, clientId, handler);
+
+  self.connection.joinChannel(name, clientId, function(name) {
+    console.log('JOIN CALLBACK SUCCEEDED', name);
+
+    if (handler && (self.connection.SUPPORTS_JOIN_CALLBACK)) {
+      if (clientId == self.getClientId()) {
+        self.children['channel:' + name] = handler;
+      } else {
+        var args = [name, handler];
+        var pathchain = [clientId, 'system', 'hook_channel_handler'];
+
+        var links = {};
+        // Index 1 to get the value. Index 0 is the type (list)
+        var serargs = NowSerialize.serialize(self, args, links)[1];
+        var packet = {'args': serargs, 'pathchain': pathchain};
+
+        self.connection.send('C_' + clientId, util.stringify(packet), util.getKeys(links), true);
+      }
+    }
+  });
 };
 
 Now.prototype.execute = function(pathchain, named, args) {
@@ -424,7 +476,7 @@ Now.prototype.execute = function(pathchain, named, args) {
     } else {
       var routingKey = pathchain.join('.');
     }
-   this.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
+   this.connection.send(routingKey, util.stringify(packet), util.getKeys(links), false);
   }
 };
 

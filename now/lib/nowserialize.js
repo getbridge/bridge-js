@@ -15,11 +15,23 @@ var NowSerialize = {
           result = ['now', target ];
         } else {
           var tmp = {};
+          var needs_wrap = false;
           for (pos in pivot) {
             var val = pivot[pos];
+            if ( (pos.indexOf('handle_') ==0) && (util.typeOf(val) == 'function') ) {
+              needs_wrap = true;
+              break;
+            }
             tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
           }
-          result = ['dict', tmp];
+          if (needs_wrap) {
+            var ref = nowRoot.doJoinService(pivot);
+            var target = ref.getRef();
+            links[ target['ref'].join('.') ] = true;
+            result = ['now', target ];
+          } else {
+            result = ['dict', tmp];            
+          }
         }
         break;
       case 'array':
