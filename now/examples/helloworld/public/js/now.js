@@ -133,7 +133,7 @@ var NowSerialize = {
             var val = pivot[pos];
             tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
           }
-          result = ['list', tmp];
+          result = ['dict', tmp];
         }
         break;
       case 'array':
@@ -166,6 +166,12 @@ var NowSerialize = {
       case 'null':
         result = ['none', null];
         break;
+      case 'undefined':
+        result = ['none', null];
+        break;
+      case 'boolean':
+        result = ['bool', pivot];
+        break;
       default:
         util.warn('Unknown', pivot, typ);
     }
@@ -196,10 +202,14 @@ var NowSerialize = {
       case "float":
         result = pivot;
         break;
+      case "bool":
+        result = Boolean(pivot);
+        break;
       case "now":
         result = new NowPath(nowRoot, pivot['ref']);
         break;
       case "none":
+        result = null;
         break;
       default:
         util.warn('Unknown', pivot, typ)
@@ -223,7 +233,7 @@ Connection.prototype.getExchangeName = function() {
 }
 
 var defaultOptions = {
-  url: 'http://localhost:8080/mqb'
+  url: 'http://192.168.2.109:8080/mqb'
 }
 
 function WebConnection(onReady, onMessage, options) {
@@ -274,7 +284,7 @@ WebConnection.prototype.joinWorkerPool = function(name) {
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.addToChannel = function(name) {
+WebConnection.prototype.joinChannel = function(name) {
   // Adding other client is not supported
   this.sock.send(util.stringify({type: 'joinChannel', name: name}));
 }
