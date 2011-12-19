@@ -233,7 +233,7 @@ Connection.prototype.getExchangeName = function() {
 }
 
 var defaultOptions = {
-  url: 'http://192.168.2.109:8080/mqb'
+  url: 'http://localhost:8080/mqb'
 }
 
 function WebConnection(onReady, onMessage, options) {
@@ -290,12 +290,39 @@ WebConnection.prototype.joinChannel = function(name) {
 }
 
 var NowConnection = WebConnection;
+// Browser compatibility shims
+
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5 internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var aArgs = Array.prototype.slice.call(arguments, 1), 
+        fToBind = this, 
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP
+                                 ? this
+                                 : oThis || window,
+                               aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
 
 
 function Now(options) {
   var self = this;
   this.children = {};
 
+  console.log(this);
+  
   this.callQueue = new CallQueue(this);
   // Communication layer
   this.connection = new NowConnection(function(){

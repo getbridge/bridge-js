@@ -42,6 +42,7 @@ var base = [
   , 'nowserialize.js'
   , 'connection.js'
   , 'web.js'
+  , 'shim.js'
   , 'now.js'
 ];
 

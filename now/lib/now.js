@@ -11,7 +11,6 @@ var NowPath = require('./nowpath.js');
 function Now(options) {
   var self = this;
   this.children = {};
-
   this.callQueue = new CallQueue(this);
   // Communication layer
   this.connection = new NowConnection(function(){

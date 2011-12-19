@@ -1,5 +1,5 @@
 var defaultOptions = {
-  url: 'http://192.168.2.109:8080/mqb'
+  url: 'http://localhost:8080/mqb'
 }
 
 function WebConnection(onReady, onMessage, options) {
