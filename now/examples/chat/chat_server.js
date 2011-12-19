@@ -1,12 +1,12 @@
 var static = require('node-static');
-var file = new(static.Server)('./public');
+var file = new(static.Server)(__dirname+'/public');
 require('http').createServer(function (request, response) {
     request.addListener('end', function () {
         file.serve(request, response);
     });
 }).listen(9000);
 
-var Now = require('../../lib/now.js').Now;
+var Now = require(__dirname+'/../../lib/now.js').Now;
 now = new Now();
 
 var ChatServer = {
