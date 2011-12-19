@@ -1,7 +1,9 @@
 /*! now.js build:0.0.1, development. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */
 var log;
 if(window.console && console.log) {
-  log = function () { console.log.apply(console, arguments); };
+  log = function () { 
+    console.log.apply(console, arguments); 
+  };
 } else {
   log = function noop () {};
 }
@@ -62,9 +64,15 @@ var util = {
   
   log: log,
   
-  error: log,
-  warn: log,
-  info: log
+  error: function(){
+    //util.log.apply(this, arguments);
+  },
+  warn: function(){
+    //util.log.apply(this, arguments);
+  },
+  info: function(){
+    //util.log.apply(this, arguments);
+  }
 }
 
 function CallQueue(Now){
@@ -320,9 +328,6 @@ if (!Function.prototype.bind) {
 function Now(options) {
   var self = this;
   this.children = {};
-
-  console.log(this);
-  
   this.callQueue = new CallQueue(this);
   // Communication layer
   this.connection = new NowConnection(function(){
@@ -499,5 +504,3 @@ Now.prototype.getChannel = function(name) {
 
 
 
-
-  //}
