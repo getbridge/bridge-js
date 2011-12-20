@@ -1,3 +1,5 @@
+/* No longer in use! */
+
 var util = require('./util.js');
 var amqp = require('amqp');
 var Connection = require('./connection.js');

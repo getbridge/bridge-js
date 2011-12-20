@@ -2,7 +2,7 @@
 var util = require('./util.js');
 
 var CallQueue = require('./callqueue.js');
-var NowConnection = require('./amqp.js');
+var NowConnection = require('./web.js').NowConnection;
 var NowSerialize = require('./nowserialize.js');
 var NowPath = require('./nowpath.js');
 // end node

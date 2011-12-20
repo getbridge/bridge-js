@@ -12,7 +12,7 @@
     "node": "~0.6.1"
   },
   "dependencies": {
-    "amqp": "https://github.com/enki/node-amqp/tarball/master"
+    "iostream": ">=0.0.3"
   },
   "devDependencies": {}
 }
