@@ -1,7 +1,9 @@
 /*! now.js build:0.0.1, development. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */
 var log;
 if(window.console && console.log) {
-  log = function () { console.log.apply(console, arguments); };
+  log = function () { 
+    console.log.apply(console, arguments); 
+  };
 } else {
   log = function noop () {};
 }
@@ -62,9 +64,15 @@ var util = {
   
   log: log,
   
-  error: log,
-  warn: log,
-  info: log
+  error: function(){
+    //util.log.apply(this, arguments);
+  },
+  warn: function(){
+    //util.log.apply(this, arguments);
+  },
+  info: function(){
+    //util.log.apply(this, arguments);
+  }
 }
 
 function CallQueue(Now){
@@ -245,8 +253,10 @@ Connection.prototype.getExchangeName = function() {
 }
 
 var defaultOptions = {
-  url: 'http://localhost:8080/mqb'
+  url: 'http://localhost:8080/now'
 }
+
+
 
 function WebConnection(onReady, onMessage, options) {
   var self = this;
@@ -255,8 +265,13 @@ function WebConnection(onReady, onMessage, options) {
   
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
- 
-  this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
+
+  if (use_tcp) {
+    console.log('TCP CONN', this.options.host, this.options.port);
+    this.sock = createTCPConn(this.options);
+  } else {
+    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs); 
+  }
   this.sock.onopen = function() {
     self.clientId = self.sock._connid;
     onReady();
@@ -303,11 +318,36 @@ WebConnection.prototype.joinChannel = function(name) {
 
 var NowConnection = WebConnection;
 
+// Browser compatibility shims
+
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5 internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var aArgs = Array.prototype.slice.call(arguments, 1), 
+        fToBind = this, 
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP
+                                 ? this
+                                 : oThis || window,
+                               aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+
 
 function Now(options) {
   var self = this;
   this.children = {};
-
   this.callQueue = new CallQueue(this);
   // Communication layer
   this.connection = new NowConnection(function(){
@@ -514,5 +554,3 @@ Now.prototype.getChannel = function(name) {
 
 
 
-
-  //}

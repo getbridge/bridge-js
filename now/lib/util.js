@@ -1,9 +1,13 @@
 // if node
 var window = global;
+
+
 // end node
 var log;
 if(window.console && console.log) {
-  log = function () { console.log.apply(console, arguments); };
+  log = function () { 
+    console.log.apply(console, arguments); 
+  };
 } else {
   log = function noop () {};
 }
@@ -64,9 +68,15 @@ var util = {
   
   log: log,
   
-  error: log,
-  warn: log,
-  info: log
+  error: function(){
+    //util.log.apply(this, arguments);
+  },
+  warn: function(){
+    //util.log.apply(this, arguments);
+  },
+  info: function(){
+    //util.log.apply(this, arguments);
+  }
 }
 
 // if node

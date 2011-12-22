@@ -11,7 +11,6 @@ var NowPath = require('./nowpath.js');
 function Now(options) {
   var self = this;
   this.children = {};
-
   this.callQueue = new CallQueue(this);
   // Communication layer
   this.connection = new NowConnection(function(){
@@ -219,33 +218,6 @@ Now.prototype.getChannel = function(name) {
 
 
 // if node
-/*if (!module.parent) {
-// Now is the main module
-  var now = new Now();
-
-  HelloService = (function() {
-    function HelloService() {}
-    HelloService.prototype.handle_remote_call = function(msg, callback) {
-      console.log("GREETING", msg);
-      callback('lala');
-    }
-    return HelloService;
-  })();
-
-  hello = new HelloService();
-  now.register_service(hello, 'hello');
-
-  // now('local.hello.greet')();
-
-  now('hello').call( 'http://slashdot.org/', function(msg) {
-    console.log('MOEP', msg);
-  });
-  // now('webpull.fetch_url').call( 'http://slashdot.org/', function(body) {
-  //     console.log('received body', body);
-  // } );
-} else {*/
 
 exports.Now = Now;
 // end node
-
-  //}
