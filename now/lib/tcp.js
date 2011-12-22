@@ -16,7 +16,8 @@ function createTCPConn(options) {
 
   sock.wait_for_message = function(callback) {
     sock._iostream.read_bytes(4, function(data) {
-      bytecount = data.readUInt32LE(0);
+      bytecount = data.readUInt32BE(0);
+      console.log('got', bytecount);
       sock._iostream.read_bytes(bytecount, function(data) {
         callback(data);
       });

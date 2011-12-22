@@ -253,7 +253,8 @@ Connection.prototype.getExchangeName = function() {
 }
 
 var defaultOptions = {
-  url: 'http://localhost:8080/now'
+  url: 'http://localhost:8080/now',
+  use_tcp: false
 }
 
 
@@ -266,7 +267,7 @@ function WebConnection(onReady, onMessage, options) {
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
 
-  if (use_tcp) {
+  if (options.use_tcp) {
     console.log('TCP CONN', this.options.host, this.options.port);
     this.sock = createTCPConn(this.options);
   } else {

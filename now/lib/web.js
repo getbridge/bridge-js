@@ -1,15 +1,16 @@
 var defaultOptions = {
-  url: 'http://localhost:8080/now'
+  url: 'http://localhost:8080/now',
+  use_tcp: false
 }
 
 // if node
 var util = require('./util');
 var createTCPConn = require('./tcp').createTCPConn
 var Connection = require('./connection');
-var use_tcp = true;
 var defaultOptions = {
   host: 'localhost',
-  port: 8090
+  port: 8090,
+  use_tcp: true
 }
 // end node
 
@@ -22,7 +23,7 @@ function WebConnection(onReady, onMessage, options) {
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
 
-  if (use_tcp) {
+  if (options.use_tcp) {
     console.log('TCP CONN', this.options.host, this.options.port);
     this.sock = createTCPConn(this.options);
   } else {
