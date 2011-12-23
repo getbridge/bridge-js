@@ -69,13 +69,13 @@ var util = {
   log: log,
   
   error: function(){
-    //util.log.apply(this, arguments);
+    util.log.apply(this, arguments);
   },
   warn: function(){
-    //util.log.apply(this, arguments);
+    util.log.apply(this, arguments);
   },
   info: function(){
-    //util.log.apply(this, arguments);
+    util.log.apply(this, arguments);
   }
 }
 

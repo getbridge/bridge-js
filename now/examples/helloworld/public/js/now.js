@@ -65,13 +65,13 @@ var util = {
   log: log,
   
   error: function(){
-    //util.log.apply(this, arguments);
+    util.log.apply(this, arguments);
   },
   warn: function(){
-    //util.log.apply(this, arguments);
+    util.log.apply(this, arguments);
   },
   info: function(){
-    //util.log.apply(this, arguments);
+    util.log.apply(this, arguments);
   }
 }
 
@@ -314,7 +314,9 @@ WebConnection.prototype.joinWorkerPool = function(name) {
 // TODO: Implement join channel callback
 WebConnection.prototype.joinChannel = function(name) {
   // Adding other client is not supported
-  this.sock.send(util.stringify({type: 'joinChannel', name: name}));
+  var msg = util.stringify({type: 'joinChannel', name: name});
+  util.info('msg', msg);
+  this.sock.send(msg);
 }
 
 var NowConnection = WebConnection;
