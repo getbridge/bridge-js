@@ -1,4 +1,5 @@
 var now = new (require('../..').Now)();
+// var rl = require('readline');
 
 var handler = {
   channel_joined: function(name) {
@@ -10,8 +11,10 @@ var handler = {
 };
 
 now.ready(function(){
-  now.joinService('default', handler);
-  now.joinChannel('lobby');
+  now.joinService('default', handler, function() {
+      console.log('JOINSERVICE SUCCESS');
+  });
+  now.joinChannel('lobby',  handler);
 });
 
 // now.ready(function(){

@@ -87,25 +87,31 @@ Now.prototype.executeSystem = function(args) {
   util.info('Execute system', args);
 };
 
-Now.prototype.joinService = function(name, service) {
-  this.callQueue.push(this.doJoinService, [name, service]);
+Now.prototype.joinService = function(name, service, callback) {
+  this.callQueue.push(this.doJoinService, [name, service, callback]);
 };
 
 Now.prototype.joinChannel = function(name, clientId, handler) {
   this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
 };
 
-Now.prototype.doJoinService = function(name, service) {
+Now.prototype.doJoinService = function(name, service, callback) {
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
+  }
+
+  var callback_wrap = null;
+  if (callback) {
+    var links = {};
+    callback_wrap = NowSerialize.serialize(this, callback, links)[1]['ref'];
   }
   
   if (!service._nowRef) {
     if (!name) {
       name = util.generateGuid();
     } else {
-      this.connection.joinWorkerPool(name);
+      this.connection.joinWorkerPool(name, callback_wrap);
     }
     service._nowRef = new NowPath(this, [ 'local', name ]);
   } else {
@@ -119,11 +125,13 @@ Now.prototype.doJoinService = function(name, service) {
   return service._nowRef;
 };
 
-Now.prototype.doJoinChannel = function(name, clientId, handler) {
+Now.prototype.doJoinChannel = function(name, clientId, callback) {
   var self = this;
   if(!clientId) {
     clientId = this.getClientId();
   }
+
+  var handler;
   
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
@@ -131,30 +139,40 @@ Now.prototype.doJoinChannel = function(name, clientId, handler) {
     var foo = NowSerialize.serialize(this, handler, links);
     clientId = foo[1]['ref'][0];
   }
-  
-  if ( handler && (!self.connection.SUPPORTS_JOIN_CALLBACK) ) {
-    self.children['channel:' + name] = handler;
-  }
+    
+  // if ( handler && (!self.connection.SUPPORTS_JOIN_CALLBACK) ) {
+  //   console.log('OVERRIDE');
+  //   self.children['channel:' + name] = handler;
+  // }
 
-  self.connection.joinChannel(name, clientId, function(name) {
+  function callback_success() {
     console.log('JOIN CALLBACK SUCCEEDED', name);
 
-    if (handler && (self.connection.SUPPORTS_JOIN_CALLBACK)) {
-      if (clientId == self.getClientId()) {
-        self.children['channel:' + name] = handler;
-      } else {
-        var args = [name, handler];
-        var pathchain = [clientId, 'system', 'hook_channel_handler'];
+    if (0 && (clientId == self.getClientId()) ) {
+      console.log('LOCAL');
+      self.children['channel:' + name] = handler;
+    } else {
+      console.log('REMOTE');
+      var args = [name, handler];
+      var pathchain = [clientId, 'system', 'hook_channel_handler'];
 
-        var links = {};
-        // Index 1 to get the value. Index 0 is the type (list)
-        var serargs = NowSerialize.serialize(self, args, links)[1];
-        var packet = {'args': serargs, 'pathchain': pathchain};
+      var links = {};
+      // Index 1 to get the value. Index 0 is the type (list)
+      var serargs = NowSerialize.serialize(self, args, links)[1];
+      var packet = {'args': serargs, 'pathchain': pathchain};
 
-        self.connection.send('C_' + clientId, util.stringify(packet), util.getKeys(links), true);
-      }
+      self.connection.send('C_' + clientId, util.stringify(packet), util.getKeys(links), true);
+      /* XXX: actually call callback */
     }
-  });
+  }
+
+  var callback_wrap = null;
+  if (handler) {
+    var links = {};
+    callback_wrap = NowSerialize.serialize(this, callback_success, links)[1]['ref'];
+  }
+
+  self.connection.joinChannel(name, clientId, callback_wrap );
 };
 
 Now.prototype.execute = function(pathchain, named, args) {

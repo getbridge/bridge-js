@@ -63,17 +63,17 @@ WebConnection.prototype.send = function(routingKey, message, links) {
   this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
 }
 
-WebConnection.prototype.joinWorkerPool = function(name) {
-  util.info('Joined worker pool', name);
-  var msg = util.stringify({type: 'joinWorkerPool', name: name});
+WebConnection.prototype.joinWorkerPool = function(name, callback) {
+  util.info('Joining worker pool', name, callback);
+  var msg = util.stringify({type: 'joinWorkerPool', name: name, callback: callback});
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.joinChannel = function(name) {
+WebConnection.prototype.joinChannel = function(name, clientId, callback) {
   // Adding other client is not supported
-  var msg = util.stringify({type: 'joinChannel', name: name});
+  var msg = util.stringify({type: 'joinChannel', name: name, callback: callback});
   // util.info('msg', msg);
   this.sock.send(msg);
 }
