@@ -44,6 +44,7 @@ util.inherit(WebConnection, Connection);
 WebConnection.prototype.onData = function(message) {
   var self = this;
   try {
+    util.info('hi', message, message.data);
     var message = util.parse(message.data);    
     self.onMessage(message);
   } catch (e) {
@@ -64,14 +65,16 @@ WebConnection.prototype.send = function(routingKey, message, links) {
 
 WebConnection.prototype.joinWorkerPool = function(name) {
   util.info('Joined worker pool', name);
-  this.sock.send(util.stringify({type: 'joinWorkerPool', name: name}));
+  var msg = util.stringify({type: 'joinWorkerPool', name: name});
+  // util.info('msg', msg);
+  this.sock.send(msg);
 }
 
 // TODO: Implement join channel callback
 WebConnection.prototype.joinChannel = function(name) {
   // Adding other client is not supported
   var msg = util.stringify({type: 'joinChannel', name: name});
-  util.info('msg', msg);
+  // util.info('msg', msg);
   this.sock.send(msg);
 }
 

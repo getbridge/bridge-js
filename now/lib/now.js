@@ -25,8 +25,12 @@ Now.prototype.getPathObj = function(pathchain, named) {
 }
 
 Now.prototype.onMessage = function(message) {
-  util.info('Message received: ', message);
+  util.info('Message received: ', message, typeof(message));
   var pathchain = message.pathchain;
+  if (!pathchain) {
+    util.warn('NO PATHCHAIN IN MESSAGE, IGNORING');
+    return;
+  }
 
   // Add client Id so execute() treats the call as local
   if ((pathchain[0] != this.getClientId()) && (pathchain[0] != 'local')) {

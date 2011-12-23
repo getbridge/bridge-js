@@ -267,7 +267,7 @@ function WebConnection(onReady, onMessage, options) {
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
 
-  if (options.use_tcp) {
+  if (this.options.use_tcp) {
     console.log('TCP CONN', this.options.host, this.options.port);
     this.sock = createTCPConn(this.options);
   } else {
@@ -308,7 +308,9 @@ WebConnection.prototype.send = function(routingKey, message, links) {
 
 WebConnection.prototype.joinWorkerPool = function(name) {
   util.info('Joined worker pool', name);
-  this.sock.send(util.stringify({type: 'joinWorkerPool', name: name}));
+  var msg = util.stringify({type: 'joinWorkerPool', name: name});
+  util.info('msg', msg);
+  this.sock.send(msg);
 }
 
 // TODO: Implement join channel callback
