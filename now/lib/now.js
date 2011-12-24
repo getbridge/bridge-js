@@ -64,10 +64,10 @@ Now.prototype.executeLocal = function(pathchain, args) {
   if (pathchain[0] === "system") {
     console.log('system message', pathchain.slice(1), args[0]);
     if (pathchain[1] == 'hook_channel_handler') {
-      console.log('HOOK CHANNEL HANDLER');
+      console.log('HOOK CHANNEL HANDLER', pathchain, args[0], args[1].getRef());
       self.children['channel:' + args[0]] = self.children[args[1].getRef()['ref'][1]];
       if (args[2]) {
-        args[2].call();
+        args[2].call(args[0]);
       }
     }
     return;
@@ -77,18 +77,31 @@ Now.prototype.executeLocal = function(pathchain, args) {
   if (!targetobj) {
     throw new Error("No registered handler and no Default Handler!");
   }
-  
-  var func = targetobj['handle_' + pathchain[1]];
+
+  var target_funcname = 'handle_' + pathchain[1];
+
+  var func = targetobj[target_funcname];
+  if (!func) {
+    func = targetobj['handle_default'];
+    args.unshift(pathchain[1]);
+  }
   
   if (func) {
     func.apply( targetobj, args );
   } else {
-    util.warn('No Handler', pathchain);
+    util.warn('No Handler for', pathchain);
   }
 };
 
 Now.prototype.executeSystem = function(args) {
   util.info('Execute system', args);
+};
+
+Now.prototype.registerDefault = function(service, callback) {
+  this.children['default'] = service;
+  if (callback) {
+    callback();
+  }
 };
 
 Now.prototype.joinService = function(name, service, callback) {
@@ -141,17 +154,8 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
     clientId = foo[1]['ref'][0];
   }
     
-  function callback_success() {
-    console.log('JOIN CALLBACK CALLED');
-    callback();
-  }
-
-  var callback_wrap = null;
-  if (callback) {
-    var callback_wrap = callback_success;
-  }
   var links = {};
-  callback_wrap = NowSerialize.serialize(this, callback_wrap, links);
+  var callback_wrap = NowSerialize.serialize(this, callback, links);
 
   var handler_wrap = null;
   if (handler) {

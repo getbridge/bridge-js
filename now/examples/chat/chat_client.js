@@ -1,23 +1,15 @@
 var now = new (require('../..').Now)();
-// var rl = require('readline');
 
-var handler = {
-  channel_joined: function(name) {
-    console.log('CALLBACK JOINED', name);
-  },
+var chat_handler = {
   handle_receive: function(name, message) {
-    console.log(name + ': ' + message);
+    console.log('CHAT ' + name + ': ' + message);
   }
 };
 
 now.ready(function(){
-  now.joinService('default', handler, function() {
-      console.log('JOINSERVICE SUCCESS');
-  });
-
-  now.joinChannel('lobby',  handler, function() {
-      console.log('JOINCHANNEL SUCCESS');
-  });
+  now.joinChannel('lobby', chat_handler, function(name){ console.log('joined', name); } );
+  var foo = now.getService('foo');
+  foo('lala').call('blub');
 });
 
 // now.ready(function(){
