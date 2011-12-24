@@ -14,7 +14,10 @@ now.ready(function(){
   now.joinService('default', handler, function() {
       console.log('JOINSERVICE SUCCESS');
   });
-  now.joinChannel('lobby',  handler);
+
+  now.joinChannel('lobby',  handler, function() {
+      console.log('JOINCHANNEL SUCCESS');
+  });
 });
 
 // now.ready(function(){

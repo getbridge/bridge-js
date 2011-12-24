@@ -308,16 +308,16 @@ WebConnection.prototype.send = function(routingKey, message, links) {
 }
 
 WebConnection.prototype.joinWorkerPool = function(name, callback) {
-  util.info('Joined worker pool', name);
+  util.info('Joining worker pool', name, callback);
   var msg = util.stringify({type: 'joinWorkerPool', name: name, callback: callback});
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
 // TODO: Implement join channel callback
-WebConnection.prototype.joinChannel = function(name, callback) {
+WebConnection.prototype.joinChannel = function(name, clientId, handler, callback) {
   // Adding other client is not supported
-  var msg = util.stringify({type: 'joinChannel', name: name, callback: callback});
+  var msg = util.stringify({type: 'joinChannel', name: name, handler: handler, callback: callback});
   // util.info('msg', msg);
   this.sock.send(msg);
 }
@@ -407,7 +407,11 @@ Now.prototype.executeLocal = function(pathchain, args) {
   if (pathchain[0] === "system") {
     console.log('system message', pathchain.slice(1), args[0]);
     if (pathchain[1] == 'hook_channel_handler') {
+      console.log('HOOK CHANNEL HANDLER');
       self.children['channel:' + args[0]] = self.children[args[1].getRef()['ref'][1]];
+      if (args[2]) {
+        args[2].call();
+      }
     }
     return;
   }
@@ -430,25 +434,28 @@ Now.prototype.executeSystem = function(args) {
   util.info('Execute system', args);
 };
 
-Now.prototype.joinService = function(name, service) {
-  this.callQueue.push(this.doJoinService, [name, service]);
+Now.prototype.joinService = function(name, service, callback) {
+  this.callQueue.push(this.doJoinService, [name, service, callback]);
 };
 
 Now.prototype.joinChannel = function(name, clientId, handler) {
   this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
 };
 
-Now.prototype.doJoinService = function(name, service) {
+Now.prototype.doJoinService = function(name, service, callback) {
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
   }
+
+  var links = {};
+  var callback_wrap = NowSerialize.serialize(this, callback, links);
   
   if (!service._nowRef) {
     if (!name) {
       name = util.generateGuid();
     } else {
-      this.connection.joinWorkerPool(name);
+      this.connection.joinWorkerPool(name, callback_wrap);
     }
     service._nowRef = new NowPath(this, [ 'local', name ]);
   } else {
@@ -462,11 +469,13 @@ Now.prototype.doJoinService = function(name, service) {
   return service._nowRef;
 };
 
-Now.prototype.doJoinChannel = function(name, clientId, handler) {
+Now.prototype.doJoinChannel = function(name, clientId, callback) {
   var self = this;
   if(!clientId) {
     clientId = this.getClientId();
   }
+
+  var handler;
   
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
@@ -474,30 +483,26 @@ Now.prototype.doJoinChannel = function(name, clientId, handler) {
     var foo = NowSerialize.serialize(this, handler, links);
     clientId = foo[1]['ref'][0];
   }
-  
-  if ( handler && (!self.connection.SUPPORTS_JOIN_CALLBACK) ) {
-    self.children['channel:' + name] = handler;
+    
+  function callback_success() {
+    console.log('JOIN CALLBACK CALLED');
+    callback();
   }
 
-  self.connection.joinChannel(name, clientId, function(name) {
-    console.log('JOIN CALLBACK SUCCEEDED', name);
+  var callback_wrap = null;
+  if (callback) {
+    var callback_wrap = callback_success;
+  }
+  var links = {};
+  callback_wrap = NowSerialize.serialize(this, callback_wrap, links);
 
-    if (handler && (self.connection.SUPPORTS_JOIN_CALLBACK)) {
-      if (clientId == self.getClientId()) {
-        self.children['channel:' + name] = handler;
-      } else {
-        var args = [name, handler];
-        var pathchain = [clientId, 'system', 'hook_channel_handler'];
+  var handler_wrap = null;
+  if (handler) {
+    var links = {};
+    handler_wrap = NowSerialize.serialize(this, handler, links);
+  }
 
-        var links = {};
-        // Index 1 to get the value. Index 0 is the type (list)
-        var serargs = NowSerialize.serialize(self, args, links)[1];
-        var packet = {'args': serargs, 'pathchain': pathchain};
-
-        self.connection.send('C_' + clientId, util.stringify(packet), util.getKeys(links), true);
-      }
-    }
-  });
+  self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
 };
 
 Now.prototype.execute = function(pathchain, named, args) {

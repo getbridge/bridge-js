@@ -64,7 +64,11 @@ Now.prototype.executeLocal = function(pathchain, args) {
   if (pathchain[0] === "system") {
     console.log('system message', pathchain.slice(1), args[0]);
     if (pathchain[1] == 'hook_channel_handler') {
+      console.log('HOOK CHANNEL HANDLER');
       self.children['channel:' + args[0]] = self.children[args[1].getRef()['ref'][1]];
+      if (args[2]) {
+        args[2].call();
+      }
     }
     return;
   }
@@ -101,11 +105,8 @@ Now.prototype.doJoinService = function(name, service, callback) {
     name = undefined;
   }
 
-  var callback_wrap = null;
-  if (callback) {
-    var links = {};
-    callback_wrap = NowSerialize.serialize(this, callback, links)[1]['ref'];
-  }
+  var links = {};
+  var callback_wrap = NowSerialize.serialize(this, callback, links);
   
   if (!service._nowRef) {
     if (!name) {
@@ -140,39 +141,25 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
     clientId = foo[1]['ref'][0];
   }
     
-  // if ( handler && (!self.connection.SUPPORTS_JOIN_CALLBACK) ) {
-  //   console.log('OVERRIDE');
-  //   self.children['channel:' + name] = handler;
-  // }
-
   function callback_success() {
-    console.log('JOIN CALLBACK SUCCEEDED', name);
-
-    if (0 && (clientId == self.getClientId()) ) {
-      console.log('LOCAL');
-      self.children['channel:' + name] = handler;
-    } else {
-      console.log('REMOTE');
-      var args = [name, handler];
-      var pathchain = [clientId, 'system', 'hook_channel_handler'];
-
-      var links = {};
-      // Index 1 to get the value. Index 0 is the type (list)
-      var serargs = NowSerialize.serialize(self, args, links)[1];
-      var packet = {'args': serargs, 'pathchain': pathchain};
-
-      self.connection.send('C_' + clientId, util.stringify(packet), util.getKeys(links), true);
-      /* XXX: actually call callback */
-    }
+    console.log('JOIN CALLBACK CALLED');
+    callback();
   }
 
   var callback_wrap = null;
+  if (callback) {
+    var callback_wrap = callback_success;
+  }
+  var links = {};
+  callback_wrap = NowSerialize.serialize(this, callback_wrap, links);
+
+  var handler_wrap = null;
   if (handler) {
     var links = {};
-    callback_wrap = NowSerialize.serialize(this, callback_success, links)[1]['ref'];
+    handler_wrap = NowSerialize.serialize(this, handler, links);
   }
 
-  self.connection.joinChannel(name, clientId, callback_wrap );
+  self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
 };
 
 Now.prototype.execute = function(pathchain, named, args) {
