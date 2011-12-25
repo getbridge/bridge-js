@@ -410,7 +410,7 @@ Now.prototype.executeLocal = function(pathchain, args) {
       console.log('HOOK CHANNEL HANDLER', pathchain, args[0], args[1].getRef());
       self.children['channel:' + args[0]] = self.children[args[1].getRef()['ref'][1]];
       if (args[2]) {
-        args[2].call(args[0]);
+        args[2].call( self.getChannel(args[0]), args[0] );
       }
     }
     return;

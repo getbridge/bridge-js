@@ -11,7 +11,7 @@ var now = new Now({url: 'http://localhost:8080/now'});
 var name = prompt('Name?');
 
 var handler = {
-  handle_receive: function(name, message) {
+  handle_msg: function(name, message) {
     console.log(name + ': ' + message);
   }
 };
@@ -21,7 +21,7 @@ now.ready(function(){
 });
 
 function send(message) {
-  now.getChannel('lobby')('receive').call(name, message);
+  now.getChannel('lobby')('msg').call(name, message);
 }
 
 </script>
