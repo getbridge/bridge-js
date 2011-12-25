@@ -8,15 +8,17 @@ require('http').createServer(function (request, response) {
 
 var Now = require(__dirname+'/../../lib/now.js').Now;
 // now = new Now({host: 'ec2-50-19-181-20.compute-1.amazonaws.com'});
-// now = new Now({host: 'localhost'});
 
-// var ChatServer = {
-//   handle_join: function(name, client){
-//     console.log(name, 'join request', client);
-//     now.joinChannel('lobby', client);
-//   },
-// }
-// now.joinService('chat', ChatServer);
+now = new Now({host: 'localhost'});
+
+var ChatServer = {
+  handle_join: function(name, handler, callback){
+    now.joinChannel('lobby', handler, callback);
+  },
+}
+now.joinService('chat', ChatServer, function(){ 
+    console.log('started chatserver');
+});
 
 
 

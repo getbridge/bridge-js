@@ -17,7 +17,11 @@ var handler = {
 };
 
 now.ready(function(){
-  now.joinChannel('lobby', handler);
+  var chat = now.getService('chat');
+  chat('join').call('lobby', handler, function(lobby, name) {
+    // lobby('msg').call('peter', 'hello');
+    console.log("joined channel");
+  });
 });
 
 function send(message) {

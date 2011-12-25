@@ -275,6 +275,7 @@ function WebConnection(onReady, onMessage, options) {
   }
   this.sock.onopen = function() {
     self.clientId = self.sock._connid;
+    console.log("CLIENT ID:", self.clientId);
     onReady();
   };
   this.sock.onmessage = self.onData.bind(self);
