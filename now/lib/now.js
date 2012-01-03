@@ -24,6 +24,10 @@ Now.prototype.getPathObj = function(pathchain, named) {
   return new NowPath(this, pathchain, named);
 }
 
+Now.prototype.getRootRef = function() {
+  return new NowPath(this, [this.connection.clientId], false);
+}
+
 Now.prototype.onMessage = function(message) {
   util.info('Message received: ', message, typeof(message));
   var pathchain = message.pathchain;
@@ -104,28 +108,28 @@ Now.prototype.registerDefault = function(service, callback) {
   }
 };
 
-Now.prototype.joinService = function(name, service, callback) {
-  this.callQueue.push(this.doJoinService, [name, service, callback]);
+Now.prototype.publishService = function(name, service, callback) {
+  this.callQueue.push(this.doPublishService, [name, service, callback]);
 };
 
 Now.prototype.joinChannel = function(name, clientId, handler) {
   this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
 };
 
-Now.prototype.doJoinService = function(name, service, callback) {
+Now.prototype.doPublishService = function(name, service, callback) {
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
   }
 
-  var links = {};
-  var callback_wrap = NowSerialize.serialize(this, callback, links);
+  // var callback_wrap = NowSerialize.serialize(this, callback);
+  var callback_wrap = callback;
   
   if (!service._nowRef) {
     if (!name) {
       name = util.generateGuid();
     } else {
-      this.connection.joinWorkerPool(name, callback_wrap);
+      this.connection.joinWorkerPool(this, name, callback_wrap);
     }
     service._nowRef = new NowPath(this, [ 'local', name ]);
   } else {
@@ -149,24 +153,21 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
   
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
-    var links = {};
-    var foo = NowSerialize.serialize(this, handler, links);
+    var foo = NowSerialize.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
     
-  var links = {};
-  var callback_wrap = NowSerialize.serialize(this, callback, links);
+  var callback_wrap = callback; //NowSerialize.serialize(this, callback);
 
   var handler_wrap = null;
   if (handler) {
-    var links = {};
-    handler_wrap = NowSerialize.serialize(this, handler, links);
+    handler_wrap = handler; //NowSerialize.serialize(this, handler);
   }
 
   self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
 };
 
-Now.prototype.execute = function(pathchain, named, args) {
+Now.prototype.execute = function(errcallback, pathchain, named, args) {
   
   // System call
   if (pathchain[0] == 'system') {
@@ -181,26 +182,28 @@ Now.prototype.execute = function(pathchain, named, args) {
     }
   } else {
     // Construct remote function
-    var links = {};
+    // var links = {};
     // Index 1 to get the value. Index 0 is the type (list)
-    var serargs = NowSerialize.serialize(this, args, links)[1];
-    var packet = {'args': serargs, 'pathchain': pathchain};
+    // var serargs = NowSerialize.serialize(this, args)[1];
+    // var errcallback = NowSerialize.serialize(this, errcallback);
+    var packet = {'args': args, 'pathchain': pathchain, 'errcallback': errcallback};
     
     // Set proper routing keys
-    if (named) {
-      var routingKey = 'N.' + pathchain.join('.');
-    } else {
-      var routingKey = pathchain.join('.');
-    }
-   this.connection.send(routingKey, util.stringify(packet), util.getKeys(links), false);
+    // if (named) {
+    //   var routingKey = 'N.' + pathchain.join('.');
+    // } else {
+    //   var routingKey = pathchain.join('.');
+    // }
+   // this.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
+   console.log('not sending');
   }
 };
 
 
 // Handle function calls
-Now.prototype.funcCall = function(pathchain, named, args) {
+Now.prototype.funcCall = function(errcallback, pathchain, named, args) {
   // Add execute action to queue
-  this.callQueue.push(this.execute, [pathchain, named, args]);
+  this.callQueue.push(this.execute, [errcallback, pathchain, named, args]);
 };
 
 /* Public APIs */

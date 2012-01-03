@@ -5,6 +5,7 @@ var defaultOptions = {
 
 // if node
 var util = require('./util');
+var NowSerialize = require('./nowserialize.js');
 var createTCPConn = require('./tcp').createTCPConn
 var Connection = require('./connection');
 var defaultOptions = {
@@ -64,14 +65,15 @@ WebConnection.prototype.send = function(routingKey, message, links) {
   this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
 }
 
-WebConnection.prototype.joinWorkerPool = function(name, callback) {
+WebConnection.prototype.joinWorkerPool = function(nowobj, name, callback) {
   util.info('Joining worker pool', name, callback);
-  var msg = util.stringify({type: 'joinWorkerPool', name: name, callback: callback});
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: nowobj.getRootRef(), callback: callback} };
+  msg = NowSerialize.serialize(nowobj, msg);
+  msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
-// TODO: Implement join channel callback
 WebConnection.prototype.joinChannel = function(name, clientId, handler, callback) {
   // Adding other client is not supported
   var msg = util.stringify({type: 'joinChannel', name: name, handler: handler, callback: callback});

@@ -16,7 +16,7 @@ var ChatServer = {
     now.joinChannel('lobby', handler, callback);
   },
 }
-now.joinService('chat', ChatServer, function(){ 
+now.publishService('chat', ChatServer, function(){ 
     console.log('started chatserver');
 });
 

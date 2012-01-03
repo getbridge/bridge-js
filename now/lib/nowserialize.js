@@ -11,7 +11,9 @@ var NowSerialize = {
       case 'object':
         if (pivot._nowRef) {
           var target = pivot._nowRef.getRef();
-          links[ target['ref'].join('.') ] = true;
+          if (links) {
+            links[ target['ref'].join('.') ] = true;
+          }
           result = ['now', target ];
         } else {
           var tmp = {};
@@ -25,9 +27,11 @@ var NowSerialize = {
             tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
           }
           if (needs_wrap) {
-            var ref = nowRoot.doJoinService(pivot);
+            var ref = nowRoot.doPublishService(pivot);
             var target = ref.getRef();
-            links[ target['ref'].join('.') ] = true;
+            if (links) {
+              links[ target['ref'].join('.') ] = true;
+            }
             result = ['now', target ];
           } else {
             result = ['dict', tmp];            
@@ -55,10 +59,12 @@ var NowSerialize = {
         } else {
           var wrap = function WrapDummy(){};
           wrap.handle_default = pivot;
-          var ref = nowRoot.doJoinService(wrap);
+          var ref = nowRoot.doPublishService(wrap);
           target = ref.getRef();
         }
-        links[ target['ref'].join('.') ] = true;
+        if (links) {
+          links[ target['ref'].join('.') ] = true;
+        }
         result = ['now', target ];
         break;
       case 'null':

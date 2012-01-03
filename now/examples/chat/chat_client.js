@@ -20,10 +20,15 @@ now.ready(function(){
   //     rl.prompt();
   //   });
   // });
+  
   var chat = now.getService('chat');
-  chat('join').call('lobby', chat_handler, function(lobby, name) {
-    lobby('msg').call('peter', 'hello');
-  });
+  chat( 'doesnotexist' ).call_e( function(data){
+    console.log('ERROR INFO', data);
+  }, 31337);
+
+  // chat('join').call('lobby', chat_handler, function(lobby, name) {
+  //   lobby('msg').call_error( 'peter', 'hello');
+  // });
   // var foo = now.getService('foo');
   // now.getService('lala').call('har');
   // now.getPathObj(['frob', 'cow'], false).call('blah');
