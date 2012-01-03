@@ -20,8 +20,8 @@ function Now(options) {
   }, this.onMessage.bind(this), options); 
 };
 
-Now.prototype.getPathObj = function(pathchain, named) {
-  return new NowPath(this, pathchain, named);
+Now.prototype.getPathObj = function(pathchain) {
+  return new NowPath(this, pathchain);
 }
 
 Now.prototype.getRootRef = function() {
@@ -66,6 +66,8 @@ Now.prototype.executeLocal = function(pathchain, args) {
     }
   } else if (pathchain.length == 0) {
     pathchain = ['default', 'default'];
+  } else if (pathchain[0] === "named") {
+    pathchain.shift();
   }
   
   if (pathchain[0] === "system") {
@@ -82,7 +84,7 @@ Now.prototype.executeLocal = function(pathchain, args) {
 
   var targetobj = this.children[pathchain[0]] || this.children['default'];
   if (!targetobj) {
-    throw new Error("No registered handler and no Default Handler!");
+    throw new Error("No registered handler and no Default Handler for " + pathchain[0] + " !");
   }
 
   var target_funcname = 'handle_' + pathchain[1];
@@ -170,18 +172,18 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
   self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
 };
 
-Now.prototype.execute = function(errcallback, pathchain, named, args) {
+Now.prototype.execute = function(errcallback, nowref, args) {
   
   // System call
-  if (pathchain[0] == 'system') {
+  if (nowref.pathchain[0] == 'system') {
     this.executeSystem(commandArgs);
   }
-  if ((pathchain[0] == this.getClientId()) || (pathchain[0] == 'local') ) {
+  if ((nowref.pathchain[0] == this.getClientId()) || (nowref.pathchain[0] == 'local') ) {
     // Local function call
-    if (pathchain[1] == 'channel') {
-      this.executeLocal(['channel:' + pathchain[2]].concat( pathchain.slice(3) ), args);
+    if (nowref.pathchain[1] == 'channel') {
+      this.executeLocal(['channel:' + nowref.pathchain[2]].concat( nowref.pathchain.slice(3) ), args);
     } else {
-      this.executeLocal(pathchain.slice(1), args);
+      this.executeLocal(nowref.pathchain.slice(1), args);
     }
   } else {
     // Construct remote function
@@ -189,7 +191,7 @@ Now.prototype.execute = function(errcallback, pathchain, named, args) {
     // Index 1 to get the value. Index 0 is the type (list)
     // var serargs = NowSerialize.serialize(this, args)[1];
     // var errcallback = NowSerialize.serialize(this, errcallback);
-    var packet = {'args': args, 'pathchain': pathchain, 'errcallback': errcallback};
+    var packet = { 'args': args, 'destination': nowref };
     
     // Set proper routing keys
     // if (named) {
@@ -197,16 +199,16 @@ Now.prototype.execute = function(errcallback, pathchain, named, args) {
     // } else {
     //   var routingKey = pathchain.join('.');
     // }
-   // this.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
-   console.log('not sending');
+   this.connection.send( this, packet );
+   // console.log('not sending');
   }
 };
 
 
 // Handle function calls
-Now.prototype.funcCall = function(errcallback, pathchain, named, args) {
+Now.prototype.funcCall = function(errcallback, nowref, args) {
   // Add execute action to queue
-  this.callQueue.push(this.execute, [errcallback, pathchain, named, args]);
+  this.callQueue.push(this.execute, [errcallback, nowref, args]);
 };
 
 /* Public APIs */
@@ -220,7 +222,7 @@ Now.prototype.get = function(pathStr)  {
 };
 
 Now.prototype.getService = function(name) {
-  return this.getPathObj([name], true);
+  return this.getPathObj(['named', name]);
 };
 
 Now.prototype.getClient = function(name) {
@@ -228,7 +230,7 @@ Now.prototype.getClient = function(name) {
 };
 
 Now.prototype.getChannel = function(name) {
-  return this.getPathObj(['channel', name], false);
+  return this.getPathObj(['channel', name]);
 };
   
 

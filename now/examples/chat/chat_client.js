@@ -22,9 +22,11 @@ now.ready(function(){
   // });
   
   var chat = now.getService('chat');
-  chat( 'doesnotexist' ).call_e( function(data){
-    console.log('ERROR INFO', data);
-  }, 31337);
+  //chat( 'doesnotexist' ).call_e( function(data){
+  //  console.log('ERROR INFO', data);
+  //}, 31337);
+
+  chat('join').call('hello');
 
   // chat('join').call('lobby', chat_handler, function(lobby, name) {
   //   lobby('msg').call_error( 'peter', 'hello');

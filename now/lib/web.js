@@ -54,15 +54,17 @@ WebConnection.prototype.onData = function(message) {
   }
 }
 
-WebConnection.prototype.send = function(routingKey, message, links) {
-  util.info('Sending', routingKey, message, links);
+WebConnection.prototype.send = function(nowobj, message) {
   // Adding links that need to be established to headers
-  var headers = {};
-  for (x in links) {
-    headers['link_' + x] = links[x];
-  }
+  // var headers = {};
+  // for (x in links) {
+  //   headers['link_' + x] = links[x];
+  // }
   // Push message
-  this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
+  // this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
+  var msg = NowSerialize.serialize(nowobj, {command: 'SEND', data: message});
+  msg = util.stringify(msg);
+  this.sock.send( msg );
 }
 
 WebConnection.prototype.joinWorkerPool = function(nowobj, name, callback) {

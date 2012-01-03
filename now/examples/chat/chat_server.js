@@ -13,7 +13,8 @@ now = new Now({host: 'localhost'});
 
 var ChatServer = {
   handle_join: function(name, handler, callback){
-    now.joinChannel('lobby', handler, callback);
+    console.log("RECEIVED JOIN REQUEST", name, handler, callback);
+    // now.joinChannel('lobby', handler, callback);
   },
 }
 now.publishService('chat', ChatServer, function(){ 
