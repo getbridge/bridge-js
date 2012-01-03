@@ -30,19 +30,22 @@ Now.prototype.getRootRef = function() {
 
 Now.prototype.onMessage = function(message) {
   util.info('Message received: ', message, typeof(message));
-  var pathchain = message.pathchain;
-  if (!pathchain) {
-    util.warn('NO PATHCHAIN IN MESSAGE, IGNORING');
+  var unser = NowSerialize.unserialize(this, message);
+
+  var destination = unser.destination;
+  if (!destination) {
+    util.warn('NO DESTINATION IN MESSAGE, IGNORING');
     return;
   }
+
+  var pathchain = unser.destination.pathchain;
+  var args = unser.args;
 
   // Add client Id so execute() treats the call as local
   if ((pathchain[0] != this.getClientId()) && (pathchain[0] != 'local')) {
     pathchain.unshift(this.getClientId());
   }
-  
-  var args = NowSerialize.unserialize( this, ["list", message.args] );
-  
+    
   var ref = new NowPath(this, pathchain);
   ref.call.apply(null, args);
 };
