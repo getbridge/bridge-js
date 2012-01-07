@@ -96,17 +96,17 @@ CallQueue.prototype.process = function() {
   this.queue = [];
 }
 
-var NowPath = function(nowRoot, pathchain, named) {
+var NowPath = function(nowRoot, pathchain) {
     function NowPath(path) {
       var pathchain = path.split('.');
-      return NowPath.nowRoot.getPathObj( NowPath.pathchain.concat(pathchain), NowPath.named );
+      return NowPath.nowRoot.getPathObj( NowPath.pathchain.concat(pathchain) );
     };
     NowPath.call = function() {
       return NowPath.call_e(null);
     }
     NowPath.call_e = function(errcallback) {
       var args = [].slice.apply(arguments);
-      return NowPath.nowRoot.funcCall(errcallback, NowPath.pathchain, NowPath.named, args);
+      return NowPath.nowRoot.funcCall(errcallback, NowPath, args);
     }
     NowPath.getLocalName = function() {
       return NowPath.pathchain[1];
@@ -121,8 +121,6 @@ var NowPath = function(nowRoot, pathchain, named) {
     // Set root Now object
     NowPath.nowRoot = nowRoot;
     NowPath.pathchain = pathchain;
-    // Set whether is named (part of Now namespace)
-    NowPath.named = named;
   
     return NowPath;
 };
@@ -306,20 +304,24 @@ WebConnection.prototype.onData = function(message) {
   }
 }
 
-WebConnection.prototype.send = function(routingKey, message, links) {
-  util.info('Sending', routingKey, message, links);
+WebConnection.prototype.send = function(nowobj, message) {
   // Adding links that need to be established to headers
-  var headers = {};
-  for (x in links) {
-    headers['link_' + x] = links[x];
-  }
+  // var headers = {};
+  // for (x in links) {
+  //   headers['link_' + x] = links[x];
+  // }
   // Push message
-  this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
+  // this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
+  var msg = NowSerialize.serialize(nowobj, {command: 'SEND', data: message});
+  msg = util.stringify(msg);
+  this.sock.send( msg );
 }
 
-WebConnection.prototype.joinWorkerPool = function(name, callback) {
+WebConnection.prototype.joinWorkerPool = function(nowobj, name, callback) {
   util.info('Joining worker pool', name, callback);
-  var msg = util.stringify({type: 'joinWorkerPool', name: name, callback: callback});
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: nowobj.getRootRef(), callback: callback} };
+  msg = NowSerialize.serialize(nowobj, msg);
+  msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }
@@ -372,25 +374,32 @@ function Now(options) {
   }, this.onMessage.bind(this), options); 
 };
 
-Now.prototype.getPathObj = function(pathchain, named) {
-  return new NowPath(this, pathchain, named);
+Now.prototype.getPathObj = function(pathchain) {
+  return new NowPath(this, pathchain);
+}
+
+Now.prototype.getRootRef = function() {
+  return new NowPath(this, [this.connection.clientId], false);
 }
 
 Now.prototype.onMessage = function(message) {
   util.info('Message received: ', message, typeof(message));
-  var pathchain = message.pathchain;
-  if (!pathchain) {
-    util.warn('NO PATHCHAIN IN MESSAGE, IGNORING');
+  var unser = NowSerialize.unserialize(this, message);
+
+  var destination = unser.destination;
+  if (!destination) {
+    util.warn('NO DESTINATION IN MESSAGE, IGNORING');
     return;
   }
+
+  var pathchain = unser.destination.pathchain;
+  var args = unser.args;
 
   // Add client Id so execute() treats the call as local
   if ((pathchain[0] != this.getClientId()) && (pathchain[0] != 'local')) {
     pathchain.unshift(this.getClientId());
   }
-  
-  var args = NowSerialize.unserialize( this, ["list", message.args] );
-  
+    
   var ref = new NowPath(this, pathchain);
   ref.call.apply(null, args);
 };
@@ -411,6 +420,8 @@ Now.prototype.executeLocal = function(pathchain, args) {
     }
   } else if (pathchain.length == 0) {
     pathchain = ['default', 'default'];
+  } else if (pathchain[0] === "named") {
+    pathchain.shift();
   }
   
   if (pathchain[0] === "system") {
@@ -427,7 +438,7 @@ Now.prototype.executeLocal = function(pathchain, args) {
 
   var targetobj = this.children[pathchain[0]] || this.children['default'];
   if (!targetobj) {
-    throw new Error("No registered handler and no Default Handler!");
+    throw new Error("No registered handler and no Default Handler for " + pathchain[0] + " !");
   }
 
   var target_funcname = 'handle_' + pathchain[1];
@@ -470,13 +481,14 @@ Now.prototype.doPublishService = function(name, service, callback) {
     name = undefined;
   }
 
-  var callback_wrap = NowSerialize.serialize(this, callback);
+  // var callback_wrap = NowSerialize.serialize(this, callback);
+  var callback_wrap = callback;
   
   if (!service._nowRef) {
     if (!name) {
       name = util.generateGuid();
     } else {
-      this.connection.joinWorkerPool(name, callback_wrap);
+      this.connection.joinWorkerPool(this, name, callback_wrap);
     }
     service._nowRef = new NowPath(this, [ 'local', name ]);
   } else {
@@ -504,28 +516,28 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
     clientId = foo[1]['ref'][0];
   }
     
-  var callback_wrap = NowSerialize.serialize(this, callback);
+  var callback_wrap = callback; //NowSerialize.serialize(this, callback);
 
   var handler_wrap = null;
   if (handler) {
-    handler_wrap = NowSerialize.serialize(this, handler);
+    handler_wrap = handler; //NowSerialize.serialize(this, handler);
   }
 
   self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
 };
 
-Now.prototype.execute = function(errcallback, pathchain, named, args) {
+Now.prototype.execute = function(errcallback, nowref, args) {
   
   // System call
-  if (pathchain[0] == 'system') {
+  if (nowref.pathchain[0] == 'system') {
     this.executeSystem(commandArgs);
   }
-  if ((pathchain[0] == this.getClientId()) || (pathchain[0] == 'local') ) {
+  if ((nowref.pathchain[0] == this.getClientId()) || (nowref.pathchain[0] == 'local') ) {
     // Local function call
-    if (pathchain[1] == 'channel') {
-      this.executeLocal(['channel:' + pathchain[2]].concat( pathchain.slice(3) ), args);
+    if (nowref.pathchain[1] == 'channel') {
+      this.executeLocal(['channel:' + nowref.pathchain[2]].concat( nowref.pathchain.slice(3) ), args);
     } else {
-      this.executeLocal(pathchain.slice(1), args);
+      this.executeLocal(nowref.pathchain.slice(1), args);
     }
   } else {
     // Construct remote function
@@ -533,7 +545,7 @@ Now.prototype.execute = function(errcallback, pathchain, named, args) {
     // Index 1 to get the value. Index 0 is the type (list)
     // var serargs = NowSerialize.serialize(this, args)[1];
     // var errcallback = NowSerialize.serialize(this, errcallback);
-    var packet = {'args': args, 'pathchain': pathchain, 'errcallback': errcallback};
+    var packet = { 'args': args, 'destination': nowref };
     
     // Set proper routing keys
     // if (named) {
@@ -541,16 +553,16 @@ Now.prototype.execute = function(errcallback, pathchain, named, args) {
     // } else {
     //   var routingKey = pathchain.join('.');
     // }
-   // this.connection.send(routingKey, util.stringify(packet), util.getKeys(links));
-   console.log('not sending');
+   this.connection.send( this, packet );
+   // console.log('not sending');
   }
 };
 
 
 // Handle function calls
-Now.prototype.funcCall = function(errcallback, pathchain, named, args) {
+Now.prototype.funcCall = function(errcallback, nowref, args) {
   // Add execute action to queue
-  this.callQueue.push(this.execute, [errcallback, pathchain, named, args]);
+  this.callQueue.push(this.execute, [errcallback, nowref, args]);
 };
 
 /* Public APIs */
@@ -564,7 +576,7 @@ Now.prototype.get = function(pathStr)  {
 };
 
 Now.prototype.getService = function(name) {
-  return this.getPathObj([name], true);
+  return this.getPathObj(['named', name]);
 };
 
 Now.prototype.getClient = function(name) {
@@ -572,7 +584,7 @@ Now.prototype.getClient = function(name) {
 };
 
 Now.prototype.getChannel = function(name) {
-  return this.getPathObj(['channel', name], false);
+  return this.getPathObj(['channel', name]);
 };
   
 
