@@ -78,7 +78,7 @@ WebConnection.prototype.joinWorkerPool = function(nowobj, name, callback) {
 
 WebConnection.prototype.joinChannel = function(name, clientId, handler, callback) {
   // Adding other client is not supported
-  var msg = util.stringify({type: 'joinChannel', name: name, handler: handler, callback: callback});
+  var msg = util.stringify({type: 'JOINCHANNEL', name: name, handler: handler, callback: callback});
   // util.info('msg', msg);
   this.sock.send(msg);
 }

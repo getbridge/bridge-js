@@ -4,11 +4,12 @@ var NowPath = function(nowRoot, pathchain) {
       return NowPath.nowRoot.getPathObj( NowPath.pathchain.concat(pathchain) );
     };
     NowPath.call = function() {
-      return NowPath.call_e(null);
+      var args = [].slice.apply(arguments);
+      return NowPath.call_e.apply(this, [null].concat(args) );
     }
     NowPath.call_e = function(errcallback) {
       var args = [].slice.apply(arguments);
-      return NowPath.nowRoot.funcCall(errcallback, NowPath, args);
+      return NowPath.nowRoot.funcCall(errcallback, NowPath, args.slice(1));
     }
     NowPath.getLocalName = function() {
       return NowPath.pathchain[1];

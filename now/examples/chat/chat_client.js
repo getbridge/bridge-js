@@ -26,11 +26,10 @@ now.ready(function(){
   //  console.log('ERROR INFO', data);
   //}, 31337);
 
-  chat('join').call('hello');
-
-  // chat('join').call('lobby', chat_handler, function(lobby, name) {
-  //   lobby('msg').call_error( 'peter', 'hello');
-  // });
+  chat('join').call('lobby', chat_handler, function(lobby, name) {
+    console.log('JOIN SUCCESS', lobby, name);
+    // lobby('msg').call_error( 'peter', 'hello');
+  });
   // var foo = now.getService('foo');
   // now.getService('lala').call('har');
   // now.getPathObj(['frob', 'cow'], false).call('blah');

@@ -29,10 +29,11 @@ Now.prototype.getRootRef = function() {
 }
 
 Now.prototype.onMessage = function(message) {
-  util.info('Message received: ', message, typeof(message));
+  // util.info('Message received: ', message, typeof(message));
   var unser = NowSerialize.unserialize(this, message);
 
   var destination = unser.destination;
+  util.info('Message received: ', unser, destination.pathchain);
   if (!destination) {
     util.warn('NO DESTINATION IN MESSAGE, IGNORING');
     return;
