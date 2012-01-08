@@ -76,9 +76,11 @@ WebConnection.prototype.joinWorkerPool = function(bridgeobj, name, callback) {
   this.sock.send(msg);
 }
 
-WebConnection.prototype.joinChannel = function(name, clientId, handler, callback) {
+WebConnection.prototype.joinChannel = function(nowobj, name, clientId, handler, callback) {
   // Adding other client is not supported
-  var msg = util.stringify({type: 'JOINCHANNEL', name: name, handler: handler, callback: callback});
+  var msg = {command: 'JOINCHANNEL', data: {name: name, handler: handler, callback: callback} };
+  msg = BridgeSerialize.serialize(nowobj, msg);
+  msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }

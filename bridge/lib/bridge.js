@@ -170,7 +170,7 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
     handler_wrap = handler; //BridgeSerialize.serialize(this, handler);
   }
 
-  self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
+  self.connection.joinChannel(this, name, clientId, handler_wrap, callback_wrap );
 };
 
 Bridge.prototype.execute = function(errcallback, bridgeref, args) {
