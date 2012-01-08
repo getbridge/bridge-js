@@ -38,7 +38,7 @@ var starttagIF = '// if node'
 var base = [
   , 'util.js'
   , 'callqueue.js'
-  , 'bridge.js'
+  , 'bridgepath.js'
   , 'bridgeserialize.js'
   , 'connection.js'
   , 'web.js'

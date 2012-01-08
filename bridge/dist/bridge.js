@@ -1,4 +1,4 @@
-/*! now.js build:0.0.1, development. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */
+/*! bridge.js build:0.0.1, development. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */
 var log;
 if(window.console && console.log) {
   log = function () { 
@@ -75,14 +75,14 @@ var util = {
   }
 }
 
-function CallQueue(Now){
-  this._nowref = Now;
+function CallQueue(Bridge){
+  this._bridgeref = Bridge;
   this.ready = false;
   this.queue = [];
 };
 CallQueue.prototype.push = function(callback, args) {
   if (this.ready) {
-    callback.apply(this._nowref, args);
+    callback.apply(this._bridgeref, args);
   } else {
     this.queue.push( {callback: callback, args: args} );
   }
@@ -91,49 +91,50 @@ CallQueue.prototype.push = function(callback, args) {
 CallQueue.prototype.process = function() {
   this.ready = true;
   for (var i = 0, ii = this.queue.length; i < ii; i++) {
-    this.queue[i].callback.apply(this._nowref, this.queue[i].args);
+    this.queue[i].callback.apply(this._bridgeref, this.queue[i].args);
   }
   this.queue = [];
 }
 
-var NowPath = function(nowRoot, pathchain) {
-    function NowPath(path) {
+var BridgePath = function(bridgeRoot, pathchain) {
+    function BridgePath(path) {
       var pathchain = path.split('.');
-      return NowPath.nowRoot.getPathObj( NowPath.pathchain.concat(pathchain) );
+      return BridgePath.bridgeRoot.getPathObj( BridgePath.pathchain.concat(pathchain) );
     };
-    NowPath.call = function() {
-      return NowPath.call_e(null);
-    }
-    NowPath.call_e = function(errcallback) {
+    BridgePath.call = function() {
       var args = [].slice.apply(arguments);
-      return NowPath.nowRoot.funcCall(errcallback, NowPath, args);
+      return BridgePath.call_e.apply(this, [null].concat(args) );
     }
-    NowPath.getLocalName = function() {
-      return NowPath.pathchain[1];
+    BridgePath.call_e = function(errcallback) {
+      var args = [].slice.apply(arguments);
+      return BridgePath.bridgeRoot.funcCall(errcallback, BridgePath, args.slice(1));
+    }
+    BridgePath.getLocalName = function() {
+      return BridgePath.pathchain[1];
     };
-    NowPath.getRef = function() {
-      if (NowPath.pathchain[0] == 'local') {
-        NowPath.pathchain[0] = NowPath.nowRoot.getClientId();
+    BridgePath.getRef = function() {
+      if (BridgePath.pathchain[0] == 'local') {
+        BridgePath.pathchain[0] = BridgePath.bridgeRoot.getClientId();
       }
-      return {'ref': NowPath.pathchain};
+      return {'ref': BridgePath.pathchain};
     };
 
-    // Set root Now object
-    NowPath.nowRoot = nowRoot;
-    NowPath.pathchain = pathchain;
+    // Set root Bridge object
+    BridgePath.bridgeRoot = bridgeRoot;
+    BridgePath.pathchain = pathchain;
   
-    return NowPath;
+    return BridgePath;
 };
 
 
-var NowSerialize = {
-  serialize: function(nowRoot, pivot, links) {
+var BridgeSerialize = {
+  serialize: function(bridgeRoot, pivot, links) {
     var typ = util.typeOf(pivot);
     var result;
     switch(typ) {
       case 'object':
-        if (pivot._nowRef) {
-          var target = pivot._nowRef.getRef();
+        if (pivot._bridgeRef) {
+          var target = pivot._bridgeRef.getRef();
           if (links) {
             links[ target['ref'].join('.') ] = true;
           }
@@ -147,17 +148,17 @@ var NowSerialize = {
               needs_wrap = true;
               break;
             }
-            tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
+            tmp[pos] = BridgeSerialize.serialize(bridgeRoot, val, links);
           }
           if (needs_wrap) {
-            var ref = nowRoot.doPublishService(pivot);
+            var ref = bridgeRoot.doPublishService(pivot);
             var target = ref.getRef();
             if (links) {
               links[ target['ref'].join('.') ] = true;
             }
             result = ['now', target ];
           } else {
-            result = ['dict', tmp];            
+            result = ['dict', tmp];
           }
         }
         break;
@@ -165,7 +166,7 @@ var NowSerialize = {
         var tmp = [];
         for (pos in pivot) {
           var val = pivot[pos];
-          tmp.push(NowSerialize.serialize(nowRoot, val, links));
+          tmp.push(BridgeSerialize.serialize(bridgeRoot, val, links));
         }
         result = ['list', tmp];
         break;
@@ -182,7 +183,7 @@ var NowSerialize = {
         } else {
           var wrap = function WrapDummy(){};
           wrap.handle_default = pivot;
-          var ref = nowRoot.doPublishService(wrap);
+          var ref = bridgeRoot.doPublishService(wrap);
           target = ref.getRef();
         }
         if (links) {
@@ -204,7 +205,7 @@ var NowSerialize = {
     }
     return result;
   },
-  unserialize: function(nowRoot, tup) {
+  unserialize: function(bridgeRoot, tup) {
     var typ = tup[0];
     var pivot = tup[1];
     var result;
@@ -212,14 +213,14 @@ var NowSerialize = {
       case "list":
         var tmp = [];
         for (pos in pivot) {
-          tmp.push( NowSerialize.unserialize(nowRoot, pivot[pos] ) );
+          tmp.push( BridgeSerialize.unserialize(bridgeRoot, pivot[pos] ) );
         }
         result = tmp;
         break;
       case "dict":
         var tmp = {};
         for (pos in pivot) {
-          tmp[pos] = NowSerialize.unserialize(nowRoot, pivot[pos] );
+          tmp[pos] = BridgeSerialize.unserialize(bridgeRoot, pivot[pos] );
         }
         result = tmp;
         break;
@@ -233,7 +234,7 @@ var NowSerialize = {
         result = Boolean(pivot);
         break;
       case "now":
-        result = new NowPath(nowRoot, pivot['ref']);
+        result = new BridgePath(bridgeRoot, pivot['ref']);
         break;
       case "none":
         result = null;
@@ -304,7 +305,7 @@ WebConnection.prototype.onData = function(message) {
   }
 }
 
-WebConnection.prototype.send = function(nowobj, message) {
+WebConnection.prototype.send = function(bridgeobj, message) {
   // Adding links that need to be established to headers
   // var headers = {};
   // for (x in links) {
@@ -312,28 +313,30 @@ WebConnection.prototype.send = function(nowobj, message) {
   // }
   // Push message
   // this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
-  var msg = NowSerialize.serialize(nowobj, {command: 'SEND', data: message});
+  var msg = BridgeSerialize.serialize(bridgeobj, {command: 'SEND', data: message});
   msg = util.stringify(msg);
   this.sock.send( msg );
 }
 
-WebConnection.prototype.joinWorkerPool = function(nowobj, name, callback) {
+WebConnection.prototype.joinWorkerPool = function(bridgeobj, name, callback) {
   util.info('Joining worker pool', name, callback);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: nowobj.getRootRef(), callback: callback} };
-  msg = NowSerialize.serialize(nowobj, msg);
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: bridgeobj.getRootRef(), callback: callback} };
+  msg = BridgeSerialize.serialize(bridgeobj, msg);
   msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
-WebConnection.prototype.joinChannel = function(name, clientId, handler, callback) {
+WebConnection.prototype.joinChannel = function(nowobj, name, clientId, handler, callback) {
   // Adding other client is not supported
-  var msg = util.stringify({type: 'joinChannel', name: name, handler: handler, callback: callback});
+  var msg = {command: 'JOINCHANNEL', data: {name: name, handler: handler, callback: callback} };
+  msg = BridgeSerialize.serialize(nowobj, msg);
+  msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
-var NowConnection = WebConnection;
+var BridgeConnection = WebConnection;
 
 // Browser compatibility shims
 
@@ -362,31 +365,32 @@ if (!Function.prototype.bind) {
 }
 
 
-function Now(options) {
+function Bridge(options) {
   var self = this;
   this.children = {};
   this.callQueue = new CallQueue(this);
   // Communication layer
-  this.connection = new NowConnection(function(){
+  this.connection = new BridgeConnection(function(){
     util.info('Connected');
     // Start processing queue
     self.callQueue.process();
   }, this.onMessage.bind(this), options); 
 };
 
-Now.prototype.getPathObj = function(pathchain) {
-  return new NowPath(this, pathchain);
+Bridge.prototype.getPathObj = function(pathchain) {
+  return new BridgePath(this, pathchain);
 }
 
-Now.prototype.getRootRef = function() {
-  return new NowPath(this, [this.connection.clientId], false);
+Bridge.prototype.getRootRef = function() {
+  return new BridgePath(this, [this.connection.clientId], false);
 }
 
-Now.prototype.onMessage = function(message) {
-  util.info('Message received: ', message, typeof(message));
-  var unser = NowSerialize.unserialize(this, message);
+Bridge.prototype.onMessage = function(message) {
+  // util.info('Message received: ', message, typeof(message));
+  var unser = BridgeSerialize.unserialize(this, message);
 
   var destination = unser.destination;
+  util.info('Message received: ', unser, destination.pathchain);
   if (!destination) {
     util.warn('NO DESTINATION IN MESSAGE, IGNORING');
     return;
@@ -400,15 +404,15 @@ Now.prototype.onMessage = function(message) {
     pathchain.unshift(this.getClientId());
   }
     
-  var ref = new NowPath(this, pathchain);
+  var ref = new BridgePath(this, pathchain);
   ref.call.apply(null, args);
 };
 
-Now.prototype.getClientId = function() {
+Bridge.prototype.getClientId = function() {
   return this.connection.clientId;
 };
 
-Now.prototype.executeLocal = function(pathchain, args) {
+Bridge.prototype.executeLocal = function(pathchain, args) {
   var self = this;
   if (pathchain.length == 1) {
     if(util.hasProp(this.children, pathchain[0])) {
@@ -456,53 +460,53 @@ Now.prototype.executeLocal = function(pathchain, args) {
   }
 };
 
-Now.prototype.executeSystem = function(args) {
+Bridge.prototype.executeSystem = function(args) {
   util.info('Execute system', args);
 };
 
-Now.prototype.registerDefault = function(service, callback) {
+Bridge.prototype.registerDefault = function(service, callback) {
   this.children['default'] = service;
   if (callback) {
     callback();
   }
 };
 
-Now.prototype.publishService = function(name, service, callback) {
+Bridge.prototype.publishService = function(name, service, callback) {
   this.callQueue.push(this.doPublishService, [name, service, callback]);
 };
 
-Now.prototype.joinChannel = function(name, clientId, handler) {
+Bridge.prototype.joinChannel = function(name, clientId, handler) {
   this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
 };
 
-Now.prototype.doPublishService = function(name, service, callback) {
+Bridge.prototype.doPublishService = function(name, service, callback) {
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
   }
 
-  // var callback_wrap = NowSerialize.serialize(this, callback);
+  // var callback_wrap = BridgeSerialize.serialize(this, callback);
   var callback_wrap = callback;
   
-  if (!service._nowRef) {
+  if (!service._bridgeRef) {
     if (!name) {
       name = util.generateGuid();
     } else {
       this.connection.joinWorkerPool(this, name, callback_wrap);
     }
-    service._nowRef = new NowPath(this, [ 'local', name ]);
+    service._bridgeRef = new BridgePath(this, [ 'local', name ]);
   } else {
     if (name) {
-      throw Error("Service can't be renamed! " + name + ' old ' +  service._nowRef.getLocalName() );
+      throw Error("Service can't be renamed! " + name + ' old ' +  service._bridgeRef.getLocalName() );
     } else {
-      name = service._nowRef.getLocalName()
+      name = service._bridgeRef.getLocalName()
     }
   }
   this.children[name] = service;
-  return service._nowRef;
+  return service._bridgeRef;
 };
 
-Now.prototype.doJoinChannel = function(name, clientId, callback) {
+Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
   var self = this;
   if(!clientId) {
     clientId = this.getClientId();
@@ -512,40 +516,40 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
   
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
-    var foo = NowSerialize.serialize(this, handler);
+    var foo = BridgeSerialize.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
     
-  var callback_wrap = callback; //NowSerialize.serialize(this, callback);
+  var callback_wrap = callback; //BridgeSerialize.serialize(this, callback);
 
   var handler_wrap = null;
   if (handler) {
-    handler_wrap = handler; //NowSerialize.serialize(this, handler);
+    handler_wrap = handler; //BridgeSerialize.serialize(this, handler);
   }
 
-  self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
+  self.connection.joinChannel(this, name, clientId, handler_wrap, callback_wrap );
 };
 
-Now.prototype.execute = function(errcallback, nowref, args) {
+Bridge.prototype.execute = function(errcallback, bridgeref, args) {
   
   // System call
-  if (nowref.pathchain[0] == 'system') {
+  if (bridgeref.pathchain[0] == 'system') {
     this.executeSystem(commandArgs);
   }
-  if ((nowref.pathchain[0] == this.getClientId()) || (nowref.pathchain[0] == 'local') ) {
+  if ((bridgeref.pathchain[0] == this.getClientId()) || (bridgeref.pathchain[0] == 'local') ) {
     // Local function call
-    if (nowref.pathchain[1] == 'channel') {
-      this.executeLocal(['channel:' + nowref.pathchain[2]].concat( nowref.pathchain.slice(3) ), args);
+    if (bridgeref.pathchain[1] == 'channel') {
+      this.executeLocal(['channel:' + bridgeref.pathchain[2]].concat( bridgeref.pathchain.slice(3) ), args);
     } else {
-      this.executeLocal(nowref.pathchain.slice(1), args);
+      this.executeLocal(bridgeref.pathchain.slice(1), args);
     }
   } else {
     // Construct remote function
     // var links = {};
     // Index 1 to get the value. Index 0 is the type (list)
-    // var serargs = NowSerialize.serialize(this, args)[1];
-    // var errcallback = NowSerialize.serialize(this, errcallback);
-    var packet = { 'args': args, 'destination': nowref };
+    // var serargs = BridgeSerialize.serialize(this, args)[1];
+    // var errcallback = BridgeSerialize.serialize(this, errcallback);
+    var packet = { 'args': args, 'destination': bridgeref };
     
     // Set proper routing keys
     // if (named) {
@@ -560,30 +564,30 @@ Now.prototype.execute = function(errcallback, nowref, args) {
 
 
 // Handle function calls
-Now.prototype.funcCall = function(errcallback, nowref, args) {
+Bridge.prototype.funcCall = function(errcallback, bridgeref, args) {
   // Add execute action to queue
-  this.callQueue.push(this.execute, [errcallback, nowref, args]);
+  this.callQueue.push(this.execute, [errcallback, bridgeref, args]);
 };
 
 /* Public APIs */
-Now.prototype.ready = function(func) {
+Bridge.prototype.ready = function(func) {
   this.callQueue.push(func, []);
 };
 
-Now.prototype.get = function(pathStr)  {
+Bridge.prototype.get = function(pathStr)  {
   var pathchain = pathStr.split('.');
   return this.getPathObj(pathchain, true);
 };
 
-Now.prototype.getService = function(name) {
+Bridge.prototype.getService = function(name) {
   return this.getPathObj(['named', name]);
 };
 
-Now.prototype.getClient = function(name) {
+Bridge.prototype.getClient = function(name) {
   return this.getPathObj([name], false);
 };
 
-Now.prototype.getChannel = function(name) {
+Bridge.prototype.getChannel = function(name) {
   return this.getPathObj(['channel', name]);
 };
   
