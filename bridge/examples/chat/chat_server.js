@@ -6,18 +6,18 @@ require('http').createServer(function (request, response) {
     });
 }).listen(9000);
 
-var Now = require(__dirname+'/../../lib/now.js').Now;
-// now = new Now({host: 'ec2-50-19-181-20.compute-1.amazonaws.com'});
+var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
+// bridge = new Bridge({host: 'ec2-50-19-181-20.compute-1.amazonaws.com'});
 
-now = new Now({host: 'localhost'});
+bridge = new Bridge({host: 'localhost'});
 
 var ChatServer = {
   handle_join: function(name, handler, callback){
     console.log("RECEIVED JOIN REQUEST", name, handler, callback);
-    now.joinChannel('lobby', handler, callback);
+    bridge.joinChannel('lobby', handler, callback);
   },
 }
-now.publishService('chat', ChatServer, function(){ 
+bridge.publishService('chat', ChatServer, function(){ 
     console.log('started chatserver');
 });
 
