@@ -1,13 +1,13 @@
 {
   "author": "",
-  "name": "now",
-  "description": "Now for JS",
+  "name": "bridge",
+  "description": "Bridge for JS",
   "version": "0.0.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/Flotype/mqb-prototype.git"
   },
-  "main": "lib/now.js",
+  "main": "lib/bridge.js",
   "engines": {
     "node": "~0.6.1"
   },

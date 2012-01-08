@@ -2,12 +2,12 @@
 <head>
 
 <script src="http://cdn.sockjs.org/sockjs-0.1.2.min.js"></script>
-<script src="/js/now.js"></script>
+<script src="/js/bridge.js"></script>
 
 <script>
 
-//var now = new Now({url: 'http://ec2-50-19-181-20.compute-1.amazonaws.com:8080/now'});
-var now = new Now({url: 'http://localhost:8081/now'});
+//var bridge = new Bridge({url: 'http://ec2-50-19-181-20.compute-1.amazonaws.com:8080/now'});
+var bridge = new Bridge({url: 'http://localhost:8081/now'});
 var name = prompt('Name?');
 
 var handler = {
@@ -16,15 +16,15 @@ var handler = {
   }
 };
 
-now.ready(function(){
-  var chat = now.getService('chat');
+bridge.ready(function(){
+  var chat = bridge.getService('chat');
   chat('join').call('lobby', handler, function(lobby, name) {
     console.log("joined channel");
   });
 });
 
 function send(message) {
-  now.getChannel('lobby')('msg').call(name, message);
+  bridge.getChannel('lobby')('msg').call(name, message);
 }
 
 </script>

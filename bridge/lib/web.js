@@ -5,7 +5,7 @@ var defaultOptions = {
 
 // if node
 var util = require('./util');
-var NowSerialize = require('./nowserialize.js');
+var BridgeSerialize = require('./bridgeserialize.js');
 var createTCPConn = require('./tcp').createTCPConn
 var Connection = require('./connection');
 var defaultOptions = {
@@ -54,7 +54,7 @@ WebConnection.prototype.onData = function(message) {
   }
 }
 
-WebConnection.prototype.send = function(nowobj, message) {
+WebConnection.prototype.send = function(bridgeobj, message) {
   // Adding links that need to be established to headers
   // var headers = {};
   // for (x in links) {
@@ -62,15 +62,15 @@ WebConnection.prototype.send = function(nowobj, message) {
   // }
   // Push message
   // this.sock.send(util.stringify({message: message, routingKey: routingKey, headers: headers}));
-  var msg = NowSerialize.serialize(nowobj, {command: 'SEND', data: message});
+  var msg = BridgeSerialize.serialize(bridgeobj, {command: 'SEND', data: message});
   msg = util.stringify(msg);
   this.sock.send( msg );
 }
 
-WebConnection.prototype.joinWorkerPool = function(nowobj, name, callback) {
+WebConnection.prototype.joinWorkerPool = function(bridgeobj, name, callback) {
   util.info('Joining worker pool', name, callback);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: nowobj.getRootRef(), callback: callback} };
-  msg = NowSerialize.serialize(nowobj, msg);
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: bridgeobj.getRootRef(), callback: callback} };
+  msg = BridgeSerialize.serialize(bridgeobj, msg);
   msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
@@ -85,8 +85,8 @@ WebConnection.prototype.joinChannel = function(nowobj, name, clientId, handler, 
   this.sock.send(msg);
 }
 
-var NowConnection = WebConnection;
+var BridgeConnection = WebConnection;
 
 // if node
-exports.NowConnection = NowConnection;
+exports.BridgeConnection = BridgeConnection;
 // end node

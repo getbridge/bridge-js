@@ -2,14 +2,14 @@
 <head>
 
 <script src="http://cdn.sockjs.org/sockjs-0.1.2.min.js"></script>
-<script src="/js/now.js"></script>
+<script src="/js/bridge.js"></script>
 
 <script>
 
-var now = new Now();
+var bridge = new Bridge();
 
-var webpull = now.getService('webpull');
-var resize = now.getService('resize');
+var webpull = bridge.getService('webpull');
+var resize = bridge.getService('resize');
 
 webpull('fetch_url').call( 'http://flotype.com/images/shipyard.png', function(downloaded_file) {
   resize('resize').call( downloaded_file, 2000, 2300, function(resized_file) {

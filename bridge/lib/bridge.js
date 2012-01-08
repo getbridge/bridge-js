@@ -2,35 +2,35 @@
 var util = require('./util.js');
 
 var CallQueue = require('./callqueue.js');
-var NowConnection = require('./web.js').NowConnection;
-var NowSerialize = require('./nowserialize.js');
-var NowPath = require('./nowpath.js');
+var BridgeConnection = require('./web.js').BridgeConnection;
+var BridgeSerialize = require('./bridgeserialize.js');
+var BridgePath = require('./bridgepath.js');
 // end node
 
 
-function Now(options) {
+function Bridge(options) {
   var self = this;
   this.children = {};
   this.callQueue = new CallQueue(this);
   // Communication layer
-  this.connection = new NowConnection(function(){
+  this.connection = new BridgeConnection(function(){
     util.info('Connected');
     // Start processing queue
     self.callQueue.process();
   }, this.onMessage.bind(this), options); 
 };
 
-Now.prototype.getPathObj = function(pathchain) {
-  return new NowPath(this, pathchain);
+Bridge.prototype.getPathObj = function(pathchain) {
+  return new BridgePath(this, pathchain);
 }
 
-Now.prototype.getRootRef = function() {
-  return new NowPath(this, [this.connection.clientId], false);
+Bridge.prototype.getRootRef = function() {
+  return new BridgePath(this, [this.connection.clientId], false);
 }
 
-Now.prototype.onMessage = function(message) {
+Bridge.prototype.onMessage = function(message) {
   // util.info('Message received: ', message, typeof(message));
-  var unser = NowSerialize.unserialize(this, message);
+  var unser = BridgeSerialize.unserialize(this, message);
 
   var destination = unser.destination;
   util.info('Message received: ', unser, destination.pathchain);
@@ -47,15 +47,15 @@ Now.prototype.onMessage = function(message) {
     pathchain.unshift(this.getClientId());
   }
     
-  var ref = new NowPath(this, pathchain);
+  var ref = new BridgePath(this, pathchain);
   ref.call.apply(null, args);
 };
 
-Now.prototype.getClientId = function() {
+Bridge.prototype.getClientId = function() {
   return this.connection.clientId;
 };
 
-Now.prototype.executeLocal = function(pathchain, args) {
+Bridge.prototype.executeLocal = function(pathchain, args) {
   var self = this;
   if (pathchain.length == 1) {
     if(util.hasProp(this.children, pathchain[0])) {
@@ -103,53 +103,53 @@ Now.prototype.executeLocal = function(pathchain, args) {
   }
 };
 
-Now.prototype.executeSystem = function(args) {
+Bridge.prototype.executeSystem = function(args) {
   util.info('Execute system', args);
 };
 
-Now.prototype.registerDefault = function(service, callback) {
+Bridge.prototype.registerDefault = function(service, callback) {
   this.children['default'] = service;
   if (callback) {
     callback();
   }
 };
 
-Now.prototype.publishService = function(name, service, callback) {
+Bridge.prototype.publishService = function(name, service, callback) {
   this.callQueue.push(this.doPublishService, [name, service, callback]);
 };
 
-Now.prototype.joinChannel = function(name, clientId, handler) {
+Bridge.prototype.joinChannel = function(name, clientId, handler) {
   this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
 };
 
-Now.prototype.doPublishService = function(name, service, callback) {
+Bridge.prototype.doPublishService = function(name, service, callback) {
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
   }
 
-  // var callback_wrap = NowSerialize.serialize(this, callback);
+  // var callback_wrap = BridgeSerialize.serialize(this, callback);
   var callback_wrap = callback;
   
-  if (!service._nowRef) {
+  if (!service._bridgeRef) {
     if (!name) {
       name = util.generateGuid();
     } else {
       this.connection.joinWorkerPool(this, name, callback_wrap);
     }
-    service._nowRef = new NowPath(this, [ 'local', name ]);
+    service._bridgeRef = new BridgePath(this, [ 'local', name ]);
   } else {
     if (name) {
-      throw Error("Service can't be renamed! " + name + ' old ' +  service._nowRef.getLocalName() );
+      throw Error("Service can't be renamed! " + name + ' old ' +  service._bridgeRef.getLocalName() );
     } else {
-      name = service._nowRef.getLocalName()
+      name = service._bridgeRef.getLocalName()
     }
   }
   this.children[name] = service;
-  return service._nowRef;
+  return service._bridgeRef;
 };
 
-Now.prototype.doJoinChannel = function(name, clientId, callback) {
+Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
   var self = this;
   if(!clientId) {
     clientId = this.getClientId();
@@ -159,40 +159,40 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
   
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
-    var foo = NowSerialize.serialize(this, handler);
+    var foo = BridgeSerialize.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
     
-  var callback_wrap = callback; //NowSerialize.serialize(this, callback);
+  var callback_wrap = callback; //BridgeSerialize.serialize(this, callback);
 
   var handler_wrap = null;
   if (handler) {
-    handler_wrap = handler; //NowSerialize.serialize(this, handler);
+    handler_wrap = handler; //BridgeSerialize.serialize(this, handler);
   }
 
   self.connection.joinChannel(this, name, clientId, handler_wrap, callback_wrap );
 };
 
-Now.prototype.execute = function(errcallback, nowref, args) {
+Bridge.prototype.execute = function(errcallback, bridgeref, args) {
   
   // System call
-  if (nowref.pathchain[0] == 'system') {
+  if (bridgeref.pathchain[0] == 'system') {
     this.executeSystem(commandArgs);
   }
-  if ((nowref.pathchain[0] == this.getClientId()) || (nowref.pathchain[0] == 'local') ) {
+  if ((bridgeref.pathchain[0] == this.getClientId()) || (bridgeref.pathchain[0] == 'local') ) {
     // Local function call
-    if (nowref.pathchain[1] == 'channel') {
-      this.executeLocal(['channel:' + nowref.pathchain[2]].concat( nowref.pathchain.slice(3) ), args);
+    if (bridgeref.pathchain[1] == 'channel') {
+      this.executeLocal(['channel:' + bridgeref.pathchain[2]].concat( bridgeref.pathchain.slice(3) ), args);
     } else {
-      this.executeLocal(nowref.pathchain.slice(1), args);
+      this.executeLocal(bridgeref.pathchain.slice(1), args);
     }
   } else {
     // Construct remote function
     // var links = {};
     // Index 1 to get the value. Index 0 is the type (list)
-    // var serargs = NowSerialize.serialize(this, args)[1];
-    // var errcallback = NowSerialize.serialize(this, errcallback);
-    var packet = { 'args': args, 'destination': nowref };
+    // var serargs = BridgeSerialize.serialize(this, args)[1];
+    // var errcallback = BridgeSerialize.serialize(this, errcallback);
+    var packet = { 'args': args, 'destination': bridgeref };
     
     // Set proper routing keys
     // if (named) {
@@ -207,30 +207,30 @@ Now.prototype.execute = function(errcallback, nowref, args) {
 
 
 // Handle function calls
-Now.prototype.funcCall = function(errcallback, nowref, args) {
+Bridge.prototype.funcCall = function(errcallback, bridgeref, args) {
   // Add execute action to queue
-  this.callQueue.push(this.execute, [errcallback, nowref, args]);
+  this.callQueue.push(this.execute, [errcallback, bridgeref, args]);
 };
 
 /* Public APIs */
-Now.prototype.ready = function(func) {
+Bridge.prototype.ready = function(func) {
   this.callQueue.push(func, []);
 };
 
-Now.prototype.get = function(pathStr)  {
+Bridge.prototype.get = function(pathStr)  {
   var pathchain = pathStr.split('.');
   return this.getPathObj(pathchain, true);
 };
 
-Now.prototype.getService = function(name) {
+Bridge.prototype.getService = function(name) {
   return this.getPathObj(['named', name]);
 };
 
-Now.prototype.getClient = function(name) {
+Bridge.prototype.getClient = function(name) {
   return this.getPathObj([name], false);
 };
 
-Now.prototype.getChannel = function(name) {
+Bridge.prototype.getChannel = function(name) {
   return this.getPathObj(['channel', name]);
 };
   
@@ -241,5 +241,5 @@ Now.prototype.getChannel = function(name) {
 
 // if node
 
-exports.Now = Now;
+exports.Bridge = Bridge;
 // end node

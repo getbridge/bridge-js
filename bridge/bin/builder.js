@@ -12,7 +12,7 @@ var fs = require('fs')
  * @api private
  */
 
-var template = '/*! now.%ext% build:' + package.version + ', %type%. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */\n'
+var template = '/*! bridge.%ext% build:' + package.version + ', %type%. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */\n'
   , development = template.replace('%type%', 'development').replace('%ext%', 'js')
   , production = template.replace('%type%', 'production').replace('%ext%', 'min.js');
 
@@ -28,7 +28,7 @@ var starttagIF = '// if node'
   , endtagIF = '// end node';
 
 /**
- * The modules that are required to create a base build of Now.
+ * The modules that are required to create a base build of Bridge.
  *
  * @const
  * @type {Array}
@@ -38,17 +38,17 @@ var starttagIF = '// if node'
 var base = [
   , 'util.js'
   , 'callqueue.js'
-  , 'nowpath.js'
-  , 'nowserialize.js'
+  , 'bridge.js'
+  , 'bridgeserialize.js'
   , 'connection.js'
   , 'web.js'
   , 'shim.js'
-  , 'now.js'
+  , 'bridge.js'
 ];
 
 
 /**
- * Builds a custom Now distribution based on the transports that you
+ * Builds a custom Bridge distribution based on the transports that you
  * need. You can configure the build to create development build or production
  * build (minified).
  *
@@ -93,7 +93,7 @@ var builder = module.exports = function () {
   }
 
   // Start creating a dependencies chain with all the required files for the
-  // custom Now bundle.
+  // custom Bridge bundle.
   var files = [];
   base.forEach(function (file) {
     files.push(__dirname + '/../lib/' + file);
@@ -188,12 +188,12 @@ if (!module.parent){
     if (err) return console.error(err);
 
     fs.write(
-        fs.openSync(__dirname + '/../dist/now.js', 'w')
+        fs.openSync(__dirname + '/../dist/bridge.js', 'w')
       , content
       , 0
       , 'utf8'
     );
-    console.log('Successfully generated the development build: now.js');
+    console.log('Successfully generated the development build: bridge.js');
   });
 
   // and build a production build
@@ -201,11 +201,11 @@ if (!module.parent){
     if (err) return console.error(err);
  
     fs.write(
-        fs.openSync(__dirname + '/../dist/now.min.js', 'w')
+        fs.openSync(__dirname + '/../dist/bridge.min.js', 'w')
       , content
       , 0
       , 'utf8'
     );
-    console.log('Successfully generated the production build: now.min.js');
+    console.log('Successfully generated the production build: bridge.min.js');
   });
 }

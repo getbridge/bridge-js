@@ -1,16 +1,16 @@
 // if node
 var util = require('./util.js');
-var NowPath = require('./nowpath.js');
+var BridgePath = require('./bridgepath.js');
 // end node
 
-var NowSerialize = {
-  serialize: function(nowRoot, pivot, links) {
+var BridgeSerialize = {
+  serialize: function(bridgeRoot, pivot, links) {
     var typ = util.typeOf(pivot);
     var result;
     switch(typ) {
       case 'object':
-        if (pivot._nowRef) {
-          var target = pivot._nowRef.getRef();
+        if (pivot._bridgeRef) {
+          var target = pivot._bridgeRef.getRef();
           if (links) {
             links[ target['ref'].join('.') ] = true;
           }
@@ -24,10 +24,10 @@ var NowSerialize = {
               needs_wrap = true;
               break;
             }
-            tmp[pos] = NowSerialize.serialize(nowRoot, val, links);
+            tmp[pos] = BridgeSerialize.serialize(bridgeRoot, val, links);
           }
           if (needs_wrap) {
-            var ref = nowRoot.doPublishService(pivot);
+            var ref = bridgeRoot.doPublishService(pivot);
             var target = ref.getRef();
             if (links) {
               links[ target['ref'].join('.') ] = true;
@@ -42,7 +42,7 @@ var NowSerialize = {
         var tmp = [];
         for (pos in pivot) {
           var val = pivot[pos];
-          tmp.push(NowSerialize.serialize(nowRoot, val, links));
+          tmp.push(BridgeSerialize.serialize(bridgeRoot, val, links));
         }
         result = ['list', tmp];
         break;
@@ -59,7 +59,7 @@ var NowSerialize = {
         } else {
           var wrap = function WrapDummy(){};
           wrap.handle_default = pivot;
-          var ref = nowRoot.doPublishService(wrap);
+          var ref = bridgeRoot.doPublishService(wrap);
           target = ref.getRef();
         }
         if (links) {
@@ -81,7 +81,7 @@ var NowSerialize = {
     }
     return result;
   },
-  unserialize: function(nowRoot, tup) {
+  unserialize: function(bridgeRoot, tup) {
     var typ = tup[0];
     var pivot = tup[1];
     var result;
@@ -89,14 +89,14 @@ var NowSerialize = {
       case "list":
         var tmp = [];
         for (pos in pivot) {
-          tmp.push( NowSerialize.unserialize(nowRoot, pivot[pos] ) );
+          tmp.push( BridgeSerialize.unserialize(bridgeRoot, pivot[pos] ) );
         }
         result = tmp;
         break;
       case "dict":
         var tmp = {};
         for (pos in pivot) {
-          tmp[pos] = NowSerialize.unserialize(nowRoot, pivot[pos] );
+          tmp[pos] = BridgeSerialize.unserialize(bridgeRoot, pivot[pos] );
         }
         result = tmp;
         break;
@@ -110,7 +110,7 @@ var NowSerialize = {
         result = Boolean(pivot);
         break;
       case "now":
-        result = new NowPath(nowRoot, pivot['ref']);
+        result = new BridgePath(bridgeRoot, pivot['ref']);
         break;
       case "none":
         result = null;
@@ -123,5 +123,5 @@ var NowSerialize = {
 }
 
 // if node
-module.exports = NowSerialize;
+module.exports = BridgeSerialize;
 // end node
