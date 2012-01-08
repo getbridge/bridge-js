@@ -38,7 +38,7 @@ var starttagIF = '// if node'
 var base = [
   , 'util.js'
   , 'callqueue.js'
-  , 'bridge.js'
+  , 'bridgepath.js'
   , 'bridgeserialize.js'
   , 'connection.js'
   , 'web.js'
@@ -186,7 +186,7 @@ if (!module.parent){
   // build a development build
   builder(args.length ? args : false, { minify:false }, function (err, content) {
     if (err) return console.error(err);
-
+		console.log(__dirname);
     fs.write(
         fs.openSync(__dirname + '/../dist/bridge.js', 'w')
       , content
