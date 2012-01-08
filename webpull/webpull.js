@@ -13,7 +13,7 @@ var WebpullService = {
         if (!err) {
             var file = new nowfile.NowFile();
             file.store_data(data);
-            now.joinService(file);
+            now.publishService(file);
             callback.call(file);
         }
     });
@@ -21,5 +21,5 @@ var WebpullService = {
 }
 
 
-now.joinService('webpull', WebpullService);
+now.publishService('webpull', WebpullService);
 
