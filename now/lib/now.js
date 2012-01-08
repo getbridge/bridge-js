@@ -170,7 +170,7 @@ Now.prototype.doJoinChannel = function(name, clientId, callback) {
     handler_wrap = handler; //NowSerialize.serialize(this, handler);
   }
 
-  self.connection.joinChannel(name, clientId, handler_wrap, callback_wrap );
+  self.connection.joinChannel(this, name, clientId, handler_wrap, callback_wrap );
 };
 
 Now.prototype.execute = function(errcallback, nowref, args) {
