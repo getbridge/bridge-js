@@ -1,4 +1,5 @@
-var now = new (require('../..').Now)();
+var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
+bridge = new Bridge({host: 'localhost'});
 
 var readline = require('readline');
 rl = readline.createInterface(process.stdin, process.stdout);
@@ -10,9 +11,9 @@ var chat_handler = {
   }
 };
 
-now.ready(function(){
+bridge.ready(function(){
   // rl.question("What is your name? ", function(username) {
-  //   now.joinChannel('lobby', chat_handler, function(lobby, name){
+  //   bridge.joinChannel('lobby', chat_handler, function(lobby, name){
   //     console.log('JOINED', name);
   //     rl.on('line', function(line) {
   //         lobby('msg').call(username, line);
@@ -21,7 +22,7 @@ now.ready(function(){
   //   });
   // });
   
-  var chat = now.getService('chat');
+  var chat = bridge.getService('chat');
   //chat( 'doesnotexist' ).call_e( function(data){
   //  console.log('ERROR INFO', data);
   //}, 31337);
@@ -30,7 +31,7 @@ now.ready(function(){
     console.log('JOIN SUCCESS', lobby, name);
     // lobby('msg').call_error( 'peter', 'hello');
   });
-  // var foo = now.getService('foo');
-  // now.getService('lala').call('har');
-  // now.getPathObj(['frob', 'cow'], false).call('blah');
+  // var foo = bridge.getService('foo');
+  // bridge.getService('lala').call('har');
+  // bridge.getPathObj(['frob', 'cow'], false).call('blah');
 });
