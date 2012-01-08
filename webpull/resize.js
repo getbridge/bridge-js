@@ -18,12 +18,12 @@ var ResizeService = {
           }
       });
       var file = new nowfile.NowFile();
-      now.joinService(file);
+      now.publishService(file);
       file.filepath = path;
       callback.call(file);
     });
   }
 };
 
-now.joinService('resize', ResizeService);
+now.publishService('resize', ResizeService);
 

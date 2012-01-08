@@ -34,7 +34,7 @@ var NowSerialize = {
             }
             result = ['now', target ];
           } else {
-            result = ['dict', tmp];            
+            result = ['dict', tmp];
           }
         }
         break;
