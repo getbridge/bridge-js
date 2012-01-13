@@ -8,7 +8,7 @@ var chat_handler = {
 };
 
 bridge.ready(function(){
-  var chat = bridge.getService('chat');
+  var chat = bridge.getService('chaxt');
   // chat( 'doesnotexist' ).call_e( function(data){
   //  console.log('ERROR INFO', data);
   // }, 31337);
