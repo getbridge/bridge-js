@@ -1,15 +1,18 @@
 var BridgePath = function(bridgeRoot, pathchain) {
     function BridgePath(path) {
-      var pathchain = path.split('.');
-      return BridgePath.bridgeRoot.getPathObj( BridgePath.pathchain.concat(pathchain) );
+      return BridgePath.get(path);
     };
+    BridgePath.get = function(path) {
+      var pathchain = path.split('.');
+      return BridgePath.bridgeRoot.getPathObj( BridgePath.pathchain.concat(pathchain) );      
+    }
     BridgePath.call = function() {
       var args = [].slice.apply(arguments);
       return BridgePath.call_e.apply(this, [null].concat(args) );
     }
-    BridgePath.call_e = function(errcallback) {
+    BridgePath.call_e = function() {
       var args = [].slice.apply(arguments);
-      return BridgePath.bridgeRoot.funcCall(errcallback, BridgePath, args.slice(1));
+      return BridgePath.bridgeRoot.funcCall(args[0], BridgePath, args.slice(1));
     }
     BridgePath.getLocalName = function() {
       return BridgePath.pathchain[1];

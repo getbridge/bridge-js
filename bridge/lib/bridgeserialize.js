@@ -16,15 +16,16 @@ var BridgeSerialize = {
           }
           result = ['now', target ];
         } else {
-          var tmp = {};
           var needs_wrap = false;
-          for (pos in pivot) {
-            var val = pivot[pos];
-            if ( (pos.indexOf('handle_') ==0) && (util.typeOf(val) == 'function') ) {
+          var recurse_queue = [];
+          for (key in pivot) {
+            var val = pivot[key];
+            console.log('checking', key, val);
+            if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
               needs_wrap = true;
-              break;
+            } else {
+              recurse_queue.push(key);
             }
-            tmp[pos] = BridgeSerialize.serialize(bridgeRoot, val, links);
           }
           if (needs_wrap) {
             var ref = bridgeRoot.doPublishService(pivot);
@@ -34,6 +35,12 @@ var BridgeSerialize = {
             }
             result = ['now', target ];
           } else {
+            var tmp = {};
+            for (pos in recurse_queue) {
+              var key = recurse_queue[pos];
+              var val = pivot[key];
+              tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
+            }
             result = ['dict', tmp];
           }
         }

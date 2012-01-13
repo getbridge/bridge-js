@@ -13,12 +13,12 @@ bridge.ready(function(){
   //  console.log('ERROR INFO', data);
   // }, 31337);
 
-  chat('join').call_e( function(original) {
+  chat.get('join').call_e( function(original) {
     console.log("ERROR: Can't reach chat service.");
   }, 'lobby', chat_handler, function(lobby, name) {
     console.log('JOIN SUCCESS', lobby, name);
     for (var i = 0; i <= 5; i++) {
-      lobby('msg').call('peter', 'hello' + i);
+      lobby.get('msg').call('peter', 'hello' + i);
     }
   });
 });
