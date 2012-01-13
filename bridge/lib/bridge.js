@@ -192,7 +192,7 @@ Bridge.prototype.execute = function(errcallback, bridgeref, args) {
     // Index 1 to get the value. Index 0 is the type (list)
     // var serargs = BridgeSerialize.serialize(this, args)[1];
     // var errcallback = BridgeSerialize.serialize(this, errcallback);
-    var packet = { 'args': args, 'destination': bridgeref };
+    var packet = { 'args': args, 'destination': bridgeref, 'errcallback': errcallback };
     
     // Set proper routing keys
     // if (named) {
