@@ -98,16 +98,19 @@ CallQueue.prototype.process = function() {
 
 var BridgePath = function(bridgeRoot, pathchain) {
     function BridgePath(path) {
-      var pathchain = path.split('.');
-      return BridgePath.bridgeRoot.getPathObj( BridgePath.pathchain.concat(pathchain) );
+      return BridgePath.get(path);
     };
+    BridgePath.get = function(path) {
+      var pathchain = path.split('.');
+      return BridgePath.bridgeRoot.getPathObj( BridgePath.pathchain.concat(pathchain) );      
+    }
     BridgePath.call = function() {
       var args = [].slice.apply(arguments);
       return BridgePath.call_e.apply(this, [null].concat(args) );
     }
-    BridgePath.call_e = function(errcallback) {
+    BridgePath.call_e = function() {
       var args = [].slice.apply(arguments);
-      return BridgePath.bridgeRoot.funcCall(errcallback, BridgePath, args.slice(1));
+      return BridgePath.bridgeRoot.funcCall(args[0], BridgePath, args.slice(1));
     }
     BridgePath.getLocalName = function() {
       return BridgePath.pathchain[1];
@@ -140,15 +143,16 @@ var BridgeSerialize = {
           }
           result = ['now', target ];
         } else {
-          var tmp = {};
           var needs_wrap = false;
-          for (pos in pivot) {
-            var val = pivot[pos];
-            if ( (pos.indexOf('handle_') ==0) && (util.typeOf(val) == 'function') ) {
+          var recurse_queue = [];
+          for (key in pivot) {
+            var val = pivot[key];
+            console.log('checking', key, val);
+            if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
               needs_wrap = true;
-              break;
+            } else {
+              recurse_queue.push(key);
             }
-            tmp[pos] = BridgeSerialize.serialize(bridgeRoot, val, links);
           }
           if (needs_wrap) {
             var ref = bridgeRoot.doPublishService(pivot);
@@ -158,6 +162,12 @@ var BridgeSerialize = {
             }
             result = ['now', target ];
           } else {
+            var tmp = {};
+            for (pos in recurse_queue) {
+              var key = recurse_queue[pos];
+              var val = pivot[key];
+              tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
+            }
             result = ['dict', tmp];
           }
         }
@@ -282,11 +292,19 @@ function WebConnection(onReady, onMessage, options) {
     this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs); 
   }
   this.sock.onopen = function() {
-    self.clientId = self.sock._connid;
-    console.log("CLIENT ID:", self.clientId);
+    console.log("Waiting for clientId");
+  
+  };
+  this.sock.onmessage = function(message){
+    console.log("clientId======", message.data);
+    var ids = message.data.toString().split('|');
+    self.sock._connid = ids[0];
+    self.clientId = ids[0];
+    self.secret = ids[1];
+    
+    self.sock.onmessage = self.onData.bind(self);
     onReady();
   };
-  this.sock.onmessage = self.onData.bind(self);
   this.sock.onclose = function() {
     util.warn("WebConnection closed");
   };
@@ -549,7 +567,7 @@ Bridge.prototype.execute = function(errcallback, bridgeref, args) {
     // Index 1 to get the value. Index 0 is the type (list)
     // var serargs = BridgeSerialize.serialize(this, args)[1];
     // var errcallback = BridgeSerialize.serialize(this, errcallback);
-    var packet = { 'args': args, 'destination': bridgeref };
+    var packet = { 'args': args, 'destination': bridgeref, 'errcallback': errcallback };
     
     // Set proper routing keys
     // if (named) {

@@ -9,10 +9,7 @@ function createTCPConn(options) {
   sock.conn_init = function() {
     sock.setNoDelay(true)
     sock._iostream = new iostream.IOStream(sock);
-    sock.wait_for_message(function(data) {
-      sock._connid = data.toString();
-      sock.handshake_complete();
-    });
+    sock.handshake_complete();
   }
 
   sock.wait_for_message = function(callback) {
