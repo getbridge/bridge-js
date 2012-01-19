@@ -302,7 +302,7 @@ function WebConnection(onReady, onMessage, options) {
   var self = this;
 
   this.onMessage = onMessage;
-  
+
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
 
@@ -313,11 +313,19 @@ function WebConnection(onReady, onMessage, options) {
     this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs); 
   }
   this.sock.onopen = function() {
-    self.clientId = self.sock._connid;
-    console.log("CLIENT ID:", self.clientId);
+    console.log("Waiting for clientId");
+  
+  };
+  this.sock.onmessage = function(message){
+    console.log("clientId======", message.data);
+    var ids = message.data.toString().split('|');
+    self.sock._connid = ids[0];
+    self.clientId = ids[0];
+    self.secret = ids[1];
+
+    self.sock.onmessage = self.onData.bind(self);
     onReady();
   };
-  this.sock.onmessage = self.onData.bind(self);
   this.sock.onclose = function() {
     util.warn("WebConnection closed");
   };
