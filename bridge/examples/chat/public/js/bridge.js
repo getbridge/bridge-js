@@ -319,7 +319,6 @@ function WebConnection(onReady, onMessage, options) {
   this.sock.onmessage = function(message){
     console.log("clientId======", message.data);
     var ids = message.data.toString().split('|');
-    self.sock._connid = ids[0];
     self.clientId = ids[0];
     self.secret = ids[1];
 
@@ -474,7 +473,7 @@ Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
     }
     return;
   }
-
+  console.log('PATHCHAIN', pathchain, args);
   var targetobj = this.children[pathchain[0]] || this.children['default'];
   if (!targetobj) {
     throw new Error("No registered handler and no Default Handler for " + pathchain[0] + " !");

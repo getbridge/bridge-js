@@ -18,14 +18,16 @@ var handler = {
 };
 
 bridge.ready(function(){
-  var chat = bridge.getService('chat');
-  chat('join').call('lobby', handler, function(lobby, name) {
-    console.log("joined channel");
+  var chat = bridge.getService('chatserver', function(chat){
+    console.log('chat found');
+    chat.join('lobby', handler, function(lobby, name) {
+      console.log("joined channel");
+    });
   });
 });
 
 function send(message) {
-  bridge.getChannel('lobby')('msg').call(name, message);
+  bridge.getChannel('lobby').get('msg')('test', message);
 }
 
 </script>

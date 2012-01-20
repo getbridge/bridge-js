@@ -79,7 +79,6 @@ Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
     }
     return;
   }
-
   var targetobj = this.children[pathchain[0]] || this.children['default'];
   if (!targetobj) {
     throw new Error("No registered handler and no Default Handler for " + pathchain[0] + " !");
