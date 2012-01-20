@@ -75,14 +75,14 @@ var util = {
   }
 }
 
-function CallQueue(Bridge){
-  this._bridgeref = Bridge;
+function CallQueue(Target){
+  this._target = Target;
   this.ready = false;
   this.queue = [];
 };
 CallQueue.prototype.push = function(callback, args) {
   if (this.ready) {
-    callback.apply(this._bridgeref, args);
+    callback.apply(this._target, args);
   } else {
     this.queue.push( {callback: callback, args: args} );
   }
@@ -91,42 +91,60 @@ CallQueue.prototype.push = function(callback, args) {
 CallQueue.prototype.process = function() {
   this.ready = true;
   for (var i = 0, ii = this.queue.length; i < ii; i++) {
-    this.queue[i].callback.apply(this._bridgeref, this.queue[i].args);
+    this.queue[i].callback.apply(this._target, this.queue[i].args);
   }
   this.queue = [];
 }
 
-var BridgePath = function(bridgeRoot, pathchain) {
-    function BridgePath(path) {
-      return BridgePath.get(path);
-    };
-    BridgePath.get = function(path) {
-      var pathchain = path.split('.');
-      return BridgePath.bridgeRoot.getPathObj( BridgePath.pathchain.concat(pathchain) );      
+var BridgeRef = function (bridgeRoot, pathchain, operations) {
+  function BridgeRef() {
+    var args = [].slice.apply(arguments);
+    BridgeRef.call.apply(BridgeRef, args);
+  };
+  BridgeRef._fixops = function() {
+    for (x in BridgeRef._operations) {
+      var op = BridgeRef._operations[x];
+      console.log('FIXING', op);
+      BridgeRef[op] = BridgeRef.get(op).call;
+      BridgeRef[op + '_e'] = BridgeRef.get(op).call_e;
     }
-    BridgePath.call = function() {
-      var args = [].slice.apply(arguments);
-      return BridgePath.call_e.apply(this, [null].concat(args) );
+  }
+  BridgeRef.get = function(pathadd) {
+    var pathadd = pathadd.split('.');
+    return BridgeRef._bridgeRoot.getPathObj( BridgeRef._pathchain.concat(pathadd) );      
+  }
+  BridgeRef.call = function() {
+    var args = [].slice.apply(arguments);
+    args.push(null); /* errcallback */
+    return BridgeRef.call_e.apply(BridgeRef, args);
+  }
+  BridgeRef.call_e = function() {
+    var args = [].slice.apply(arguments);
+    var errcallback = args.pop(); /* errcallback is always last arg */
+    console.log('CALL_E', errcallback, BridgeRef._pathchain, args);
+    return BridgeRef._bridgeRoot.funcCall(errcallback, BridgeRef, args);
+  }
+  BridgeRef.getLocalName = function() {
+    return BridgeRef._pathchain[1];
+  };
+  BridgeRef._getRef = function(operations) {
+    BridgeRef._operations = operations;
+    BridgeRef._fixops();
+    return BridgeRef;
+  }
+  BridgeRef.toDict = function() {
+    if (BridgeRef._pathchain[0] == 'local') {
+      BridgeRef._pathchain[0] = BridgeRef._bridgeRoot.getClientId();
     }
-    BridgePath.call_e = function() {
-      var args = [].slice.apply(arguments);
-      return BridgePath.bridgeRoot.funcCall(args[0], BridgePath, args.slice(1));
-    }
-    BridgePath.getLocalName = function() {
-      return BridgePath.pathchain[1];
-    };
-    BridgePath.getRef = function() {
-      if (BridgePath.pathchain[0] == 'local') {
-        BridgePath.pathchain[0] = BridgePath.bridgeRoot.getClientId();
-      }
-      return {'ref': BridgePath.pathchain};
-    };
+    return {'ref': BridgeRef._pathchain, 'operations': BridgeRef._operations};
+  };
 
-    // Set root Bridge object
-    BridgePath.bridgeRoot = bridgeRoot;
-    BridgePath.pathchain = pathchain;
-  
-    return BridgePath;
+  BridgeRef._operations = operations || [];
+  BridgeRef._bridgeRoot = bridgeRoot;
+  BridgeRef._pathchain = pathchain;
+  BridgeRef._fixops();
+
+  return BridgeRef;
 };
 
 
@@ -136,40 +154,43 @@ var BridgeSerialize = {
     var result;
     switch(typ) {
       case 'object':
-        if (pivot._bridgeRef) {
-          var target = pivot._bridgeRef.getRef();
+        var needs_wrap = false;
+        var recurse_queue = [];
+        var operations = {};
+        for (key in pivot) {
+          var val = pivot[key];
+          if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
+            operations[ key.substr(7) ] = true;
+            needs_wrap = true;
+          } else {
+            recurse_queue.push(key);
+          }
+        }
+        operations = util.getKeys(operations);
+        if ( pivot._getRef && util.typeOf(pivot._getRef) == 'function' ) {
+          needs_wrap = true;
+        }
+        // console.log('found operations', operations);
+        if (needs_wrap) {
+          var ref;
+          if (pivot._getRef && util.typeOf(pivot._getRef) == 'function') {
+            ref = pivot._getRef();
+          } else {
+            ref = bridgeRoot.doPublishService(pivot);
+          }
+          var target = ref._getRef(operations).toDict();
           if (links) {
             links[ target['ref'].join('.') ] = true;
           }
           result = ['now', target ];
         } else {
-          var needs_wrap = false;
-          var recurse_queue = [];
-          for (key in pivot) {
+          var tmp = {};
+          for (pos in recurse_queue) {
+            var key = recurse_queue[pos];
             var val = pivot[key];
-            console.log('checking', key, val);
-            if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
-              needs_wrap = true;
-            } else {
-              recurse_queue.push(key);
-            }
+            tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
           }
-          if (needs_wrap) {
-            var ref = bridgeRoot.doPublishService(pivot);
-            var target = ref.getRef();
-            if (links) {
-              links[ target['ref'].join('.') ] = true;
-            }
-            result = ['now', target ];
-          } else {
-            var tmp = {};
-            for (pos in recurse_queue) {
-              var key = recurse_queue[pos];
-              var val = pivot[key];
-              tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
-            }
-            result = ['dict', tmp];
-          }
+          result = ['dict', tmp];
         }
         break;
       case 'array':
@@ -188,13 +209,13 @@ var BridgeSerialize = {
         break;
       case 'function':
         var target;
-        if ( pivot.getRef ) {
-          target = pivot.getRef();
+        if ( pivot._getRef && util.typeOf(pivot._getRef) == 'function' ) {
+          target = pivot._getRef().toDict();
         } else {
           var wrap = function WrapDummy(){};
           wrap.handle_default = pivot;
           var ref = bridgeRoot.doPublishService(wrap);
-          target = ref.getRef();
+          target = ref.toDict();
         }
         if (links) {
           links[ target['ref'].join('.') ] = true;
@@ -244,7 +265,7 @@ var BridgeSerialize = {
         result = Boolean(pivot);
         break;
       case "now":
-        result = new BridgePath(bridgeRoot, pivot['ref']);
+        result = bridgeRoot.getPathObj(pivot['ref'])._getRef(pivot['operations']);
         break;
       case "none":
         result = null;
@@ -281,7 +302,7 @@ function WebConnection(onReady, onMessage, options) {
   var self = this;
 
   this.onMessage = onMessage;
-  
+
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
 
@@ -301,7 +322,7 @@ function WebConnection(onReady, onMessage, options) {
     self.sock._connid = ids[0];
     self.clientId = ids[0];
     self.secret = ids[1];
-    
+
     self.sock.onmessage = self.onData.bind(self);
     onReady();
   };
@@ -315,7 +336,6 @@ util.inherit(WebConnection, Connection);
 WebConnection.prototype.onData = function(message) {
   var self = this;
   try {
-    util.info('hi', message, message.data);
     var message = util.parse(message.data);    
     self.onMessage(message);
   } catch (e) {
@@ -336,19 +356,19 @@ WebConnection.prototype.send = function(bridgeobj, message) {
   this.sock.send( msg );
 }
 
-WebConnection.prototype.joinWorkerPool = function(bridgeobj, name, callback) {
-  util.info('Joining worker pool', name, callback);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: bridgeobj.getRootRef(), callback: callback} };
-  msg = BridgeSerialize.serialize(bridgeobj, msg);
+WebConnection.prototype.joinWorkerPool = function(bridge, name, callback) {
+  util.info('Joining worker pool', name);
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: bridge.getRootRef(), callback: callback} };
+  msg = BridgeSerialize.serialize(bridge, msg);
   msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
-WebConnection.prototype.joinChannel = function(nowobj, name, clientId, handler, callback) {
+WebConnection.prototype.joinChannel = function(bridge, name, clientId, handler, callback) {
   // Adding other client is not supported
   var msg = {command: 'JOINCHANNEL', data: {name: name, handler: handler, callback: callback} };
-  msg = BridgeSerialize.serialize(nowobj, msg);
+  msg = BridgeSerialize.serialize(bridge, msg);
   msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
@@ -393,28 +413,21 @@ function Bridge(options) {
     // Start processing queue
     self.callQueue.process();
   }, this.onMessage.bind(this), options); 
+  this.getPathObj = this.getPathObj.bind(this);
 };
 
-Bridge.prototype.getPathObj = function(pathchain) {
-  return new BridgePath(this, pathchain);
-}
-
-Bridge.prototype.getRootRef = function() {
-  return new BridgePath(this, [this.connection.clientId], false);
-}
-
 Bridge.prototype.onMessage = function(message) {
-  // util.info('Message received: ', message, typeof(message));
+  util.info('MESSAGE RECEIVED: ', JSON.stringify(message) );
   var unser = BridgeSerialize.unserialize(this, message);
 
   var destination = unser.destination;
-  util.info('Message received: ', unser, destination.pathchain);
+  // util.info('DECODED: ', unser.args );
   if (!destination) {
     util.warn('NO DESTINATION IN MESSAGE, IGNORING');
     return;
   }
 
-  var pathchain = unser.destination.pathchain;
+  var pathchain = unser.destination._pathchain;
   var args = unser.args;
 
   // Add client Id so execute() treats the call as local
@@ -422,17 +435,13 @@ Bridge.prototype.onMessage = function(message) {
     pathchain.unshift(this.getClientId());
   }
     
-  var ref = new BridgePath(this, pathchain);
-  ref.call.apply(null, args);
+  var ref = this.getPathObj(pathchain);
+  ref.call.apply(ref, args);
 };
 
-Bridge.prototype.getClientId = function() {
-  return this.connection.clientId;
-};
-
-Bridge.prototype.executeLocal = function(pathchain, args) {
+Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
   var self = this;
-  if (pathchain.length == 1) {
+  if ( (pathchain.length == 1) && (!ischannel) ) {
     if(util.hasProp(this.children, pathchain[0])) {
       // Have a reference for
       pathchain.push('default');
@@ -443,17 +452,25 @@ Bridge.prototype.executeLocal = function(pathchain, args) {
   } else if (pathchain.length == 0) {
     pathchain = ['default', 'default'];
   } else if (pathchain[0] === "named") {
-    pathchain.shift();
+    if (pathchain[2] == "system" ) {
+      pathchain = ["system", pathchain[3], pathchain[1]];
+    } else {
+      pathchain.shift();
+    }
   }
   
+  console.log('checking for system', pathchain);
   if (pathchain[0] === "system") {
     console.log('system message', pathchain.slice(1), args[0]);
     if (pathchain[1] == 'hook_channel_handler') {
-      console.log('HOOK CHANNEL HANDLER', pathchain, args[0], args[1].getRef());
-      self.children['channel:' + args[0]] = self.children[args[1].getRef()['ref'][1]];
+      console.log('HOOK CHANNEL HANDLER', pathchain, args[0], args[1]._getRef().toDict() );
+      self.children['channel:' + args[0]] = self.children[args[1]._getRef()._pathchain[1]];
       if (args[2]) {
         args[2].call( self.getChannel(args[0]), args[0] );
       }
+    } else if (pathchain[1] == 'getservice') {
+      console.log('getservice', pathchain, args);
+      args[0].call( this.children[pathchain[2]] );
     }
     return;
   }
@@ -463,18 +480,26 @@ Bridge.prototype.executeLocal = function(pathchain, args) {
     throw new Error("No registered handler and no Default Handler for " + pathchain[0] + " !");
   }
 
-  var target_funcname = 'handle_' + pathchain[1];
+  var target_funcname;
+  if (pathchain[1]) {
+    target_funcname = 'handle_' + pathchain[1];
+  } else {
+    target_funcname = 'handle_base';
+  }
+  console.log('finding func for', pathchain, 'is', target_funcname);
 
   var func = targetobj[target_funcname];
   if (!func) {
+    util.warn('No Handler for', pathchain, '- trying default handler');
     func = targetobj['handle_default'];
-    args.unshift(pathchain[1]);
+    var default_target = pathchain[1] || 'base';
+    args.unshift(default_target);
   }
   
   if (func) {
     func.apply( targetobj, args );
   } else {
-    util.warn('No Handler for', pathchain);
+    util.warn('No Func nor Default Handler for', pathchain);
   }
 };
 
@@ -498,6 +523,7 @@ Bridge.prototype.joinChannel = function(name, clientId, handler) {
 };
 
 Bridge.prototype.doPublishService = function(name, service, callback) {
+  var self = this;
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
     name = undefined;
@@ -506,22 +532,23 @@ Bridge.prototype.doPublishService = function(name, service, callback) {
   // var callback_wrap = BridgeSerialize.serialize(this, callback);
   var callback_wrap = callback;
   
-  if (!service._bridgeRef) {
+  if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
     if (!name) {
       name = util.generateGuid();
+      service._getRef = function() { return self.getPathObj( ['local', name] ); };
     } else {
-      this.connection.joinWorkerPool(this, name, callback_wrap);
+      service._getRef = function() { return self.getPathObj( ['local', name] ); };
+      this.connection.joinWorkerPool(self, name, callback_wrap);
     }
-    service._bridgeRef = new BridgePath(this, [ 'local', name ]);
   } else {
     if (name) {
-      throw Error("Service can't be renamed! " + name + ' old ' +  service._bridgeRef.getLocalName() );
+      throw Error("Service can't be renamed! " + name + ' old ' +  service._getRef().getLocalName() );
     } else {
-      name = service._bridgeRef.getLocalName()
+      name = service._getRef().getLocalName()
     }
   }
-  this.children[name] = service;
-  return service._bridgeRef;
+  self.children[name] = service;
+  return service._getRef();
 };
 
 Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
@@ -551,15 +578,16 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
 Bridge.prototype.execute = function(errcallback, bridgeref, args) {
   
   // System call
-  if (bridgeref.pathchain[0] == 'system') {
-    this.executeSystem(commandArgs);
+  if (bridgeref._pathchain[0] == 'system') {
+    this.executeSystem(args);
   }
-  if ((bridgeref.pathchain[0] == this.getClientId()) || (bridgeref.pathchain[0] == 'local') ) {
+  if ((bridgeref._pathchain[0] == this.getClientId()) || (bridgeref._pathchain[0] == 'local') ) {
     // Local function call
-    if (bridgeref.pathchain[1] == 'channel') {
-      this.executeLocal(['channel:' + bridgeref.pathchain[2]].concat( bridgeref.pathchain.slice(3) ), args);
+    if (bridgeref._pathchain[1] == 'channel') {
+      console.log('local channel exec', bridgeref._pathchain);
+      this.executeLocal(['channel:' + bridgeref._pathchain[2]].concat( bridgeref._pathchain.slice(3) ), args, true);
     } else {
-      this.executeLocal(bridgeref.pathchain.slice(1), args);
+      this.executeLocal(bridgeref._pathchain.slice(1), args);
     }
   } else {
     // Construct remote function
@@ -592,18 +620,30 @@ Bridge.prototype.ready = function(func) {
   this.callQueue.push(func, []);
 };
 
+Bridge.prototype.getClientId = function() {
+  return this.connection.clientId;
+};
+
+Bridge.prototype.getPathObj = function(pathchain) {
+  return new BridgeRef(this, pathchain);
+}
+
+Bridge.prototype.getRootRef = function() {
+  return this.getPathObj([this.getClientId()]);
+}
+
 Bridge.prototype.get = function(pathStr)  {
   var pathchain = pathStr.split('.');
   return this.getPathObj(pathchain, true);
 };
 
-Bridge.prototype.getService = function(name) {
-  return this.getPathObj(['named', name]);
+Bridge.prototype.getService = function(name, callback, errcallback) {
+  this.getPathObj(['named', name, 'system', 'getservice']).call_e(callback, errcallback);
 };
 
-Bridge.prototype.getClient = function(name) {
-  return this.getPathObj([name], false);
-};
+// Bridge.prototype.getClient = function(name) {
+//   return this.getPathObj([name]);
+// };
 
 Bridge.prototype.getChannel = function(name) {
   return this.getPathObj(['channel', name]);

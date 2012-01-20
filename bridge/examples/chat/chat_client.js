@@ -1,24 +1,24 @@
 var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
 bridge = new Bridge({host: 'localhost'});
 
-var chat_handler = {
-  handle_msg: function(name, message) {
-    console.log('CHAT ' + name + ': ' + message);
-  }
+var chat_handler = function(_type, name, message) {
+  console.log('CHAT#' + _type + ' ' + name + ': ' + message);
 };
 
 bridge.ready(function(){
-  var chat = bridge.getService('chat');
-  // chat( 'doesnotexist' ).call_e( function(data){
-  //  console.log('ERROR INFO', data);
-  // }, 31337);
+  bridge.getService('chatserver', function(chatserver) {
+    console.log('GOT CHATSERVER', chatserver);
 
-  chat.get('join').call_e( function(original) {
-    console.log("ERROR: Can't reach chat service.");
-  }, 'lobby', chat_handler, function(lobby, name) {
-    console.log('JOIN SUCCESS', lobby, name);
-    for (var i = 0; i <= 5; i++) {
-      lobby.get('msg').call('peter', 'hello' + i);
-    }
+    var join_error = function(original) {
+      console.log("ERROR: Can't send join msg to chatserver.");
+    };
+
+    var join_success = function(lobby, name) {
+      console.log('JOIN SUCCESS', lobby, name);
+      lobby.get('foo').call('peter', 'hello');
+    };
+    chatserver.join_e( 'lobby', chat_handler, join_success, join_error);
+  }, function (error) {
+    console.log("ERROR: Can't get chat service.")
   });
 });

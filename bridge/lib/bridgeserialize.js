@@ -1,6 +1,5 @@
 // if node
 var util = require('./util.js');
-var BridgePath = require('./bridgepath.js');
 // end node
 
 var BridgeSerialize = {
@@ -9,40 +8,43 @@ var BridgeSerialize = {
     var result;
     switch(typ) {
       case 'object':
-        if (pivot._bridgeRef) {
-          var target = pivot._bridgeRef.getRef();
+        var needs_wrap = false;
+        var recurse_queue = [];
+        var operations = {};
+        for (key in pivot) {
+          var val = pivot[key];
+          if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
+            operations[ key.substr(7) ] = true;
+            needs_wrap = true;
+          } else {
+            recurse_queue.push(key);
+          }
+        }
+        operations = util.getKeys(operations);
+        if ( pivot._getRef && util.typeOf(pivot._getRef) == 'function' ) {
+          needs_wrap = true;
+        }
+        // console.log('found operations', operations);
+        if (needs_wrap) {
+          var ref;
+          if (pivot._getRef && util.typeOf(pivot._getRef) == 'function') {
+            ref = pivot._getRef();
+          } else {
+            ref = bridgeRoot.doPublishService(pivot);
+          }
+          var target = ref._getRef(operations).toDict();
           if (links) {
             links[ target['ref'].join('.') ] = true;
           }
           result = ['now', target ];
         } else {
-          var needs_wrap = false;
-          var recurse_queue = [];
-          for (key in pivot) {
+          var tmp = {};
+          for (pos in recurse_queue) {
+            var key = recurse_queue[pos];
             var val = pivot[key];
-            console.log('checking', key, val);
-            if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
-              needs_wrap = true;
-            } else {
-              recurse_queue.push(key);
-            }
+            tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
           }
-          if (needs_wrap) {
-            var ref = bridgeRoot.doPublishService(pivot);
-            var target = ref.getRef();
-            if (links) {
-              links[ target['ref'].join('.') ] = true;
-            }
-            result = ['now', target ];
-          } else {
-            var tmp = {};
-            for (pos in recurse_queue) {
-              var key = recurse_queue[pos];
-              var val = pivot[key];
-              tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
-            }
-            result = ['dict', tmp];
-          }
+          result = ['dict', tmp];
         }
         break;
       case 'array':
@@ -61,13 +63,13 @@ var BridgeSerialize = {
         break;
       case 'function':
         var target;
-        if ( pivot.getRef ) {
-          target = pivot.getRef();
+        if ( pivot._getRef && util.typeOf(pivot._getRef) == 'function' ) {
+          target = pivot._getRef().toDict();
         } else {
           var wrap = function WrapDummy(){};
           wrap.handle_default = pivot;
           var ref = bridgeRoot.doPublishService(wrap);
-          target = ref.getRef();
+          target = ref.toDict();
         }
         if (links) {
           links[ target['ref'].join('.') ] = true;
@@ -117,7 +119,7 @@ var BridgeSerialize = {
         result = Boolean(pivot);
         break;
       case "now":
-        result = new BridgePath(bridgeRoot, pivot['ref']);
+        result = bridgeRoot.getPathObj(pivot['ref'])._getRef(pivot['operations']);
         break;
       case "none":
         result = null;

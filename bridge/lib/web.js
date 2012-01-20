@@ -53,7 +53,6 @@ util.inherit(WebConnection, Connection);
 WebConnection.prototype.onData = function(message) {
   var self = this;
   try {
-    util.info('hi', message, message.data);
     var message = util.parse(message.data);    
     self.onMessage(message);
   } catch (e) {
@@ -74,19 +73,19 @@ WebConnection.prototype.send = function(bridgeobj, message) {
   this.sock.send( msg );
 }
 
-WebConnection.prototype.joinWorkerPool = function(bridgeobj, name, callback) {
-  util.info('Joining worker pool', name, callback);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: bridgeobj.getRootRef(), callback: callback} };
-  msg = BridgeSerialize.serialize(bridgeobj, msg);
+WebConnection.prototype.joinWorkerPool = function(bridge, name, callback) {
+  util.info('Joining worker pool', name);
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: bridge.getRootRef(), callback: callback} };
+  msg = BridgeSerialize.serialize(bridge, msg);
   msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
 }
 
-WebConnection.prototype.joinChannel = function(nowobj, name, clientId, handler, callback) {
+WebConnection.prototype.joinChannel = function(bridge, name, clientId, handler, callback) {
   // Adding other client is not supported
   var msg = {command: 'JOINCHANNEL', data: {name: name, handler: handler, callback: callback} };
-  msg = BridgeSerialize.serialize(nowobj, msg);
+  msg = BridgeSerialize.serialize(bridge, msg);
   msg = util.stringify(msg);
   // util.info('msg', msg);
   this.sock.send(msg);
