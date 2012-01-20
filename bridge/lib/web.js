@@ -37,7 +37,6 @@ function WebConnection(onReady, onMessage, options) {
   this.sock.onmessage = function(message){
     console.log("clientId======", message.data);
     var ids = message.data.toString().split('|');
-    self.sock._connid = ids[0];
     self.clientId = ids[0];
     self.secret = ids[1];
 
