@@ -38,7 +38,7 @@ function createTCPConn(options) {
   sock.handshake_complete = function() {
     console.log('handshake complete');
     sock.wait_for_message(sock.message_received);
-      
+
     sock.on('close', sock.onclose);
     sock.onopen();
   }

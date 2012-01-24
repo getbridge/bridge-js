@@ -17,7 +17,7 @@ function Bridge(options) {
     util.info('Connected');
     // Start processing queue
     self.callQueue.process();
-  }, this.onMessage.bind(this), options); 
+  }, this.onMessage.bind(this), options);
   this.getPathObj = this.getPathObj.bind(this);
 };
 
@@ -39,7 +39,7 @@ Bridge.prototype.onMessage = function(message) {
   if ((pathchain[0] != this.getClientId()) && (pathchain[0] != 'local')) {
     pathchain.unshift(this.getClientId());
   }
-    
+
   var ref = this.getPathObj(pathchain);
   ref.call.apply(ref, args);
 };
@@ -63,7 +63,7 @@ Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
       pathchain.shift();
     }
   }
-  
+
   console.log('checking for system', pathchain);
   if (pathchain[0] === "system") {
     console.log('system message', pathchain.slice(1), args[0]);
@@ -99,7 +99,7 @@ Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
     var default_target = pathchain[1] || 'base';
     args.unshift(default_target);
   }
-  
+
   if (func) {
     func.apply( targetobj, args );
   } else {
@@ -135,7 +135,7 @@ Bridge.prototype.doPublishService = function(name, service, callback) {
 
   // var callback_wrap = BridgeSerialize.serialize(this, callback);
   var callback_wrap = callback;
-  
+
   if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
     if (!name) {
       name = util.generateGuid();
@@ -162,13 +162,13 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
   }
 
   var handler;
-  
+
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
     var foo = BridgeSerialize.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
-    
+
   var callback_wrap = callback; //BridgeSerialize.serialize(this, callback);
 
   var handler_wrap = null;
@@ -180,7 +180,7 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
 };
 
 Bridge.prototype.execute = function(errcallback, bridgeref, args) {
-  
+
   // System call
   if (bridgeref._pathchain[0] == 'system') {
     this.executeSystem(args);
@@ -200,7 +200,7 @@ Bridge.prototype.execute = function(errcallback, bridgeref, args) {
     // var serargs = BridgeSerialize.serialize(this, args)[1];
     // var errcallback = BridgeSerialize.serialize(this, errcallback);
     var packet = { 'args': args, 'destination': bridgeref, 'errcallback': errcallback };
-    
+
     // Set proper routing keys
     // if (named) {
     //   var routingKey = 'N.' + pathchain.join('.');
@@ -252,7 +252,7 @@ Bridge.prototype.getService = function(name, callback, errcallback) {
 Bridge.prototype.getChannel = function(name) {
   return this.getPathObj(['channel', name]);
 };
-  
+
 
 
 

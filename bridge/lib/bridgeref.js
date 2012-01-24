@@ -13,7 +13,7 @@ var BridgeRef = function (bridgeRoot, pathchain, operations) {
   }
   BridgeRef.get = function(pathadd) {
     var pathadd = pathadd.split('.');
-    return BridgeRef._bridgeRoot.getPathObj( BridgeRef._pathchain.concat(pathadd) );      
+    return BridgeRef._bridgeRoot.getPathObj( BridgeRef._pathchain.concat(pathadd) );
   }
   BridgeRef.call = function() {
     var args = [].slice.apply(arguments);

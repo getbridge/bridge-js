@@ -28,11 +28,11 @@ function WebConnection(onReady, onMessage, options) {
     console.log('TCP CONN', this.options.host, this.options.port);
     this.sock = createTCPConn(this.options);
   } else {
-    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs); 
+    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
   }
   this.sock.onopen = function() {
     console.log("Waiting for clientId");
-  
+
   };
   this.sock.onmessage = function(message){
     console.log("clientId======", message.data);
@@ -53,7 +53,7 @@ util.inherit(WebConnection, Connection);
 WebConnection.prototype.onData = function(message) {
   var self = this;
   try {
-    var message = util.parse(message.data);    
+    var message = util.parse(message.data);
     self.onMessage(message);
   } catch (e) {
     util.error("Message parsing failed: ", e.message, e.stack);

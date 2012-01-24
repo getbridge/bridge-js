@@ -1,8 +1,8 @@
 /*! bridge.js build:0.0.1, development. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */
 var log;
 if(window.console && console.log) {
-  log = function () { 
-    console.log.apply(console, arguments); 
+  log = function () {
+    console.log.apply(console, arguments);
   };
 } else {
   log = function noop () {};
@@ -13,15 +13,15 @@ var util = {
   hasProp: function (obj, prop) {
     return Object.prototype.hasOwnProperty.call(Object(obj), prop);
   },
-  extend: function(child, parent) { 
+  extend: function(child, parent) {
     if(child === undefined || parent === undefined) return child;
-    for (var key in parent) { 
+    for (var key in parent) {
       if (util.hasProp(parent, key)) child[key] = parent[key];
     }
     function ctor() { this.constructor = child; }
-    ctor.prototype = parent.prototype; 
-    child.prototype = new ctor; 
-    child.__super__ = parent.prototype; 
+    ctor.prototype = parent.prototype;
+    child.prototype = new ctor;
+    child.__super__ = parent.prototype;
     return child;
   },
   generateGuid: function() {
@@ -52,18 +52,18 @@ var util = {
       }
     return keys;
   },
-  
+
   inherit: function (ctor, ctor2) {
     function f() {};
     f.prototype = ctor2.prototype;
     ctor.prototype = new f;
   },
-  
+
   stringify: JSON.stringify,
   parse: JSON.parse,
-  
+
   log: log,
-  
+
   error: function(){
     util.log.apply(this, arguments);
   },
@@ -111,7 +111,7 @@ var BridgeRef = function (bridgeRoot, pathchain, operations) {
   }
   BridgeRef.get = function(pathadd) {
     var pathadd = pathadd.split('.');
-    return BridgeRef._bridgeRoot.getPathObj( BridgeRef._pathchain.concat(pathadd) );      
+    return BridgeRef._bridgeRoot.getPathObj( BridgeRef._pathchain.concat(pathadd) );
   }
   BridgeRef.call = function() {
     var args = [].slice.apply(arguments);
@@ -310,11 +310,11 @@ function WebConnection(onReady, onMessage, options) {
     console.log('TCP CONN', this.options.host, this.options.port);
     this.sock = createTCPConn(this.options);
   } else {
-    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs); 
+    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
   }
   this.sock.onopen = function() {
     console.log("Waiting for clientId");
-  
+
   };
   this.sock.onmessage = function(message){
     console.log("clientId======", message.data);
@@ -335,7 +335,7 @@ util.inherit(WebConnection, Connection);
 WebConnection.prototype.onData = function(message) {
   var self = this;
   try {
-    var message = util.parse(message.data);    
+    var message = util.parse(message.data);
     self.onMessage(message);
   } catch (e) {
     util.error("Message parsing failed: ", e.message, e.stack);
@@ -384,8 +384,8 @@ if (!Function.prototype.bind) {
       throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
     }
 
-    var aArgs = Array.prototype.slice.call(arguments, 1), 
-        fToBind = this, 
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
         fNOP = function () {},
         fBound = function () {
           return fToBind.apply(this instanceof fNOP
@@ -411,7 +411,7 @@ function Bridge(options) {
     util.info('Connected');
     // Start processing queue
     self.callQueue.process();
-  }, this.onMessage.bind(this), options); 
+  }, this.onMessage.bind(this), options);
   this.getPathObj = this.getPathObj.bind(this);
 };
 
@@ -433,7 +433,7 @@ Bridge.prototype.onMessage = function(message) {
   if ((pathchain[0] != this.getClientId()) && (pathchain[0] != 'local')) {
     pathchain.unshift(this.getClientId());
   }
-    
+
   var ref = this.getPathObj(pathchain);
   ref.call.apply(ref, args);
 };
@@ -457,7 +457,7 @@ Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
       pathchain.shift();
     }
   }
-  
+
   console.log('checking for system', pathchain);
   if (pathchain[0] === "system") {
     console.log('system message', pathchain.slice(1), args[0]);
@@ -494,7 +494,7 @@ Bridge.prototype.executeLocal = function(pathchain, args, ischannel) {
     var default_target = pathchain[1] || 'base';
     args.unshift(default_target);
   }
-  
+
   if (func) {
     func.apply( targetobj, args );
   } else {
@@ -530,7 +530,7 @@ Bridge.prototype.doPublishService = function(name, service, callback) {
 
   // var callback_wrap = BridgeSerialize.serialize(this, callback);
   var callback_wrap = callback;
-  
+
   if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
     if (!name) {
       name = util.generateGuid();
@@ -557,13 +557,13 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
   }
 
   var handler;
-  
+
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
     var foo = BridgeSerialize.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
-    
+
   var callback_wrap = callback; //BridgeSerialize.serialize(this, callback);
 
   var handler_wrap = null;
@@ -575,7 +575,7 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
 };
 
 Bridge.prototype.execute = function(errcallback, bridgeref, args) {
-  
+
   // System call
   if (bridgeref._pathchain[0] == 'system') {
     this.executeSystem(args);
@@ -595,7 +595,7 @@ Bridge.prototype.execute = function(errcallback, bridgeref, args) {
     // var serargs = BridgeSerialize.serialize(this, args)[1];
     // var errcallback = BridgeSerialize.serialize(this, errcallback);
     var packet = { 'args': args, 'destination': bridgeref, 'errcallback': errcallback };
-    
+
     // Set proper routing keys
     // if (named) {
     //   var routingKey = 'N.' + pathchain.join('.');
@@ -647,7 +647,7 @@ Bridge.prototype.getService = function(name, callback, errcallback) {
 Bridge.prototype.getChannel = function(name) {
   return this.getPathObj(['channel', name]);
 };
-  
+
 
 
 

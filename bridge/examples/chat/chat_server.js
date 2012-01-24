@@ -18,7 +18,7 @@ var ChatServer = {
   },
 }
 
-bridge.publishService('chatserver', ChatServer, function(){ 
+bridge.publishService('chatserver', ChatServer, function(){
     console.log('started chatserver');
 });
 

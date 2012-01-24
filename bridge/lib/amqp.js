@@ -12,21 +12,21 @@ function AMQPConnection(onReady, onMessage, options) {
   var self = this;
 
   this.onMessage = onMessage;
-  
+
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, options);
   this.client = amqp.createConnection({ host: this.options.host });
   this.client.on('ready', function() {
     // Generate UUID for client
     self.clientId = util.generateGuid();
-    
+
     // Create default queue
     self.client.queue( self.getQueueName(), {autoDelete: false}, function(queue) {
-      self.queue = queue;    
+      self.queue = queue;
       // Consume from queue
-      queue.subscribe(self.onData.bind(self));  
+      queue.subscribe(self.onData.bind(self));
     });
-    
+
     // Create default exchange
     self.client.exchange(self.getExchangeName(), {autoDelete: false, type:'topic'},  function (exchange) {
       self.client.exchange(self.DEFAULT_EXCHANGE, {autoDelete: false, type:'topic'}, function (defaultExchange) {
@@ -37,7 +37,7 @@ function AMQPConnection(onReady, onMessage, options) {
           onReady();
         });
         // Bind exchange to default exchange
-        defaultExchange.bind(exchange, "N.#");          
+        defaultExchange.bind(exchange, "N.#");
       });
     })
   });
@@ -52,12 +52,12 @@ AMQPConnection.prototype.onData = function(message, headers, deliveryInfo) {
   var self = this;
   try {
     console.log('RAWWW', message.data.toString());
-    var message = util.parse(message.data);    
+    var message = util.parse(message.data);
     // Keep track of total number of links
     var total = 0;
     // Completed links
     var current = 0;
-    
+
     for (key in headers) {
       if (key.substring(0,5) == 'link_') {
         total += 1;

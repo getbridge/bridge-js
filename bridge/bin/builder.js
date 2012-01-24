@@ -158,7 +158,7 @@ var builder = module.exports = function () {
 
         code = production + uglify.uglify.gen_code(ast, { ascii_only: true });
       }
-      
+
       callback(error, code);
     })
   })
@@ -172,14 +172,14 @@ var builder = module.exports = function () {
  * @type {String}
  * @api public
  */
- 
+
 builder.version = package.version;
 
 /**
  * Command line support, this allows us to generate builds without having
  * to load it as module.
  */
- 
+
 if (!module.parent){
   // the first 2 are `node` and the path to this file, we don't need them
   var args = process.argv.slice(2);
@@ -199,7 +199,7 @@ if (!module.parent){
   // and build a production build
   builder(args.length ? args : false, function (err, content) {
     if (err) return console.error(err);
- 
+
     fs.write(
         fs.openSync(__dirname + '/../dist/bridge.min.js', 'w')
       , content
