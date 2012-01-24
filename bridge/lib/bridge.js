@@ -1,29 +1,31 @@
 // if node
 var util = require('./util.js');
 
-var CallQueue = require('./callqueue.js');
-var BridgeConnection = require('./web.js').BridgeConnection;
-var BridgeSerialize = require('./bridgeserialize.js');
+var Connection = require('./web.js').Connection;
+var Serializer = require('./serializer.js');
 var BridgeRef = require('./bridgeref.js');
 // end node
 
 
 function Bridge(options) {
-  var self = this;
+  
+  // Set configuration options
+  this.options = options;
+  
+  // Contains references to shared references
   this.children = {};
-  this.callQueue = new CallQueue(this);
+  
   // Communication layer
-  this.connection = new BridgeConnection(function(){
-    util.info('Connected');
-    // Start processing queue
-    self.callQueue.process();
-  }, this.onMessage.bind(this), options);
+  this.connection = new BridgeConnection(this); 
   this.getPathObj = this.getPathObj.bind(this);
 };
 
+Bridge.prototype.onReady = function() {
+  util.info('Handshake complete');
+};
+
 Bridge.prototype.onMessage = function(message) {
-  util.info('MESSAGE RECEIVED: ', JSON.stringify(message) );
-  var unser = BridgeSerialize.unserialize(this, message);
+  var unser = Serializer.unserialize(this, message);
 
   var destination = unser.destination;
   // util.info('DECODED: ', unser.args );
@@ -133,7 +135,7 @@ Bridge.prototype.doPublishService = function(name, service, callback) {
     name = undefined;
   }
 
-  // var callback_wrap = BridgeSerialize.serialize(this, callback);
+  // var callback_wrap = Serializer.serialize(this, callback);
   var callback_wrap = callback;
 
   if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
@@ -165,15 +167,20 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
 
   if(typeof clientId !== 'string' && typeof clientId !== 'number') {
     handler = clientId;
-    var foo = BridgeSerialize.serialize(this, handler);
+    var foo = Serializer.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
+<<<<<<< HEAD
 
   var callback_wrap = callback; //BridgeSerialize.serialize(this, callback);
+=======
+    
+  var callback_wrap = callback; //Serializer.serialize(this, callback);
+>>>>>>> e14bdc1... revising js lib
 
   var handler_wrap = null;
   if (handler) {
-    handler_wrap = handler; //BridgeSerialize.serialize(this, handler);
+    handler_wrap = handler; //Serializer.serialize(this, handler);
   }
 
   self.connection.joinChannel(this, name, clientId, handler_wrap, callback_wrap );
@@ -197,8 +204,8 @@ Bridge.prototype.execute = function(errcallback, bridgeref, args) {
     // Construct remote function
     // var links = {};
     // Index 1 to get the value. Index 0 is the type (list)
-    // var serargs = BridgeSerialize.serialize(this, args)[1];
-    // var errcallback = BridgeSerialize.serialize(this, errcallback);
+    // var serargs = Serializer.serialize(this, args)[1];
+    // var errcallback = Serializer.serialize(this, errcallback);
     var packet = { 'args': args, 'destination': bridgeref, 'errcallback': errcallback };
 
     // Set proper routing keys

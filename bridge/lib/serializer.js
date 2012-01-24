@@ -2,7 +2,7 @@
 var util = require('./util.js');
 // end node
 
-var BridgeSerialize = {
+var Serializer = {
   serialize: function(bridgeRoot, pivot, links) {
     var typ = util.typeOf(pivot);
     var result;
@@ -42,7 +42,7 @@ var BridgeSerialize = {
           for (pos in recurse_queue) {
             var key = recurse_queue[pos];
             var val = pivot[key];
-            tmp[key] = BridgeSerialize.serialize(bridgeRoot, val, links);
+            tmp[key] = Serializer.serialize(bridgeRoot, val, links);
           }
           result = ['dict', tmp];
         }
@@ -51,7 +51,7 @@ var BridgeSerialize = {
         var tmp = [];
         for (pos in pivot) {
           var val = pivot[pos];
-          tmp.push(BridgeSerialize.serialize(bridgeRoot, val, links));
+          tmp.push(Serializer.serialize(bridgeRoot, val, links));
         }
         result = ['list', tmp];
         break;
@@ -98,14 +98,14 @@ var BridgeSerialize = {
       case "list":
         var tmp = [];
         for (pos in pivot) {
-          tmp.push( BridgeSerialize.unserialize(bridgeRoot, pivot[pos] ) );
+          tmp.push( Serializer.unserialize(bridgeRoot, pivot[pos] ) );
         }
         result = tmp;
         break;
       case "dict":
         var tmp = {};
         for (pos in pivot) {
-          tmp[pos] = BridgeSerialize.unserialize(bridgeRoot, pivot[pos] );
+          tmp[pos] = Serializer.unserialize(bridgeRoot, pivot[pos] );
         }
         result = tmp;
         break;
@@ -132,5 +132,5 @@ var BridgeSerialize = {
 }
 
 // if node
-module.exports = BridgeSerialize;
+module.exports = Serializer;
 // end node
