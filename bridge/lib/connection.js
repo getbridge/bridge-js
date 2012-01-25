@@ -6,7 +6,7 @@ var defaultOptions = {
 // if node
 var util = require('./util');
 var Serializer = require('./serializer.js');
-var createTCPConn = require('./tcp').createTCPConn
+var TCP = require('./tcp').TCP;
 var defaultOptions = {
   host: 'localhost',
   port: 8090,
@@ -20,24 +20,21 @@ function Connection(Bridge) {
 
   // Set associated Bridge object
   this.Bridge = Bridge;
-  
-  this.onMessage = Bridge.onMessage;
-
+ 
   // Merge passed in options into default options
   this.options = util.extend(defaultOptions, Bridge.options);
 
   // Select between TCP and SockJS transports
   if (this.options.tcp) {
     util.info('Starting TCP connection', this.options.host, this.options.port);
-    this.sock = createTCPConn(this.options);
+    this.sock = new TCP(this.options).sock;
   } else {
     util.info('Starting SockJS connection');
     this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs); 
   }
   
   this.sock.onopen = function() {
-    console.log("Beginning handshake");
-    // 
+    util.info("Beginning handshake");
   };
   this.sock.onmessage = function(message){
     util.info("clientId and secret received", message.data);
@@ -71,8 +68,8 @@ Connection.prototype.getExchangeName = function() {
 }
 
 
-Connection.prototype.send = function(message) {
-  var msg = Serializer.serialize(this.Bridge, {command: 'SEND', data: message});
+Connection.prototype.send = function(args, bridgeref, errcallback) {
+  var msg = Serializer.serialize(this.Bridge, {command: 'SEND', data: { 'args': args, 'destination': bridgeref, 'errcallback': errcallback }});
   msg = util.stringify(msg);
   this.sock.send(msg);
 }

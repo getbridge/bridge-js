@@ -1,11 +1,13 @@
 // if node
 var util = require('./util.js');
 
-var Connection = require('./web.js').Connection;
+var Connection = require('./connection.js').Connection;
 var Serializer = require('./serializer.js');
-var BridgeRef = require('./bridgeref.js');
+var Ref = require('./ref.js');
 // end node
 
+// Simple queue for .ready handlers
+var queue = [];
 
 function Bridge(options) {
   
@@ -15,25 +17,33 @@ function Bridge(options) {
   // Contains references to shared references
   this.children = {};
   
+  // Indicate whether connected
+  this.connected = false;
+  
   // Communication layer
   this.connection = new BridgeConnection(this); 
-  this.getPathObj = this.getPathObj.bind(this);
+
 };
 
 Bridge.prototype.onReady = function() {
   util.info('Handshake complete');
+  if(!this.connected) {
+    this.connected = true;
+    for(var i = 0, ii = queue.length; i < ii; i++) {
+      queue[i]();
+    }
+  }
 };
 
 Bridge.prototype.onMessage = function(message) {
-  var unser = Serializer.unserialize(this, message);
 
+  var unser = Serializer.unserialize(this, message);
   var destination = unser.destination;
   // util.info('DECODED: ', unser.args );
   if (!destination) {
-    util.warn('NO DESTINATION IN MESSAGE, IGNORING');
+    util.warn('No destination in message', unser);
     return;
   }
-
   var pathchain = unser.destination._pathchain;
   var args = unser.args;
 
@@ -120,15 +130,8 @@ Bridge.prototype.registerDefault = function(service, callback) {
   }
 };
 
+
 Bridge.prototype.publishService = function(name, service, callback) {
-  this.callQueue.push(this.doPublishService, [name, service, callback]);
-};
-
-Bridge.prototype.joinChannel = function(name, clientId, handler) {
-  this.callQueue.push(this.doJoinChannel, [name, clientId, handler]);
-};
-
-Bridge.prototype.doPublishService = function(name, service, callback) {
   var self = this;
   if(typeof name !== "string" && typeof name !== "number") {
     service = name;
@@ -157,7 +160,7 @@ Bridge.prototype.doPublishService = function(name, service, callback) {
   return service._getRef();
 };
 
-Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
+Bridge.prototype.joinChannel = function(name, clientId, callback) {
   var self = this;
   if(!clientId) {
     clientId = this.getClientId();
@@ -170,13 +173,8 @@ Bridge.prototype.doJoinChannel = function(name, clientId, callback) {
     var foo = Serializer.serialize(this, handler);
     clientId = foo[1]['ref'][0];
   }
-<<<<<<< HEAD
-
-  var callback_wrap = callback; //BridgeSerialize.serialize(this, callback);
-=======
-    
   var callback_wrap = callback; //Serializer.serialize(this, callback);
->>>>>>> e14bdc1... revising js lib
+
 
   var handler_wrap = null;
   if (handler) {
@@ -191,44 +189,27 @@ Bridge.prototype.execute = function(errcallback, bridgeref, args) {
   // System call
   if (bridgeref._pathchain[0] == 'system') {
     this.executeSystem(args);
-  }
-  if ((bridgeref._pathchain[0] == this.getClientId()) || (bridgeref._pathchain[0] == 'local') ) {
+  } else if ((bridgeref._pathchain[0] == this.getClientId()) || (bridgeref._pathchain[0] == 'local') ) {
     // Local function call
     if (bridgeref._pathchain[1] == 'channel') {
-      console.log('local channel exec', bridgeref._pathchain);
       this.executeLocal(['channel:' + bridgeref._pathchain[2]].concat( bridgeref._pathchain.slice(3) ), args, true);
     } else {
       this.executeLocal(bridgeref._pathchain.slice(1), args);
     }
   } else {
-    // Construct remote function
-    // var links = {};
-    // Index 1 to get the value. Index 0 is the type (list)
-    // var serargs = Serializer.serialize(this, args)[1];
-    // var errcallback = Serializer.serialize(this, errcallback);
-    var packet = { 'args': args, 'destination': bridgeref, 'errcallback': errcallback };
-
-    // Set proper routing keys
-    // if (named) {
-    //   var routingKey = 'N.' + pathchain.join('.');
-    // } else {
-    //   var routingKey = pathchain.join('.');
-    // }
-   this.connection.send( this, packet );
-   // console.log('not sending');
+    this.connection.send( args, bridgeref, errcallback );
   }
 };
 
 
-// Handle function calls
-Bridge.prototype.funcCall = function(errcallback, bridgeref, args) {
-  // Add execute action to queue
-  this.callQueue.push(this.execute, [errcallback, bridgeref, args]);
-};
 
 /* Public APIs */
 Bridge.prototype.ready = function(func) {
-  this.callQueue.push(func, []);
+  if(!connected) {
+    queue.push(func);
+  } else {
+    func();
+  }
 };
 
 Bridge.prototype.getClientId = function() {
@@ -236,7 +217,7 @@ Bridge.prototype.getClientId = function() {
 };
 
 Bridge.prototype.getPathObj = function(pathchain) {
-  return new BridgeRef(this, pathchain);
+  return new Ref(this, pathchain);
 }
 
 Bridge.prototype.getRootRef = function() {
