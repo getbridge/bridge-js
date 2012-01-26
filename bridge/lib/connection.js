@@ -68,16 +68,16 @@ Connection.prototype.getExchangeName = function() {
 }
 
 
-Connection.prototype.send = function(args, bridgeref, errcallback) {
-  var msg = Serializer.serialize(this.Bridge, {command: 'SEND', data: { 'args': args, 'destination': bridgeref, 'errcallback': errcallback }});
+Connection.prototype.send = function(args, destination) {
+  var msg = Serializer.serialize(this.Bridge, {command: 'SEND', data: { 'args': args, 'destination': destination}});
   msg = util.stringify(msg);
   this.sock.send(msg);
 }
 
-Connection.prototype.joinWorkerPool = function(name, callback) {
+Connection.prototype.publishService = function(name, callback) {
   util.info('Joining worker pool', name);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, handler: this.Bridge.getRootRef(), callback: callback} };
-  msg = Serializer.serialize(bridge, msg);
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, callback: callback} };
+  msg = Serializer.serialize(this.Bridge, msg);
   msg = util.stringify(msg);
   this.sock.send(msg);
 }
