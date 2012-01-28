@@ -37,7 +37,7 @@ function Bridge(options) {
   this.connected = false;
   
   // Communication layer
-  this.connection = new BridgeConnection(this); 
+  this.connection = new Connection(this); 
 
 };
 
@@ -125,7 +125,7 @@ Bridge.prototype.send = function(args, destination) {
 
 /* Public APIs */
 Bridge.prototype.ready = function(func) {
-  if(!connected) {
+  if(!this.connected) {
     queue.push(func);
   } else {
     func();

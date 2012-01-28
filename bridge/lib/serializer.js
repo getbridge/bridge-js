@@ -30,7 +30,7 @@ var Serializer = {
           if (pivot._getRef && util.typeOf(pivot._getRef) == 'function') {
             ref = pivot._getRef();
           } else {
-            ref = bridgeRoot.doPublishService(pivot);
+            ref = bridgeRoot.createCallback(pivot);
           }
           var target = ref._getRef(operations).toDict();
           if (links) {
@@ -68,7 +68,7 @@ var Serializer = {
         } else {
           var wrap = function WrapDummy(){};
           wrap.handle_default = pivot;
-          var ref = bridgeRoot.doPublishService(wrap);
+          var ref = bridgeRoot.createCallback(wrap);
           target = ref.toDict();
         }
         if (links) {

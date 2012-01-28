@@ -7,9 +7,8 @@ function TCP(options) {
     sock._iostream = new iostream.IOStream(sock);
     sock.on('close', sock.onclose);
     sock.onopen();
-    sock.wait();
+    sock.wait(sock.receive);
   });
-  
   sock.wait = function(callback) {
     sock._iostream.read_bytes(4, function(data) {
       bytecount = data.readUInt32BE(0);
