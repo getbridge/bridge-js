@@ -21,7 +21,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     return Ref._bridgeRoot.send(args, Ref);
   }
   Ref.getLocalName = function() {
-    return Ref._pathchain[1];
+    return Ref._pathchain[2];
   };
   Ref._getRef = function(operations) {
     Ref._operations = operations;

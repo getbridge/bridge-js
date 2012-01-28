@@ -86,7 +86,7 @@ Bridge.prototype.publishService = function(name, service, callback) {
   var self = this;
   
   if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
-    service._getRef = function() { return self.getPathObj( ['named', name] ); };
+    service._getRef = function() { return self.getPathObj( ['named', name, name] ); };
     this.connection.publishService(name, callback);
   } else {
     util.error("Service can't be renamed! " + name + ' old ' +  service._getRef().getLocalName() );
@@ -100,7 +100,7 @@ Bridge.prototype.createCallback = function(service) {
   var self = this;
   if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
     var name = util.generateGuid();
-    service._getRef = function() { return self.getPathObj( [self.getClientId(), name] ); };
+    service._getRef = function() { return self.getPathObj( ['client', self.getClientId(), name] ); };
   } else {
     var name = service.getLocalName();
   }
@@ -141,7 +141,7 @@ Bridge.prototype.getPathObj = function(pathchain) {
 }
 
 Bridge.prototype.getRootRef = function() {
-  return this.getPathObj([this.getClientId()]);
+  return this.getPathObj(['client', this.getClientId()]);
 }
 
 Bridge.prototype.get = function(pathStr)  {
