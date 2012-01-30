@@ -11,16 +11,20 @@ var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
 
 bridge = new Bridge({host: 'localhost'});
 
-var ChatServer = {
-  handle_join: function(name, handler, callback){
-    console.log("RECEIVED JOIN REQUEST", name, handler, callback);
-    bridge.joinChannel('lobby', handler, callback);
-  },
-}
+bridge.ready(function(){
 
-bridge.publishService('chatserver', ChatServer, function(){
-    console.log('started chatserver');
+  var ChatServer = {
+    handle_join: function(name, handler, callback){
+      console.log("RECEIVED JOIN REQUEST", name, handler, callback);
+      bridge.joinChannel('lobby', handler, callback);
+    },
+  }
+
+  bridge.publishService('chatserver', ChatServer, function(){
+      console.log('started chatserver');
+  });
+
+
+
 });
-
-
 

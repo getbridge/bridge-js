@@ -52,8 +52,8 @@ Bridge.prototype.onReady = function() {
 };
 
 Bridge.prototype.onMessage = function(message) {
-
   var unser = Serializer.unserialize(this, message);
+  unser = unser.data;
   var destination = unser.destination;
   // util.info('DECODED: ', unser.args );
   if (!destination) {
@@ -67,9 +67,8 @@ Bridge.prototype.onMessage = function(message) {
 };
 
 Bridge.prototype.execute = function(pathchain, args) {
-
-  var obj = this.children(pathchain[2]);
-
+  console.log('execute', arguments);
+  var obj = this.children[pathchain[2]];
   var func = obj[pathchain[3]];
 
 

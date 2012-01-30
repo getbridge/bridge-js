@@ -19,8 +19,7 @@ function TCP(options) {
   }
 
   sock.receive = function(data) {
-    var tmp = {data: data.toString()};
-    sock.onmessage(tmp);
+    sock.onmessage({data: data.toString()});
     sock.wait(sock.receive);
   }
 

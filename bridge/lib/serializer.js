@@ -125,7 +125,7 @@ var Serializer = {
         result = null;
         break;
       default:
-        util.warn('Unknown', pivot, typ)
+        util.warn('Unknown', tup)
     }
     return result;
   }

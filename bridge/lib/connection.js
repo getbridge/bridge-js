@@ -44,7 +44,8 @@ function Connection(Bridge) {
 
     self.sock.onmessage = function(message){
       try {
-        var message = util.parse(message.data);    
+        message = util.parse(message.data);    
+        console.log('Received', message);
         Bridge.onMessage(message);
       } catch (e) {
         util.error("Message parsing failed: ", e.message, e.stack);
