@@ -11,6 +11,7 @@ var Serializer = {
         var needs_wrap = false;
         var recurse_queue = [];
         var operations = {};
+        var key, val;
         for (key in pivot) {
           var val = pivot[key];
           if ( util.typeOf(val) == 'function' ) {
@@ -21,19 +22,18 @@ var Serializer = {
           }
         }
         operations = util.getKeys(operations);
-        if ( pivot._getRef && util.typeOf(pivot._getRef) == 'function' ) {
+        if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
           needs_wrap = true;
         }
         // console.log('found operations', operations);
         if (needs_wrap) {
           var ref;
-          if (pivot._getRef && util.typeOf(pivot._getRef) == 'function') {
+          if (pivot._getRef && util.typeOf(pivot._getRef) === 'function') {
             ref = pivot._getRef();
           } else {
             ref = bridgeRoot.createCallback(pivot);
           }
-          var target = ref._getRef(operations).toDict();
-          
+          var target = ref._getRef(operations).toDict();          
           result = target;
         } else {
           var tmp = {};
@@ -55,7 +55,7 @@ var Serializer = {
         break;
       case 'function':
         var target;
-        if ( pivot._getRef && util.typeOf(pivot._getRef) == 'function' ) {
+        if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
           target = pivot._getRef().toDict();
         } else {
           var wrap = function WrapDummy(){};
@@ -82,7 +82,7 @@ var Serializer = {
       }
     }
   }
-}
+};
 
 // if node
 module.exports = Serializer;

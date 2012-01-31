@@ -58,7 +58,7 @@ var util = {
   },
 
   inherit: function (ctor, ctor2) {
-    function f() {};
+    var f = function () {};
     f.prototype = ctor2.prototype;
     ctor.prototype = new f;
   },
@@ -77,7 +77,7 @@ var util = {
   info: function(){
     util.log.apply(this, arguments);
   }
-}
+};
 
 // if node
 module.exports = util;

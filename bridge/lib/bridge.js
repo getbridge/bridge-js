@@ -10,10 +10,10 @@ var Ref = require('./ref.js');
 var queue = [];
 
 function Bridge(options) {
-  
+
   var self = this;
-  
-  
+
+
   // Initialize system call service
   var system = {
     hook_channel_handler: function(name, handler, callback){
@@ -25,21 +25,21 @@ function Bridge(options) {
     getservice: function(name, callback){
       callback.call(this.children[name]);
     }
-  }
-  
+  };
+
   // Set configuration options
   this.options = options;
-  
+
   // Contains references to shared references
   this.children = {system: system};
-  
+
   // Indicate whether connected
   this.connected = false;
-  
-  // Communication layer
-  this.connection = new Connection(this); 
 
-};
+  // Communication layer
+  this.connection = new Connection(this);
+
+}
 
 Bridge.prototype.onReady = function() {
   util.info('Handshake complete');
@@ -83,8 +83,8 @@ Bridge.prototype.execute = function(pathchain, args) {
 
 Bridge.prototype.publishService = function(name, service, callback) {
   var self = this;
-  
-  if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
+
+  if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
     service._getRef = function() { return self.getPathObj( ['named', name, name] ); };
     this.connection.publishService(name, callback);
   } else {
@@ -97,11 +97,12 @@ Bridge.prototype.publishService = function(name, service, callback) {
 
 Bridge.prototype.createCallback = function(service) {
   var self = this;
-  if ( (!service._getRef) || (util.typeOf(service._getRef) != 'function') ) {
-    var name = util.generateGuid();
+  var name;
+  if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
+    name = util.generateGuid();
     service._getRef = function() { return self.getPathObj( ['client', self.getClientId(), name] ); };
   } else {
-    var name = service.getLocalName();
+    name = service.getLocalName();
   }
   this.children[name] = service;
   return service._getRef();
@@ -111,16 +112,14 @@ Bridge.prototype.joinChannel = function(name, handler, callback) {
   var self = this;
   // Detect clientId of owning hander
   var foo = Serializer.serialize(this, handler);
-  clientId = foo[1]['ref'][0];
-  
+  var clientId = foo[1].ref[0];
+
   self.connection.joinChannel(name, handler, callback);
 };
 
 Bridge.prototype.send = function(args, destination) {
   this.connection.send(args, destination);
 };
-
-
 
 /* Public APIs */
 Bridge.prototype.ready = function(func) {
@@ -137,11 +136,11 @@ Bridge.prototype.getClientId = function() {
 
 Bridge.prototype.getPathObj = function(pathchain) {
   return new Ref(this, pathchain);
-}
+};
 
 Bridge.prototype.getRootRef = function() {
   return this.getPathObj(['client', this.getClientId()]);
-}
+};
 
 Bridge.prototype.get = function(pathStr)  {
   var pathchain = pathStr.split('.');
