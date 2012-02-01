@@ -14,7 +14,7 @@ bridge = new Bridge({host: 'localhost'});
 bridge.ready(function(){
 
   var ChatServer = {
-    handle_join: function(name, handler, callback){
+    join: function(name, handler, callback){
       console.log("RECEIVED JOIN REQUEST", name, handler, callback);
       bridge.joinChannel('lobby', handler, callback);
     },

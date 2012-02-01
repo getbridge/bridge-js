@@ -3,7 +3,7 @@ var util = require('./util.js');
 // end node
 
 var Serializer = {
-  serialize: function(bridgeRoot, pivot, links) {
+  serialize: function(bridgeRoot, pivot) {
     var typ = util.typeOf(pivot);
     var result;
     switch(typ) {
@@ -13,8 +13,8 @@ var Serializer = {
         var operations = {};
         for (key in pivot) {
           var val = pivot[key];
-          if ( (key.indexOf('handle_') == 0) && (util.typeOf(val) == 'function') ) {
-            operations[ key.substr(7) ] = true;
+          if ( util.typeOf(val) == 'function' ) {
+            operations[ key ] = true;
             needs_wrap = true;
           } else {
             recurse_queue.push(key);
@@ -33,33 +33,25 @@ var Serializer = {
             ref = bridgeRoot.createCallback(pivot);
           }
           var target = ref._getRef(operations).toDict();
-          if (links) {
-            links[ target['ref'].join('.') ] = true;
-          }
-          result = ['now', target ];
+          
+          result = target;
         } else {
           var tmp = {};
           for (pos in recurse_queue) {
             var key = recurse_queue[pos];
             var val = pivot[key];
-            tmp[key] = Serializer.serialize(bridgeRoot, val, links);
+            tmp[key] = Serializer.serialize(bridgeRoot, val);
           }
-          result = ['dict', tmp];
+          result = tmp;
         }
         break;
       case 'array':
         var tmp = [];
         for (pos in pivot) {
           var val = pivot[pos];
-          tmp.push(Serializer.serialize(bridgeRoot, val, links));
+          tmp.push(Serializer.serialize(bridgeRoot));
         }
-        result = ['list', tmp];
-        break;
-      case 'string':
-        result = ['str', pivot];
-        break;
-      case 'number':
-        result = ['float', pivot];
+        result = tmp;
         break;
       case 'function':
         var target;
@@ -67,67 +59,28 @@ var Serializer = {
           target = pivot._getRef().toDict();
         } else {
           var wrap = function WrapDummy(){};
-          wrap.handle_default = pivot;
+          wrap.callback = pivot;
           var ref = bridgeRoot.createCallback(wrap);
           target = ref.toDict();
         }
-        if (links) {
-          links[ target['ref'].join('.') ] = true;
-        }
-        result = ['now', target ];
-        break;
-      case 'null':
-        result = ['none', null];
-        break;
-      case 'undefined':
-        result = ['none', null];
-        break;
-      case 'boolean':
-        result = ['bool', pivot];
+        result = target;
         break;
       default:
-        util.warn('Unknown', pivot, typ);
+        result = pivot;
     }
     return result;
   },
-  unserialize: function(bridgeRoot, tup) {
-    var typ = tup[0];
-    var pivot = tup[1];
-    var result;
-    switch(typ) {
-      case "list":
-        var tmp = [];
-        for (pos in pivot) {
-          tmp.push( Serializer.unserialize(bridgeRoot, pivot[pos] ) );
+  unserialize: function(bridgeRoot, obj) {
+    for(var key in obj) {
+      var el = obj[key]
+      if(typeof el === "object") {
+        if(util.hasProp(el, 'ref')) {
+          obj[key] = bridgeRoot.getPathObj(el['ref'])._getRef(el['operations']);
+        } else {
+          Serializer.unserialize(bridgeRoot, el);
         }
-        result = tmp;
-        break;
-      case "dict":
-        var tmp = {};
-        for (pos in pivot) {
-          tmp[pos] = Serializer.unserialize(bridgeRoot, pivot[pos] );
-        }
-        result = tmp;
-        break;
-      case "str":
-        result = pivot;
-        break;
-      case "float":
-        result = pivot;
-        break;
-      case "bool":
-        result = Boolean(pivot);
-        break;
-      case "now":
-        result = bridgeRoot.getPathObj(pivot['ref'])._getRef(pivot['operations']);
-        break;
-      case "none":
-        result = null;
-        break;
-      default:
-        util.warn('Unknown', tup)
+      }
     }
-    return result;
   }
 }
 

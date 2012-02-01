@@ -52,8 +52,8 @@ Bridge.prototype.onReady = function() {
 };
 
 Bridge.prototype.onMessage = function(message) {
-  var unser = Serializer.unserialize(this, message);
-  unser = unser.data;
+  Serializer.unserialize(this, message);
+  var unser = message.data;
   var destination = unser.destination;
   // util.info('DECODED: ', unser.args );
   if (!destination) {
