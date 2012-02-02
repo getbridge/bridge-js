@@ -75,6 +75,7 @@ var util = {
   }
 };
 
+
 var Ref = function (bridgeRoot, pathchain, operations) {
   function Ref() {
     var args = [].slice.apply(arguments);
@@ -83,7 +84,6 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref._fixops = function() {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
-      console.log('FIXING', op);
       Ref[op] = Ref.get(op).call;
       Ref[op + '_e'] = Ref.get(op).call;
     }
@@ -94,7 +94,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   };
   Ref.call = function() {
     var args = [].slice.apply(arguments);
-    console.log('CALL_E', Ref._pathchain, args);
+    util.info('Calling', Ref._pathchain, args);
     return Ref._bridgeRoot.send(args, Ref);
   };
   Ref.getLocalName = function() {
@@ -141,7 +141,6 @@ var Serializer = {
         if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
           needs_wrap = true;
         }
-        // console.log('found operations', operations);
         if (needs_wrap) {
           var ref;
           if (pivot._getRef && util.typeOf(pivot._getRef) === 'function') {
@@ -250,7 +249,7 @@ Connection.prototype.establishConnection = function () {
     self.sock.onmessage = function(message){
       try {
         message = util.parse(message.data);    
-        console.log('Received', message);
+        util.info('Received', message);
         Bridge.onMessage(message);
       } catch (e) {
         util.error("Message parsing failed: ", e.message, e.stack);
@@ -288,7 +287,7 @@ Connection.prototype.getExchangeName = function () {
 Connection.prototype.send = function (args, destination) {
   var msg = {command: 'SEND', data: { 'args': Serializer.serialize(this.Bridge, args), 'destination': Serializer.serialize(this.Bridge, destination)}};
   msg = util.stringify(msg);
-  console.log(msg);
+  util.info('Sending', msg);
   this.sock.send(msg);
 };
 
@@ -368,7 +367,6 @@ Bridge.prototype.onMessage = function(message) {
 };
 
 Bridge.prototype.execute = function(pathchain, args) {
-  console.log('execute', arguments);
   var obj = this.children[pathchain[2]];
   var func = obj[pathchain[3]];
 
@@ -415,7 +413,6 @@ Bridge.prototype.joinChannel = function(name, handler, callback) {
   
   
   var foo = Serializer.serialize(this, handler);
-  console.log(foo);
   var clientId = foo.ref[1];
 
   self.connection.joinChannel(name, handler, callback);
