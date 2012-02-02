@@ -1,5 +1,6 @@
 var defaultOptions = {
   url: 'http://localhost:8080/now',
+  reconnect: true,
   tcp: false
 };
 
@@ -7,11 +8,11 @@ var defaultOptions = {
 var util = require('./util');
 var Serializer = require('./serializer.js');
 var TCP = require('./tcp').TCP;
-defaultOptions = {
+util.extend(defaultOptions, {
   host: 'localhost',
   port: 8090,
   tcp: true
-};
+});
 // end node
 
 function Connection(Bridge) {
@@ -29,6 +30,7 @@ function Connection(Bridge) {
 Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
 
 Connection.prototype.reconnect = function () {
+  util.info("Attempting reconnect");
   if (!this.connected && this.interval < 12800) {
     this.establishConnection();
     setTimeout(this.reconnect, this.interval *= 2);
