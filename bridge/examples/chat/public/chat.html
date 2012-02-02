@@ -12,7 +12,7 @@ var bridge = new Bridge({url: 'http://localhost:8081/now'});
 var name = "someone";
 
 var handler = {
-  handle_msg: function(name, message) {
+  msg: function(name, message) {
     console.log(name + ': ' + message);
   }
 };
