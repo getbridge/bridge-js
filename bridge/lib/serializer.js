@@ -25,7 +25,6 @@ var Serializer = {
         if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
           needs_wrap = true;
         }
-        // console.log('found operations', operations);
         if (needs_wrap) {
           var ref;
           if (pivot._getRef && util.typeOf(pivot._getRef) === 'function') {
@@ -49,7 +48,7 @@ var Serializer = {
         var tmp = [];
         for (pos in pivot) {
           var val = pivot[pos];
-          tmp.push(Serializer.serialize(bridgeRoot));
+          tmp.push(Serializer.serialize(bridgeRoot, val));
         }
         result = tmp;
         break;
@@ -61,7 +60,7 @@ var Serializer = {
           var wrap = function WrapDummy(){};
           wrap.callback = pivot;
           var ref = bridgeRoot.createCallback(wrap);
-          target = ref.toDict();
+          target = ref.get('callback').toDict();
         }
         result = target;
         break;

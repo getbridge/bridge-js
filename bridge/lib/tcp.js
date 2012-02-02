@@ -1,5 +1,6 @@
 var connect = require('net').connect;
 var IOStream = require('iostream').IOStream;
+var util = require('./util.js');
 
 function TCP(options) {
   var sock = connect(options.port, options.host, function () {
@@ -24,6 +25,7 @@ function TCP(options) {
   };
 
   sock.send = function (data) {
+    util.info('Sending', data);
     var outstr = new Buffer( 'xxxx' + data );
     outstr.writeUInt32BE(Buffer.byteLength(data), 0);
     sock._iostream.write(outstr);

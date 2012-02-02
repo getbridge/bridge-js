@@ -1,3 +1,7 @@
+// if node
+var util = require('./util.js');
+// end node
+
 var Ref = function (bridgeRoot, pathchain, operations) {
   function Ref() {
     var args = [].slice.apply(arguments);
@@ -6,7 +10,6 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref._fixops = function() {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
-      console.log('FIXING', op);
       Ref[op] = Ref.get(op).call;
       Ref[op + '_e'] = Ref.get(op).call;
     }
@@ -17,7 +20,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   };
   Ref.call = function() {
     var args = [].slice.apply(arguments);
-    console.log('CALL_E', Ref._pathchain, args);
+    util.info('Calling', Ref._pathchain, args);
     return Ref._bridgeRoot.send(args, Ref);
   };
   Ref.getLocalName = function() {

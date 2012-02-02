@@ -23,7 +23,7 @@ function Bridge(options) {
       }
     },
     getservice: function(name, callback){
-      callback.call(this.children[name]);
+      callback.call(self.children[name]);
     }
   };
 
@@ -53,7 +53,7 @@ Bridge.prototype.onReady = function() {
 
 Bridge.prototype.onMessage = function(message) {
   Serializer.unserialize(this, message);
-  var unser = message.data;
+  var unser = message;
   var destination = unser.destination;
   // util.info('DECODED: ', unser.args );
   if (!destination) {
@@ -67,7 +67,6 @@ Bridge.prototype.onMessage = function(message) {
 };
 
 Bridge.prototype.execute = function(pathchain, args) {
-  console.log('execute', arguments);
   var obj = this.children[pathchain[2]];
   var func = obj[pathchain[3]];
 
@@ -111,8 +110,10 @@ Bridge.prototype.createCallback = function(service) {
 Bridge.prototype.joinChannel = function(name, handler, callback) {
   var self = this;
   // Detect clientId of owning hander
+  
+  
   var foo = Serializer.serialize(this, handler);
-  var clientId = foo[1].ref[0];
+  var clientId = foo.ref[1];
 
   self.connection.joinChannel(name, handler, callback);
 };

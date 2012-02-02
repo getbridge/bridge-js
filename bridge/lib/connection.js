@@ -23,17 +23,7 @@ function Connection(Bridge) {
   this.options = util.extend(defaultOptions, Bridge.options);
 
   this.establishConnection();
-  var onmessage = this.sock.onmessage;
-  this.sock.onmessage = function (message) {
-    util.info("clientId and secret received", message.data);
-    var ids = message.data.toString().split('|');
-    self.clientId = ids[0];
-    self.secret = ids[1];
-    self.interval = 400;
 
-    self.sock.onmessage = onmessage;
-    Bridge.onReady();
-  };
 }
 
 Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
@@ -58,12 +48,28 @@ Connection.prototype.establishConnection = function () {
     this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
   }
 
+  this.sock.onmessage = function (message) {
+    util.info("clientId and secret received", message.data);
+    var ids = message.data.toString().split('|');
+    self.clientId = ids[0];
+    self.secret = ids[1];
+    self.interval = 400;
+
+    self.sock.onmessage = function(message){
+      try {
+        message = util.parse(message.data);    
+        util.info('Received', message);
+        Bridge.onMessage(message);
+      } catch (e) {
+        util.error("Message parsing failed: ", e.message, e.stack);
+      }
+    };
+    Bridge.onReady();
+  };
+  
   this.sock.onopen = function () {
     util.info("Beginning handshake");
-    var msg = Serializer.serialize(Bridge,
-                                   {command: 'CONNECT',
-                                    data: {session: [self.clientId || 0,
-                                                     self.secret || 0]}});
+    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0]}};
     msg = util.stringify(msg);
     self.sock.send(msg);
   };
@@ -88,23 +94,22 @@ Connection.prototype.getExchangeName = function () {
 
 
 Connection.prototype.send = function (args, destination) {
-  var msg = Serializer.serialize(this.Bridge, {command: 'SEND', data: { 'args': args, 'destination': destination}});
+  var msg = {command: 'SEND', data: { 'args': Serializer.serialize(this.Bridge, args), 'destination': Serializer.serialize(this.Bridge, destination)}};
   msg = util.stringify(msg);
+  util.info('Sending', msg);
   this.sock.send(msg);
 };
 
 Connection.prototype.publishService = function (name, callback) {
   util.info('Joining worker pool', name);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, callback: callback} };
-  msg = Serializer.serialize(this.Bridge, msg);
+  var msg = {command: 'JOINWORKERPOOL', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
   msg = util.stringify(msg);
   this.sock.send(msg);
 };
 
 Connection.prototype.joinChannel = function (name, handler, callback) {
   // Adding other client is not supported
-  var msg = {command: 'JOINCHANNEL', data: {name: name, handler: handler, callback: callback} };
-  msg = Serializer.serialize(this.Bridge, msg);
+  var msg = {command: 'JOINCHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
   msg = util.stringify(msg);
   this.sock.send(msg);
 };
