@@ -76,6 +76,18 @@ var util = {
   },
   info: function(){
     util.log.apply(this, arguments);
+  },
+  
+  setLogLevel: function(level) {
+    if(level < 3) {
+      util.info = function(){};
+    }
+    if(level < 2) {
+      util.warn = function(){};
+    }
+    if(level < 1) {
+      util.error = function(){};
+    }
   }
 };
 

@@ -1,18 +1,7 @@
-var defaultOptions = {
-  url: 'http://localhost:8080/now',
-  reconnect: true,
-  tcp: false
-};
-
 // if node
 var util = require('./util');
 var Serializer = require('./serializer.js');
 var TCP = require('./tcp').TCP;
-util.extend(defaultOptions, {
-  host: 'localhost',
-  port: 8090,
-  tcp: true
-});
 // end node
 
 function Connection(Bridge) {
@@ -20,8 +9,8 @@ function Connection(Bridge) {
   // Set associated Bridge object
   this.Bridge = Bridge;
 
-  // Merge passed in options into default options
-  this.options = util.extend(defaultOptions, Bridge.options);
+  // Set options
+  this.options = Bridge.options;
 
   this.establishConnection();
 

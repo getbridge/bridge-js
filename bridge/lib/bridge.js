@@ -1,10 +1,26 @@
+var defaultOptions = {
+  url: 'http://localhost:8080/now',
+  reconnect: true,
+  log: 2,
+  tcp: false
+};
+
+
 // if node
 var util = require('./util.js');
 
 var Connection = require('./connection.js').Connection;
 var Serializer = require('./serializer.js');
 var Ref = require('./ref.js');
+
+util.extend(defaultOptions, {
+  host: 'localhost',
+  port: 8090,
+  tcp: true
+});
+
 // end node
+
 
 // Simple queue for .ready handlers
 var queue = [];
@@ -12,7 +28,6 @@ var queue = [];
 function Bridge(options) {
 
   var self = this;
-
 
   // Initialize system call service
   var system = {
@@ -28,8 +43,11 @@ function Bridge(options) {
   };
 
   // Set configuration options
-  this.options = options;
-
+  this.options = util.extend(defaultOptions, options);
+  
+  // Set logging level
+  util.setLogLevel(this.options.log);
+  
   // Contains references to shared references
   this.children = {system: system};
 
@@ -38,6 +56,7 @@ function Bridge(options) {
 
   // Communication layer
   this.connection = new Connection(this);
+  
 
 }
 
