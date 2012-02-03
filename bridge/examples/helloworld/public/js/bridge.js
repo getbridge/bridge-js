@@ -72,6 +72,18 @@ var util = {
   },
   info: function(){
     util.log.apply(this, arguments);
+  },
+  
+  setLogLevel: function(level) {
+    if(level < 3) {
+      util.info = function(){};
+    }
+    if(level < 2) {
+      util.warn = function(){};
+    }
+    if(level < 1) {
+      util.error = function(){};
+    }
   }
 };
 
@@ -85,7 +97,6 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
       Ref[op] = Ref.get(op).call;
-      Ref[op + '_e'] = Ref.get(op).call;
     }
   };
   Ref.get = function(pathadd) {
@@ -199,19 +210,14 @@ var Serializer = {
   }
 };
 
-var defaultOptions = {
-  url: 'http://localhost:8080/now',
-  tcp: false
-};
-
 
 function Connection(Bridge) {
   var self = this;
   // Set associated Bridge object
   this.Bridge = Bridge;
 
-  // Merge passed in options into default options
-  this.options = util.extend(defaultOptions, Bridge.options);
+  // Set options
+  this.options = Bridge.options;
 
   this.establishConnection();
 
@@ -220,6 +226,7 @@ function Connection(Bridge) {
 Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
 
 Connection.prototype.reconnect = function () {
+  util.info("Attempting reconnect");
   if (!this.connected && this.interval < 12800) {
     this.establishConnection();
     setTimeout(this.reconnect, this.interval *= 2);
@@ -305,6 +312,15 @@ Connection.prototype.joinChannel = function (name, handler, callback) {
   this.sock.send(msg);
 };
 
+var defaultOptions = {
+  url: 'http://localhost:8080/now',
+  reconnect: true,
+  log: 2,
+  tcp: false
+};
+
+
+
 
 // Simple queue for .ready handlers
 var queue = [];
@@ -312,7 +328,6 @@ var queue = [];
 function Bridge(options) {
 
   var self = this;
-
 
   // Initialize system call service
   var system = {
@@ -328,8 +343,11 @@ function Bridge(options) {
   };
 
   // Set configuration options
-  this.options = options;
-
+  this.options = util.extend(defaultOptions, options);
+  
+  // Set logging level
+  util.setLogLevel(this.options.log);
+  
   // Contains references to shared references
   this.children = {system: system};
 
@@ -338,6 +356,7 @@ function Bridge(options) {
 
   // Communication layer
   this.connection = new Connection(this);
+  
 
 }
 
