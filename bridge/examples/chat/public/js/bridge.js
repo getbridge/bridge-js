@@ -313,7 +313,7 @@ Connection.prototype.joinChannel = function (name, handler, callback) {
 };
 
 var defaultOptions = {
-  url: 'http://localhost:8080/now',
+  url: 'http://localhost:8080/bridge',
   reconnect: true,
   log: 2,
   tcp: false
