@@ -11,7 +11,6 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
       Ref[op] = Ref.get(op).call;
-      Ref[op + '_e'] = Ref.get(op).call;
     }
   };
   Ref.get = function(pathadd) {
