@@ -24,7 +24,5 @@ bridge.ready(function(){
       console.log('started chatserver');
   });
 
-
-
 });
 
