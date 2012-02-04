@@ -4,7 +4,7 @@ bridge = new Bridge({host: 'localhost'});
 bridge.ready(function(){
     var ConsoleLogServer = {
         log: function(msg, somethingClientDoesNotProvide) {
-            if (msg === '123') {
+            if (msg === '123' && somethingClientDoesNotProvide == undefined) {
                 process.exit(0);
             } else {
                 process.exit(1);

@@ -1,9 +1,10 @@
 var util  = require('util');
 var spawn = require('child_process').spawn;
 
-spawnTest('./tests/regression-tests/test1.js', 'test1_consolelog');
+spawnTest('./tests/regression-tests/test1.js', 'test1_consolelog', 0);
+spawnTest('./tests/regression-tests/test2.js', 'test2_consolelog', 0);
 
-function spawnTest(path, name) {
+function spawnTest(path, name, expectedExitCode) {
     var p = spawn('node', [path]);
 
     p.stdout.on('data', function (data) {
@@ -15,10 +16,11 @@ function spawnTest(path, name) {
     });
 
     p.on('exit', function (code) {
-        if (code == 0) {
-            console.log(name + '|' + p.pid + ' PASSED');
+        if (code === expectedExitCode) {
+            console.log(name + '|' + p.pid + ': PASSED');
         } else {
-            console.log(name + '|' + p.pid + ' FAILED, exited with code ' + code);
+            console.log(name + '|' + p.pid + ': FAILED, exited with code ' + code);
+            process.exit(1);
         }
     });
 }
