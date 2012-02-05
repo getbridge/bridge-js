@@ -6,4 +6,6 @@ build:
 	cp ./dist/*.js ./examples/chat/public/js
 
 test:
+	@rm -f ./tests/regression-tests/*~
+	@rm -f ./tests/regression-tests/*#*
 	@node ./tests/run.js
