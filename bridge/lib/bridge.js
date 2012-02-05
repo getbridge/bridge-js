@@ -22,8 +22,7 @@ util.extend(defaultOptions, {
 // end node
 
 
-// Simple queue for .ready handlers
-var queue = [];
+
 
 function Bridge(options) {
 
@@ -41,6 +40,9 @@ function Bridge(options) {
       callback.call(self.children[name]);
     }
   };
+  
+  // Simple queue for .ready handlers
+  this.queue = [];
 
   // Set configuration options
   this.options = util.extend(defaultOptions, options);
@@ -64,8 +66,8 @@ Bridge.prototype.onReady = function() {
   util.info('Handshake complete');
   if(!this.connected) {
     this.connected = true;
-    for(var i = 0, ii = queue.length; i < ii; i++) {
-      queue[i]();
+    for(var i = 0, ii = this.queue.length; i < ii; i++) {
+      this.queue[i]();
     }
   }
 };
@@ -144,7 +146,7 @@ Bridge.prototype.send = function(args, destination) {
 /* Public APIs */
 Bridge.prototype.ready = function(func) {
   if(!this.connected) {
-    queue.push(func);
+    this.queue.push(func);
   } else {
     func();
   }
