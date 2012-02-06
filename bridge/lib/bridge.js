@@ -38,6 +38,9 @@ function Bridge(options) {
     },
     getservice: function(name, callback){
       callback.call(self.children[name]);
+    },
+    remoteError: function(msg) {
+      util.error(msg);
     }
   };
   
