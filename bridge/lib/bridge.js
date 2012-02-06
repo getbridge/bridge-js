@@ -38,7 +38,8 @@ function Bridge(options) {
       callback.call(self.children[name]);
     },
     remoteError: function(msg) {
-      util.error(msg);
+      util.warn(msg);
+      self.emit('remoteError', [msg]);
     }
   };
   
