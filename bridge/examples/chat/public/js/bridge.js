@@ -267,7 +267,7 @@ Connection.prototype.establishConnection = function () {
   
   this.sock.onopen = function () {
     util.info("Beginning handshake");
-    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0]}};
+    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0], api_key: self.options.apiKey}};
     msg = util.stringify(msg);
     self.sock.send(msg);
   };
@@ -322,9 +322,6 @@ var defaultOptions = {
 
 
 
-// Simple queue for .ready handlers
-var queue = [];
-
 function Bridge(options) {
 
   var self = this;
@@ -339,9 +336,13 @@ function Bridge(options) {
     },
     getservice: function(name, callback){
       callback.call(self.children[name]);
+    },
+    remoteError: function(msg) {
+      util.warn(msg);
+      self.emit('remoteError', [msg]);
     }
   };
-
+  
   // Set configuration options
   this.options = util.extend(defaultOptions, options);
   
@@ -357,16 +358,46 @@ function Bridge(options) {
   // Communication layer
   this.connection = new Connection(this);
   
-
+  // Store event handlers
+  this._events = {};
 }
+
+// Event emitter functions
+Bridge.prototype.on = function (name, fn) {
+  if (!(util.hasProp(this._events, name))) {
+    this._events[name] = [];
+  }
+  this._events[name].push(fn);
+  return this;
+};
+
+Bridge.prototype.emit = function (name, args) {
+  if (util.hasProp(this._events, name)) {
+    var events = this._events[name].slice(0);
+    for (var i = 0, ii = events.length; i < ii; i++) {
+      events[i].apply(this, args === undefined ? [] : args);
+    }
+  }
+  return this;
+};
+
+Bridge.prototype.removeEvent = function (name, fn) {
+  if (util.hasProp(this._events, name)) {
+    for (var a = 0, l = this._events[name].length; a < l; a++) {
+      if (this._events[name][a] === fn) {
+        this._events[name].splice(a, 1);
+      }
+    }
+  }
+  return this;
+};
+
 
 Bridge.prototype.onReady = function() {
   util.info('Handshake complete');
   if(!this.connected) {
     this.connected = true;
-    for(var i = 0, ii = queue.length; i < ii; i++) {
-      queue[i]();
-    }
+    this.emit('ready');
   }
 };
 
@@ -444,7 +475,7 @@ Bridge.prototype.send = function(args, destination) {
 /* Public APIs */
 Bridge.prototype.ready = function(func) {
   if(!this.connected) {
-    queue.push(func);
+    this.on('ready', func);
   } else {
     func();
   }
@@ -471,9 +502,6 @@ Bridge.prototype.getService = function(name, callback) {
   this.getPathObj(['named', name, 'system', 'getservice']).call(name, callback);
 };
 
-// Bridge.prototype.getClient = function(name) {
-//   return this.getPathObj([name]);
-// };
 
 Bridge.prototype.getChannel = function(name) {
   return this.getPathObj(['channel', name, 'channel:' + name]);
