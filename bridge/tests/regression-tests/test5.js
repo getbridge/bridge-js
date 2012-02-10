@@ -17,7 +17,6 @@ bridge.ready(function(){
         }
     }
     bridge.publishService('test5_consolelog', ConsoleLogServer, function() {
-        console.log(description);
         setTimeout(function() {
             test.fail(failureMessage);
         }, 2000);
