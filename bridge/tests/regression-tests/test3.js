@@ -17,7 +17,6 @@ bridge.ready(function(){
     }
     bridge.publishService('test3_consolelog', ConsoleLogServer, function() {
         bridge.getService('test3_consolelog', function(service) {
-            console.log(description);
             service.log('123', ['some list'], {something:'else'});
         });
     });
