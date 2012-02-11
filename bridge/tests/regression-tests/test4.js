@@ -6,14 +6,15 @@ var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
 var bridge = new Bridge({host: 'localhost'});
 
 bridge.ready(function(){
-    /**
-       Server should not return a service for non-existing name.
-       Note: find a better way to detect if the server has that service or not
-     */
     bridge.getService('some non-existing service', function(service) {
-        test.fail(failureMessage);
+        if (service) {
+            test.fail(failureMessage);
+        } else {
+            test.pass();
+        }
     });
-    setTimeout(function () {
-        test.pass();
+
+    setTimeout(function() {
+        test.fail(failureMessage);
     }, 2000);
 });
