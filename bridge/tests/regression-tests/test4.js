@@ -5,6 +5,8 @@ var test = require(__dirname + '/../lib/test.js');
 var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
 var bridge = new Bridge({host: 'localhost'});
 
+test.pass();
+
 bridge.ready(function(){
     bridge.getService('some non-existing service', function(service) {
         if (service) {
