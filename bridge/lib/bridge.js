@@ -35,7 +35,11 @@ function Bridge(options) {
       }
     },
     getservice: function(name, callback){
-      callback.call(self.children[name]);
+      if (util.hasProp(self.children, name)) {
+        callback.call(self.children[name]);
+      } else {
+        callback.call(null, "Cannot find service " + name);
+      }
     },
     remoteError: function(msg) {
       util.warn(msg);
