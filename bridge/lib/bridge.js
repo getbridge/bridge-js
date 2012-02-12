@@ -135,6 +135,12 @@ Bridge.prototype.execute = function(pathchain, args) {
 
 
 Bridge.prototype.publishService = function(name, service, callback) {
+  
+  if(name === "system") {
+    util.error("Invalid service name: " + name);
+    return;
+  }
+  
   var self = this;
 
   if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
