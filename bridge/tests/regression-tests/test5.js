@@ -1,7 +1,7 @@
 var description = ' Test5: multiple instances of bridge';
 var failureMessage = 'This test tests the ability to create multiple instances of bridge in js.\nExpected behavior: should be able to create multiple instance, and send messages between them.\n';
 
-var test = require(__dirname + '/../lib/test.js');
+var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
 var bridge = new Bridge({host: 'localhost'});
 
@@ -17,12 +17,14 @@ bridge.ready(function(){
         }
     }
     bridge.publishService('test5_consolelog', ConsoleLogServer, function() {
-        setTimeout(function() {
-            test.fail(failureMessage);
-        }, 2000);
         serverReady();
     });
 });
+
+setTimeout(function() {
+    test.log('time out');
+    test.fail();
+}, 2000);
 
 function serverReady() {
     var b1 = new Bridge({host: 'localhost'});
