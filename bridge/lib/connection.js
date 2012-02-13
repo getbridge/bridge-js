@@ -98,6 +98,13 @@ Connection.prototype.publishService = function (name, callback) {
   this.sock.send(msg);
 };
 
+Connection.prototype.getService = function (name, callback) {
+  // Adding other client is not supported
+  var msg = {command: 'GETOPS', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
+
 Connection.prototype.joinChannel = function (name, handler, callback) {
   // Adding other client is not supported
   var msg = {command: 'JOINCHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };

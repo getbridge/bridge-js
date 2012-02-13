@@ -211,7 +211,7 @@ Bridge.prototype.get = function(pathStr)  {
 };
 
 Bridge.prototype.getService = function(name, callback) {
-  this.getPathObj(['named', name, 'system', 'getservice']).call(name, callback);
+  this.connection.getService(name, callback);
 };
 
 
