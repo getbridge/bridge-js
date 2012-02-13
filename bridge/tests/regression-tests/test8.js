@@ -25,7 +25,9 @@ bridgeServer.ready(function(){
                         }
                     }, function () {
                         test.log("all clients init");
-                        bridgeServer.getChannel('test8').get('send')('ping');
+                        bridgeServer.getChannel('test8', function(test8){
+                          test8.send('ping');
+                        });
                     });
                 });
             }
@@ -50,8 +52,12 @@ function initClient() {
                 send: function(msg) {
                     if (msg == 'ping') {
                         test.log('ping received');
-                        b1.getChannel('test8').get('send')('pong from b1');
-                        b2.getChannel('test8').get('send')('pong from b2');
+                        b1.getChannel('test8', function(test8){
+                          test8.send('pong from b1');
+                        });
+                        b2.getChannel('test8', function(test8){
+                          test8.send('pong from b2');
+                        });
                     }
                 }
             };
