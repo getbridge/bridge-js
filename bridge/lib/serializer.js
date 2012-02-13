@@ -10,18 +10,18 @@ var Serializer = {
       case 'object':
         var needs_wrap = false;
         var recurse_queue = [];
-        var operations = {};
+        var operations = [];
         var key, val;
         for (key in pivot) {
           var val = pivot[key];
-          if ( util.typeOf(val) == 'function' ) {
-            operations[ key ] = true;
+          if ( util.typeOf(val) == 'function' && util.isValid(key) ) {
+            operations.push(key);
             needs_wrap = true;
           } else {
             recurse_queue.push(key);
           }
         }
-        operations = util.getKeys(operations);
+        
         if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
           needs_wrap = true;
         }

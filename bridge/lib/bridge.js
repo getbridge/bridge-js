@@ -31,7 +31,7 @@ function Bridge(options) {
     hook_channel_handler: function(name, handler, callback){
       self.children['channel:' + name] = self.children[handler._getRef()._pathchain[2]];
       if (callback) {
-        callback.call( self.getChannel(name), name );
+        callback.call( self.getPathObj(['channel', name, 'channel:' + name]), name );
       }
     },
     getservice: function(name, callback){
@@ -52,7 +52,7 @@ function Bridge(options) {
   
   // Set logging level
   util.setLogLevel(this.options.log);
-  
+
   // Contains references to shared references
   this.children = {system: system};
 
@@ -157,23 +157,27 @@ Bridge.prototype.publishService = function(name, service, callback) {
 Bridge.prototype.createCallback = function(service) {
   var self = this;
   var name;
+  var ref;
   if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
     name = util.generateGuid();
-    service._getRef = function() { return self.getPathObj( ['client', self.getClientId(), name] ); };
+    ref = self.getPathObj( ['client', self.getClientId(), name] );
   } else {
+    ref = service._getRef();
     name = service.getLocalName();
   }
   this.children[name] = service;
-  return service._getRef();
+  return ref;
 };
 
 Bridge.prototype.joinChannel = function(name, handler, callback) {
   var self = this;
   // Detect clientId of owning hander
   
-  
-  var foo = Serializer.serialize(this, handler);
-  var clientId = foo.ref[1];
+  /* XXX:
+   * Serializer.serialize(this.Bridge, handler) is done in
+   * connection.joinChannel, and clientId is completely unused. */
+  // var foo = Serializer.serialize(this, handler);
+  // var clientId = foo.ref[1];
 
   self.connection.joinChannel(name, handler, callback);
 };
@@ -209,12 +213,12 @@ Bridge.prototype.get = function(pathStr)  {
 };
 
 Bridge.prototype.getService = function(name, callback) {
-  this.getPathObj(['named', name, 'system', 'getservice']).call(name, callback);
+  this.connection.getService(name, callback);
 };
 
 
-Bridge.prototype.getChannel = function(name) {
-  return this.getPathObj(['channel', name, 'channel:' + name]);
+Bridge.prototype.getChannel = function(name, callback) {
+  this.connection.getChannel(name, callback);
 };
 
 // if node
