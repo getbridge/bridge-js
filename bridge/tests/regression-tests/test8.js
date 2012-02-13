@@ -39,7 +39,7 @@ bridgeServer.ready(function(){
 
 setTimeout(function() {
     test.log('time out');
-    test.fail(failureMessage);
+    test.fail();
 }, 5000);
 
 function initClient() {

@@ -3,7 +3,7 @@ var util = require('util');
 var spawn = require('child_process').spawn;
 
 runAllTests('regression-tests');
-//spawnTest(__dirname + '/regression-tests/test8.js', 'test8');
+//spawnTest(__dirname + '/regression-tests/test9.js', 'test9');
 
 
 function runAllTests(path) {
