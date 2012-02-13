@@ -19,7 +19,7 @@ bridgeServer.ready(function(){
                     service.join({
                         send: function(msg) {
                             pongCount++;
-                            if (pongCount == 2) {
+                            if (pongCount == 5) {
                                 test.pass();
                             }
                         }
@@ -46,16 +46,19 @@ function initClient() {
     var b1 = new Bridge({host: 'localhost'});
     var b2 = new Bridge({host: 'localhost'});
 
-    b1.ready(function() {
-        b1.getService('test8_channels', function(service) {
-            service.join({
+    var handle = {
                 send: function(msg) {
                     if (msg == 'ping') {
                         test.log('ping received');
                         b1.getChannel('test8').get('send')('pong from b1');
+                        b2.getChannel('test8').get('send')('pong from b2');
                     }
                 }
-            }, function () {
+            };
+    
+    b1.ready(function() {
+        b1.getService('test8_channels', function(service) {
+            service.join(handle, function () {
                 test.log('b1 init');
             });
         });
@@ -63,14 +66,7 @@ function initClient() {
 
     b2.ready(function() {
         b2.getService('test8_channels', function(service) {
-           service.join({
-                send: function(msg) {
-                    if (msg == 'ping') {
-                        test.log('ping received');
-                        b2.getChannel('test8').get('send')('pong from b2');
-                    }
-                }
-            }, function () {
+           service.join(handle, function () {
                 test.log('b2 init');
             });
         });
