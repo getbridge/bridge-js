@@ -31,7 +31,7 @@ function Bridge(options) {
     hook_channel_handler: function(name, handler, callback){
       self.children['channel:' + name] = self.children[handler._getRef()._pathchain[2]];
       if (callback) {
-        callback.call( self.getChannel(name), name );
+        callback.call( self.getPathObj(['channel', name, 'channel:' + name]), name );
       }
     },
     getservice: function(name, callback){
@@ -215,8 +215,8 @@ Bridge.prototype.getService = function(name, callback) {
 };
 
 
-Bridge.prototype.getChannel = function(name) {
-  return this.getPathObj(['channel', name, 'channel:' + name]);
+Bridge.prototype.getChannel = function(name, callback) {
+  this.connection.getChannel(name, callback);
 };
 
 // if node
