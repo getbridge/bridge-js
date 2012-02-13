@@ -11,6 +11,8 @@ var bridge = new Bridge({url: 'http://localhost:8091/bridge', log: 0});
 // var name = prompt('Name?');
 var name = "someone";
 
+var lobby;
+
 var handler = {
   msg: function(name, message) {
     console.log(name + ': ' + message);
@@ -20,14 +22,17 @@ var handler = {
 bridge.ready(function(){
   var chat = bridge.getService('chatserver', function(chat){
     console.log('chat found');
-    chat.join('lobby', handler, function(lobby, name) {
-      console.log("joined channel");
+    chat.join('lobby', handler, function() {
+      bridge.getChannel('lobby', function(channel) {
+        console.log('got lobby');
+        lobby = channel;
+      });
     });
   });
 });
 
 function send(message) {
-  bridge.getChannel('lobby').get('msg')('test', message);
+  lobby.msg(name, message);
 }
 
 </script>
