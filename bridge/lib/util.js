@@ -49,13 +49,6 @@ var util = {
     }
     return s;
   },
-  getKeys: function(obj){
-    var keys = [];
-    for(var key in obj){
-      keys.push(key);
-    }
-    return keys;
-  },
   
   // Ignore private methods
   isValid: function(name) {
