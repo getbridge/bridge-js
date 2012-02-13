@@ -32,7 +32,7 @@ var Serializer = {
           } else {
             ref = bridgeRoot.createCallback(pivot);
           }
-          var target = ref._getRef(operations).toDict();          
+          var target = ref._getRef(operations).toDict();
           result = target;
         } else {
           var tmp = {};
