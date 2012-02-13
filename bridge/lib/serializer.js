@@ -14,7 +14,7 @@ var Serializer = {
         var key, val;
         for (key in pivot) {
           var val = pivot[key];
-          if ( util.typeOf(val) == 'function' ) {
+          if ( util.typeOf(val) == 'function' && util.isValid(key) ) {
             operations[ key ] = true;
             needs_wrap = true;
           } else {

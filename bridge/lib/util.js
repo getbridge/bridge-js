@@ -49,12 +49,17 @@ var util = {
     }
     return s;
   },
-  getKeys: Object.keys || function(obj){
+  getKeys: function(obj){
     var keys = [];
-      for(var key in obj){
-        keys.push(key);
-      }
+    for(var key in obj){
+      keys.push(key);
+    }
     return keys;
+  },
+  
+  // Ignore private methods
+  isValid: function(name) {
+    return name.charAt(0) !== '_';
   },
 
   inherit: function (ctor, ctor2) {
