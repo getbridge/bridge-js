@@ -12,27 +12,27 @@ var count2 = 0;
 var ChatServer1 = {
     send: function(msg) {
         count1++;
-        console.log("from " + msg + ", handled by chat1, count=" + count1);
+        test.log("from " + msg + ", handled by chat1, count=" + count1);
     }
 }
 
 var ChatServer2 = {
     send: function(msg) {
         count2++;
-        console.log("from " + msg + ", handled by chat2, count=" + count2);
+        test.log("from " + msg + ", handled by chat2, count=" + count2);
     }
 }
 
 _b1.ready(function(){
     _b1.publishService('test9_channels', ChatServer1, function() {
-        console.log("aa3");
+        test.log("aa3");
     });
 });
 
 
 _b2.ready(function(){
     _b2.publishService('test9_channels', ChatServer1, function() {
-        console.log("aa4");
+        test.log("aa4");
     });
 });
 
