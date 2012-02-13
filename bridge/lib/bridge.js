@@ -173,9 +173,11 @@ Bridge.prototype.joinChannel = function(name, handler, callback) {
   var self = this;
   // Detect clientId of owning hander
   
-  
-  var foo = Serializer.serialize(this, handler);
-  var clientId = foo.ref[1];
+  /* XXX:
+   * Serializer.serialize(this.Bridge, handler) is done in
+   * connection.joinChannel, and clientId is completely unused. */
+  // var foo = Serializer.serialize(this, handler);
+  // var clientId = foo.ref[1];
 
   self.connection.joinChannel(name, handler, callback);
 };
