@@ -52,7 +52,7 @@ function Bridge(options) {
   
   // Set logging level
   util.setLogLevel(this.options.log);
-  
+
   // Contains references to shared references
   this.children = {system: system};
 
@@ -157,14 +157,16 @@ Bridge.prototype.publishService = function(name, service, callback) {
 Bridge.prototype.createCallback = function(service) {
   var self = this;
   var name;
+  var ref;
   if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
     name = util.generateGuid();
-    service._getRef = function() { return self.getPathObj( ['client', self.getClientId(), name] ); };
+    ref = self.getPathObj( ['client', self.getClientId(), name] );
   } else {
+    ref = service._getRef();
     name = service.getLocalName();
   }
   this.children[name] = service;
-  return service._getRef();
+  return ref;
 };
 
 Bridge.prototype.joinChannel = function(name, handler, callback) {
