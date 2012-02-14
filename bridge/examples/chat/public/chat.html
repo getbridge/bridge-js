@@ -20,7 +20,7 @@ var handler = {
 };
 
 bridge.ready(function(){
-  var chat = bridge.getService('chatserver', function(chat){
+  bridge.getService('chatserver', function(chat){
     console.log('chat found');
     chat.join('lobby', handler, function() {
       bridge.getChannel('lobby', function(channel) {

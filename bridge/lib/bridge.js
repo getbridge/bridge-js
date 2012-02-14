@@ -46,10 +46,10 @@ function Bridge(options) {
       self.emit('remoteError', [msg]);
     }
   };
-  
+
   // Set configuration options
   this.options = util.extend(defaultOptions, options);
-  
+
   // Set logging level
   util.setLogLevel(this.options.log);
 
@@ -61,7 +61,7 @@ function Bridge(options) {
 
   // Communication layer
   this.connection = new Connection(this);
-  
+
   // Store event handlers
   this._events = {};
 }
@@ -135,12 +135,12 @@ Bridge.prototype.execute = function(pathchain, args) {
 
 
 Bridge.prototype.publishService = function(name, service, callback) {
-  
+
   if(name === "system") {
     util.error("Invalid service name: " + name);
     return;
   }
-  
+
   var self = this;
 
   if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
@@ -161,24 +161,15 @@ Bridge.prototype.createCallback = function(service) {
   if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
     name = util.generateGuid();
     ref = self.getPathObj( ['client', self.getClientId(), name] );
+    this.children[name] = service;
   } else {
     ref = service._getRef();
     name = service.getLocalName();
   }
-  this.children[name] = service;
   return ref;
 };
 
 Bridge.prototype.joinChannel = function(name, handler, callback) {
-  var self = this;
-  // Detect clientId of owning hander
-  
-  /* XXX:
-   * Serializer.serialize(this.Bridge, handler) is done in
-   * connection.joinChannel, and clientId is completely unused. */
-  // var foo = Serializer.serialize(this, handler);
-  // var clientId = foo.ref[1];
-
   self.connection.joinChannel(name, handler, callback);
 };
 
