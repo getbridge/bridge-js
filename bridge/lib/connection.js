@@ -16,8 +16,6 @@ function Connection(Bridge) {
 
 }
 
-Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
-
 Connection.prototype.reconnect = function () {
   util.info("Attempting reconnect");
   if (!this.connected && this.interval < 12800) {
