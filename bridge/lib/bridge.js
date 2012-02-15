@@ -170,7 +170,7 @@ Bridge.prototype.createCallback = function(service) {
 };
 
 Bridge.prototype.joinChannel = function(name, handler, callback) {
-  self.connection.joinChannel(name, handler, callback);
+  this.connection.joinChannel(name, handler, callback);
 };
 
 Bridge.prototype.send = function(args, destination) {
