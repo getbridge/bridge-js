@@ -75,15 +75,6 @@ Connection.prototype.establishConnection = function () {
   };
 };
 
-Connection.prototype.getQueueName = function () {
-  return 'C_' + this.clientId;
-};
-
-Connection.prototype.getExchangeName = function () {
-  return 'T_' + this.clientId;
-};
-
-
 Connection.prototype.send = function (args, destination) {
   var msg = {command: 'SEND', data: { 'args': Serializer.serialize(this.Bridge, args), 'destination': Serializer.serialize(this.Bridge, destination)}};
   msg = util.stringify(msg);
