@@ -58,7 +58,7 @@ Connection.prototype.establishConnection = function () {
   
   this.sock.onopen = function () {
     util.info("Beginning handshake");
-    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0]}};
+    var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null]}};
     msg = util.stringify(msg);
     self.sock.send(msg);
   };
