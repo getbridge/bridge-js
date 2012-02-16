@@ -14,7 +14,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     }
   };
   Ref.get = function(pathadd) {
-    var pathadd = pathadd.split('.');
+    pathadd = pathadd.split('.');
     return Ref._bridgeRoot.getPathObj( Ref._pathchain.concat(pathadd) );
   };
   Ref.call = function() {

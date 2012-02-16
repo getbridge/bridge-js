@@ -48,7 +48,7 @@ Connection.prototype.establishConnection = function () {
 
     self.sock.onmessage = function(message){
       try {
-        message = util.parse(message.data);    
+        message = util.parse(message.data);
         util.info('Received', message);
         Bridge.onMessage(message);
       } catch (e) {
@@ -57,7 +57,7 @@ Connection.prototype.establishConnection = function () {
     };
     Bridge.onReady();
   };
-  
+
   this.sock.onopen = function () {
     util.info("Beginning handshake");
     var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0]}};
