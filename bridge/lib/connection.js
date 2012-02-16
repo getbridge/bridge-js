@@ -16,8 +16,6 @@ function Connection(Bridge) {
 
 }
 
-Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
-
 Connection.prototype.reconnect = function () {
   util.info("Attempting reconnect");
   if (!this.connected && this.interval < 12800) {
@@ -48,7 +46,7 @@ Connection.prototype.establishConnection = function () {
 
     self.sock.onmessage = function(message){
       try {
-        message = util.parse(message.data);    
+        message = util.parse(message.data);
         util.info('Received', message);
         Bridge.onMessage(message);
       } catch (e) {
@@ -57,10 +55,10 @@ Connection.prototype.establishConnection = function () {
     };
     Bridge.onReady();
   };
-  
+
   this.sock.onopen = function () {
     util.info("Beginning handshake");
-    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0], api_key: self.options.apiKey}};
+    var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
     msg = util.stringify(msg);
     self.sock.send(msg);
   };
@@ -75,15 +73,6 @@ Connection.prototype.establishConnection = function () {
   };
 };
 
-Connection.prototype.getQueueName = function () {
-  return 'C_' + this.clientId;
-};
-
-Connection.prototype.getExchangeName = function () {
-  return 'T_' + this.clientId;
-};
-
-
 Connection.prototype.send = function (args, destination) {
   var msg = {command: 'SEND', data: { 'args': Serializer.serialize(this.Bridge, args), 'destination': Serializer.serialize(this.Bridge, destination)}};
   msg = util.stringify(msg);
@@ -94,6 +83,29 @@ Connection.prototype.send = function (args, destination) {
 Connection.prototype.publishService = function (name, callback) {
   util.info('Joining worker pool', name);
   var msg = {command: 'JOINWORKERPOOL', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
+
+Connection.prototype.getService = function (name, callback) {
+  // Adding other client is not supported
+  var msg = {command: 'GETOPS', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
+
+Connection.prototype.getChannel = function (name, callback) {
+  var self = this;
+  // Adding other client is not supported
+  var msg = {command: 'GETOPS', data: {name: 'channel:' + name, callback: Serializer.serialize(this.Bridge, function(service, err) {
+    if(err) {
+      callback(null, err);
+      return;
+    }
+    // Callback with channel ref
+    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations));
+
+  }) }};
   msg = util.stringify(msg);
   this.sock.send(msg);
 };

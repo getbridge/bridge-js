@@ -49,18 +49,26 @@ var util = {
     }
     return s;
   },
-  getKeys: Object.keys || function(obj){
-    var keys = [];
-      for(var key in obj){
-        keys.push(key);
-      }
-    return keys;
+  
+  // Ignore private methods
+  isValid: function(name) {
+    return name.charAt(0) !== '_';
   },
 
   inherit: function (ctor, ctor2) {
     var f = function () {};
     f.prototype = ctor2.prototype;
     ctor.prototype = new f;
+  },
+  
+  findKeys: function(pivot) {
+    var operations = [];
+    for (key in pivot) {
+      if ( typeof(pivot[key]) === 'function' && util.isValid(key) ) {
+        operations.push(key);
+      }
+    }
+    return operations;
   },
 
   stringify: JSON.stringify,
