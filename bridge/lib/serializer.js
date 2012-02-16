@@ -14,11 +14,10 @@ var Serializer = {
         var key, val;
         for (key in pivot) {
           var val = pivot[key];
-          var type = typeof(val);
-          if ( type === 'function' && util.isValid(key) ) {
+          if ( typeof(val) === 'function' && util.isValid(key) ) {
             operations.push(key);
             needs_wrap = true;
-          } else if ( type === 'object') {
+          } else {
             recurse_queue.push(key);
           }
         }
