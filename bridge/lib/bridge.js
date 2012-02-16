@@ -164,7 +164,6 @@ Bridge.prototype.createCallback = function(service) {
     this.children[name] = service;
   } else {
     ref = service._getRef();
-    name = service.getLocalName();
   }
   return ref;
 };
