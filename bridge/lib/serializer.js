@@ -14,14 +14,14 @@ var Serializer = {
         var key, val;
         for (key in pivot) {
           var val = pivot[key];
-          if ( util.typeOf(val) == 'function' && util.isValid(key) ) {
+          var type = typeof(val);
+          if ( type === 'function' && util.isValid(key) ) {
             operations.push(key);
             needs_wrap = true;
-          } else {
+          } else if ( type === 'object') {
             recurse_queue.push(key);
           }
         }
-        
         if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
           needs_wrap = true;
         }
@@ -32,7 +32,7 @@ var Serializer = {
           } else {
             ref = bridgeRoot.createCallback(pivot);
           }
-          var target = ref._getRef(operations).toDict();          
+          var target = ref._setOps(operations)._toDict();          
           result = target;
         } else {
           var tmp = {};
@@ -55,12 +55,12 @@ var Serializer = {
       case 'function':
         var target;
         if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
-          target = pivot._getRef().toDict();
+          target = pivot._getRef()._toDict();
         } else {
           var wrap = function WrapDummy(){};
           wrap.callback = pivot;
           var ref = bridgeRoot.createCallback(wrap);
-          target = ref.get('callback').toDict();
+          target = ref.get('callback')._toDict();
         }
         result = target;
         break;
@@ -74,7 +74,7 @@ var Serializer = {
       var el = obj[key]
       if(typeof el === "object") {
         if(util.hasProp(el, 'ref')) {
-          obj[key] = bridgeRoot.getPathObj(el['ref'])._getRef(el['operations']);
+          obj[key] = bridgeRoot.getPathObj(el['ref'])._setOps(el['operations']);
         } else {
           Serializer.unserialize(bridgeRoot, el);
         }

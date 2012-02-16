@@ -31,7 +31,9 @@ function Bridge(options) {
     hook_channel_handler: function(name, handler, callback){
       self.children['channel:' + name] = self.children[handler._getRef()._pathchain[2]];
       if (callback) {
-        callback.call( self.getPathObj(['channel', name, 'channel:' + name]), name );
+        var ref = self.getPathObj(['channel', name, 'channel:' + name]);
+        ref._setOps(util.findKeys(self.children['channel:' + name]));
+        callback.call( ref, name );
       }
     },
     getservice: function(name, callback){
@@ -177,19 +179,6 @@ Bridge.prototype.send = function(args, destination) {
   this.connection.send(args, destination);
 };
 
-/* Public APIs */
-Bridge.prototype.ready = function(func) {
-  if(!this.connected) {
-    this.on('ready', func);
-  } else {
-    func();
-  }
-};
-
-Bridge.prototype.getClientId = function() {
-  return this.connection.clientId;
-};
-
 Bridge.prototype.getPathObj = function(pathchain) {
   return new Ref(this, pathchain);
 };
@@ -201,6 +190,20 @@ Bridge.prototype.getRootRef = function() {
 Bridge.prototype.get = function(pathStr)  {
   var pathchain = pathStr.split('.');
   return this.getPathObj(pathchain, true);
+};
+
+
+/* Public APIs */
+Bridge.prototype.ready = function(func) {
+  if(!this.connected) {
+    this.on('ready', func);
+  } else {
+    func();
+  }
+};
+
+Bridge.prototype.getClientId = function() {
+  return this.connection.clientId;
 };
 
 Bridge.prototype.getService = function(name, callback) {

@@ -103,7 +103,7 @@ Connection.prototype.getChannel = function (name, callback) {
       return;
     }
     // Callback with channel ref
-    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._getRef(service._operations));
+    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations));
     
   }) }};
   msg = util.stringify(msg);

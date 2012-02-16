@@ -60,6 +60,16 @@ var util = {
     f.prototype = ctor2.prototype;
     ctor.prototype = new f;
   },
+  
+  findKeys: function(pivot) {
+    var operations = [];
+    for (key in pivot) {
+      if ( typeof(pivot[key]) === 'function' && util.isValid(key) ) {
+        operations.push(key);
+      }
+    }
+    return operations;
+  },
 
   stringify: JSON.stringify,
   parse: JSON.parse,
