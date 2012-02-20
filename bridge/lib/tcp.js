@@ -27,6 +27,7 @@ function TCP(options) {
   sock.send = function (data) {
     util.info('Sending', data);
     var outstr = new Buffer( 'xxxx' + data );
+    console.log(outstr.toString());
     outstr.writeUInt32BE(Buffer.byteLength(data), 0);
     sock._iostream.write(outstr);
   };

@@ -58,7 +58,7 @@ Connection.prototype.establishConnection = function () {
   
   this.sock.onopen = function () {
     util.info("Beginning handshake");
-    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0]}};
+    var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null]}};
     msg = util.stringify(msg);
     self.sock.send(msg);
   };
@@ -103,7 +103,7 @@ Connection.prototype.getChannel = function (name, callback) {
       return;
     }
     // Callback with channel ref
-    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._getRef(service._operations));
+    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations));
     
   }) }};
   msg = util.stringify(msg);
