@@ -19,8 +19,7 @@ function Connection(Bridge) {
 Connection.prototype.reconnect = function () {
   util.info("Attempting reconnect");
   if (!this.connected && this.interval < 12800) {
-    this.establishConnection();
-    setTimeout(this.reconnect, this.interval *= 2);
+    setTimeout(this.establishConnection, this.interval *= 2);
   }
 };
 
