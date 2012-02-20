@@ -18,15 +18,15 @@ function Connection(Bridge) {
 
 Connection.prototype.reconnect = function () {
   util.info("Attempting reconnect");
+  var self = this;
   if (!this.connected && this.interval < 12800) {
-    setTimeout(this.establishConnection, this.interval *= 2);
+    setTimeout(function(){self.establishConnection()}, this.interval *= 2);
   }
 };
 
 Connection.prototype.establishConnection = function () {
   var self = this,
       Bridge = this.Bridge;
-
   // Select between TCP and SockJS transports
   if (this.options.tcp) {
     util.info('Starting TCP connection', this.options.host, this.options.port);
