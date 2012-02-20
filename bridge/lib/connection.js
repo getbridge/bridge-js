@@ -38,13 +38,8 @@ Connection.prototype.establishConnection = function () {
   }
 
   this.sock.onmessage = function (message) {
-    util.info("clientId and secret received", message.data);
-    var ids = message.data.toString().split('|');
-    self.clientId = ids[0];
-    self.secret = ids[1];
-    self.interval = 400;
-
-    self.sock.onmessage = function(message){
+    
+    var handleMessage = function(message){
       try {
         message = util.parse(message.data);    
         util.info('Received', message);
@@ -53,7 +48,18 @@ Connection.prototype.establishConnection = function () {
         util.error("Message parsing failed: ", e.message, e.stack);
       }
     };
-    Bridge.onReady();
+    
+    util.info("clientId and secret received", message.data);
+    var ids = message.data.toString().split('|');
+    if(ids.length !== 2) {
+      handleMessage(message);
+    } else {
+      self.clientId = ids[0];
+      self.secret = ids[1];
+      self.interval = 400;
+      self.sock.onmessage = handleMessage;
+      Bridge.onReady();
+    }
   };
   
   this.sock.onopen = function () {
