@@ -122,6 +122,12 @@ Connection.prototype.joinChannel = function (name, handler, callback) {
   this.sock.send(msg);
 };
 
+Connection.prototype.leaveChannel = function (name, handler, callback) {
+  // Adding other client is not supported
+  var msg = {command: 'LEAVECHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
 // if node
 exports.Connection = Connection;
 // end node

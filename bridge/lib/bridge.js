@@ -175,6 +175,10 @@ Bridge.prototype.joinChannel = function(name, handler, callback) {
   this.connection.joinChannel(name, handler, callback);
 };
 
+Bridge.prototype.leaveChannel = function(name, handler, callback) {
+  this.connection.leaveChannel(name, handler, callback);
+};
+
 Bridge.prototype.send = function(args, destination) {
   this.connection.send(args, destination);
 };
