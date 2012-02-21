@@ -15,9 +15,13 @@ bridge.ready(function(){
 
   var ChatServer = {
     join: function(name, handler, callback){
-      console.log("RECEIVED JOIN REQUEST", name, handler, callback);
+      console.log("RECEIVED JOIN REQUEST");
       bridge.joinChannel('lobby', handler, callback);
     },
+    leave: function(name, handler, callback){
+      console.log("RECEIVED LEAVE REQUEST");
+      bridge.leaveChannel('lobby', handler, callback);
+    }
   }
 
   bridge.publishService('chatserver', ChatServer, function(){
