@@ -10,7 +10,9 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref._fixOps = function() {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
-      Ref[op] = Ref.get(op).call;
+      if (op !== null) {
+        Ref[op] = Ref.get(op).call;
+      }
     }
   };
   Ref._getRef = function(operations) {
@@ -37,7 +39,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref.getLocalName = function() {
     return Ref._pathchain[2];
   };
-  
+
   Ref._operations = operations || [];
   Ref._bridgeRoot = bridgeRoot;
   Ref._pathchain = pathchain;
