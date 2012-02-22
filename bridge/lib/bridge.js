@@ -1,5 +1,7 @@
 var defaultOptions = {
-  url: 'http://localhost:8080/bridge',
+  protocol: 'http://',
+  host: 'localhost',
+  port: 8091,
   reconnect: true,
   log: 2,
   tcp: false
@@ -14,7 +16,6 @@ var Serializer = require('./serializer.js');
 var Ref = require('./ref.js');
 
 util.extend(defaultOptions, {
-  host: 'localhost',
   port: 8090,
   tcp: true
 });

@@ -33,7 +33,7 @@ Connection.prototype.establishConnection = function () {
     this.sock = new TCP(this.options).sock;
   } else {
     util.info('Starting SockJS connection');
-    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
+    this.sock = new SockJS(this.options.protocol + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
 
   this.sock.onmessage = function (message) {
