@@ -1,5 +1,7 @@
 var defaultOptions = {
-  url: 'http://localhost:8080/bridge',
+  protocol: 'http://',
+  host: 'localhost',
+  port: 8091,
   reconnect: true,
   log: 2,
   tcp: false
@@ -14,7 +16,6 @@ var Serializer = require('./serializer.js');
 var Ref = require('./ref.js');
 
 util.extend(defaultOptions, {
-  host: 'localhost',
   port: 8090,
   tcp: true
 });
@@ -172,6 +173,10 @@ Bridge.prototype.createCallback = function(service) {
 
 Bridge.prototype.joinChannel = function(name, handler, callback) {
   this.connection.joinChannel(name, handler, callback);
+};
+
+Bridge.prototype.leaveChannel = function(name, handler, callback) {
+  this.connection.leaveChannel(name, handler, callback);
 };
 
 Bridge.prototype.send = function(args, destination) {
