@@ -37,7 +37,6 @@ Connection.prototype.establishConnection = function () {
   }
 
   this.sock.onmessage = function (message) {
-    
     var handleMessage = function(message){
       try {
         message = util.parse(message.data);

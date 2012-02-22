@@ -1,5 +1,5 @@
 var connect = require('net').connect;
-var IOStream = require('iostream').IOStream;
+var IOStream = require('./iostream.js').IOStream;
 var util = require('./util.js');
 
 function TCP(options) {
