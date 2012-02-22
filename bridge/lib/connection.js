@@ -8,7 +8,7 @@ function Connection(Bridge) {
   var self = this;
   // Set associated Bridge object
   this.Bridge = Bridge;
-
+  
   // Set options
   this.options = Bridge.options;
 
@@ -35,6 +35,8 @@ Connection.prototype.establishConnection = function () {
     util.info('Starting SockJS connection');
     this.sock = new SockJS(this.options.protocol + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
+  
+  this.sock.Bridge = Bridge;
 
   this.sock.onmessage = function (message) {
     var handleMessage = function(message){
@@ -64,7 +66,14 @@ Connection.prototype.establishConnection = function () {
     util.info("Beginning handshake");
     var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
     msg = util.stringify(msg);
-    self.sock.send(msg);
+    
+    // If TCP use _send to force send bypassing connect check
+    if (self.sock._send) {
+      self.sock._send(msg);
+    } else {
+      self.sock.send(msg);
+    }
+    
   };
 
   this.sock.onclose = function () {
