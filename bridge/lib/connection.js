@@ -102,13 +102,13 @@ Connection.prototype.getService = function (name, callback) {
 Connection.prototype.getChannel = function (name, callback) {
   var self = this;
   // Adding other client is not supported
-  var msg = {command: 'GETOPS', data: {name: 'channel:' + name, callback: Serializer.serialize(this.Bridge, function(service, err) {
+  var msg = {command: 'GETCHANNEL', data: {name: name, callback: Serializer.serialize(this.Bridge, function(service, err) {
     if(err) {
       callback(null, err);
       return;
     }
     // Callback with channel ref
-    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations));
+    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations), name);
 
   }) }};
   msg = util.stringify(msg);
