@@ -3,7 +3,7 @@ var failureMessage = 'This test tests the ability to create multiple instances o
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
-var bridge = new Bridge({host: 'localhost'});
+var bridge = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
 
 bridge.ready(function(){
     var count = 0;
@@ -27,9 +27,9 @@ setTimeout(function() {
 }, 2000);
 
 function serverReady() {
-    var b1 = new Bridge({host: 'localhost'});
-    var b2 = new Bridge({host: 'localhost'});
-    var b3 = new Bridge({host: 'localhost'});
+    var b1 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
+    var b2 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
+    var b3 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
     b1.ready(function() {
         b1.getService('test5_consolelog', function(service) {
             service.log('b1 1');

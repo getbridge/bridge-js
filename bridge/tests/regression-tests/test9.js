@@ -3,8 +3,8 @@ var failureMessage = '';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
-var _b1 = new Bridge({host: 'localhost'});
-var _b2 = new Bridge({host: 'localhost'});
+var _b1 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
+var _b2 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
 
 var count1 = 0;
 var count2 = 0;
@@ -44,7 +44,7 @@ setTimeout(function() {
 
 function initClient() {
     for (var i = 0; i < 10; i++) {
-        var b = new Bridge({host: 'localhost'});
+        var b = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
         (function (id) {
             b.ready(function() {
                 b.getService('test9_channels', function(service) {
