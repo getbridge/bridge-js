@@ -12,7 +12,7 @@ function Connection(Bridge) {
   this.Bridge = Bridge;
   // Set options
   this.options = Bridge.options;
-  if (!this.options.host) {
+  if (!this.options.host || !this.options.port) {
     // Find host and port with redirector
     if (this.options.redirector.charAt(this.options.redirector.length - 1) !== '/') {
       this.options.redirector += '/';
