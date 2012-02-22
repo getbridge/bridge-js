@@ -7,12 +7,24 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     var args = [].slice.apply(arguments);
     Ref.call.apply(Ref, args);
   }
-  Ref._fixops = function() {
+  Ref._fixOps = function() {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
       Ref[op] = Ref.get(op).call;
     }
   };
+  Ref._getRef = function(operations) {
+    return Ref;
+  };
+  Ref._setOps = function(operations) {
+    Ref._operations = operations;
+    Ref._fixOps();
+    return Ref;
+  };
+  Ref._toDict = function() {
+    return {'ref': Ref._pathchain, 'operations': Ref._operations};
+  };
+
   Ref.get = function(pathadd) {
     pathadd = pathadd.split('.');
     return Ref._bridgeRoot.getPathObj( Ref._pathchain.concat(pathadd) );
@@ -25,19 +37,11 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref.getLocalName = function() {
     return Ref._pathchain[2];
   };
-  Ref._getRef = function(operations) {
-    Ref._operations = operations;
-    Ref._fixops();
-    return Ref;
-  };
-  Ref.toDict = function() {
-    return {'ref': Ref._pathchain, 'operations': Ref._operations};
-  };
-
+  
   Ref._operations = operations || [];
   Ref._bridgeRoot = bridgeRoot;
   Ref._pathchain = pathchain;
-  Ref._fixops();
+  Ref._fixOps();
 
   return Ref;
 };

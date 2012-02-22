@@ -1,5 +1,7 @@
 // if node
 var util = require('./util');
+var url = require('url');
+var http = require('http');
 var Serializer = require('./serializer.js');
 var TCP = require('./tcp').TCP;
 // end node
@@ -8,45 +10,84 @@ function Connection(Bridge) {
   var self = this;
   // Set associated Bridge object
   this.Bridge = Bridge;
-
   // Set options
   this.options = Bridge.options;
+  if (!this.options.host) {
+    // Find host and port with redirector
+    if (this.options.redirector.charAt(this.options.redirector.length - 1) !== '/') {
+      this.options.redirector += '/';
+    }
+    if (this.options.tcp) {
+      var redirector = url.parse(this.options.redirector);
+      http.get({
+        host: redirector.hostname,
+        port: redirector.port,
+        path: '/' + this.options.apiKey + '/json'
+      }, function(res) {
+        var data = "";
+        res.on('data', function(chunk){
+          data += chunk;
+        });
+        res.on('end', function(){
+          try {
+            var info = JSON.parse(data);
+            self.options.host = info.bridge_host;
+            self.options.port = info.bridge_port;
+            self.establishConnection();
+          } catch (e) {
+            util.error('Unable to parse redirector response');
+          }
+        });
+      }).on('error', function(e) {
+      throw e
+        util.error('Unable to contact redirector');
+      });
+    } else {
+      console.log('jsonptime');
+      // JSONP
+      window.bridgeHost = function(host, port){ 
+        self.options.host = host;
+        self.options.port = port;
+        self.establishConnection();
+        delete window.bridgeHost;
+      };
+      var s = document.createElement('script');
+      s.setAttribute('src', this.options.redirector + this.options.apiKey + '/jsonp');
+      document.getElementsByTagName('head')[0].appendChild(s);
+    }
+  } else {
+    // Host and port is specified
+    this.establishConnection();
+  }
 
-  this.establishConnection();
+  
 
 }
 
-Connection.prototype.DEFAULT_EXCHANGE = 'T_DEFAULT';
-
 Connection.prototype.reconnect = function () {
   util.info("Attempting reconnect");
+  var self = this;
   if (!this.connected && this.interval < 12800) {
-    this.establishConnection();
-    setTimeout(this.reconnect, this.interval *= 2);
+    setTimeout(function(){self.establishConnection()}, this.interval *= 2);
   }
 };
 
 Connection.prototype.establishConnection = function () {
   var self = this,
       Bridge = this.Bridge;
-
   // Select between TCP and SockJS transports
   if (this.options.tcp) {
     util.info('Starting TCP connection', this.options.host, this.options.port);
     this.sock = new TCP(this.options).sock;
   } else {
     util.info('Starting SockJS connection');
-    this.sock = new SockJS(this.options.url, this.options.protocols, this.options.sockjs);
+    this.sock = new SockJS(this.options.protocol + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
+  
+  this.sock.Bridge = Bridge;
 
   this.sock.onmessage = function (message) {
-    util.info("clientId and secret received", message.data);
-    var ids = message.data.toString().split('|');
-    self.clientId = ids[0];
-    self.secret = ids[1];
-    self.interval = 400;
-
-    self.sock.onmessage = function(message){
+    var handleMessage = function(message){
       try {
         message = util.parse(message.data);
         util.info('Received', message);
@@ -55,14 +96,32 @@ Connection.prototype.establishConnection = function () {
         util.error("Message parsing failed: ", e.message, e.stack);
       }
     };
-    Bridge.onReady();
+    
+    util.info("clientId and secret received", message.data);
+    var ids = message.data.toString().split('|');
+    if(ids.length !== 2) {
+      handleMessage(message);
+    } else {
+      self.clientId = ids[0];
+      self.secret = ids[1];
+      self.interval = 400;
+      self.sock.onmessage = handleMessage;
+      Bridge.onReady();
+    }
   };
 
   this.sock.onopen = function () {
     util.info("Beginning handshake");
-    var msg = {command: 'CONNECT', data: {session: [self.clientId || 0, self.secret || 0]}};
+    var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
     msg = util.stringify(msg);
-    self.sock.send(msg);
+    
+    // If TCP use _send to force send bypassing connect check
+    if (self.sock._send) {
+      self.sock._send(msg);
+    } else {
+      self.sock.send(msg);
+    }
+    
   };
 
   this.sock.onclose = function () {
@@ -74,15 +133,6 @@ Connection.prototype.establishConnection = function () {
     }
   };
 };
-
-Connection.prototype.getQueueName = function () {
-  return 'C_' + this.clientId;
-};
-
-Connection.prototype.getExchangeName = function () {
-  return 'T_' + this.clientId;
-};
-
 
 Connection.prototype.send = function (args, destination) {
   var msg = {command: 'SEND', data: { 'args': Serializer.serialize(this.Bridge, args), 'destination': Serializer.serialize(this.Bridge, destination)}};
@@ -98,6 +148,29 @@ Connection.prototype.publishService = function (name, callback) {
   this.sock.send(msg);
 };
 
+Connection.prototype.getService = function (name, callback) {
+  // Adding other client is not supported
+  var msg = {command: 'GETOPS', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
+
+Connection.prototype.getChannel = function (name, callback) {
+  var self = this;
+  // Adding other client is not supported
+  var msg = {command: 'GETCHANNEL', data: {name: name, callback: Serializer.serialize(this.Bridge, function(service, err) {
+    if(err) {
+      callback(null, err);
+      return;
+    }
+    // Callback with channel ref
+    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations), name);
+
+  }) }};
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
+
 Connection.prototype.joinChannel = function (name, handler, callback) {
   // Adding other client is not supported
   var msg = {command: 'JOINCHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
@@ -105,6 +178,12 @@ Connection.prototype.joinChannel = function (name, handler, callback) {
   this.sock.send(msg);
 };
 
+Connection.prototype.leaveChannel = function (name, handler, callback) {
+  // Adding other client is not supported
+  var msg = {command: 'LEAVECHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
+  msg = util.stringify(msg);
+  this.sock.send(msg);
+};
 // if node
 exports.Connection = Connection;
 // end node

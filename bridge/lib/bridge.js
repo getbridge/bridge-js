@@ -1,5 +1,8 @@
 var defaultOptions = {
-  url: 'http://localhost:8080/bridge',
+  protocol: 'http://',
+  /*host: 'localhost',
+  port: 8091,*/
+  redirector: 'http://localhost',
   reconnect: true,
   log: 2,
   tcp: false
@@ -14,8 +17,7 @@ var Serializer = require('./serializer.js');
 var Ref = require('./ref.js');
 
 util.extend(defaultOptions, {
-  host: 'localhost',
-  port: 8090,
+  /*port: 8090,*/
   tcp: true
 });
 
@@ -31,7 +33,9 @@ function Bridge(options) {
     hook_channel_handler: function(name, handler, callback){
       self.children['channel:' + name] = self.children[handler._getRef()._pathchain[2]];
       if (callback) {
-        callback.call( self.getChannel(name), name );
+        var ref = self.getPathObj(['channel', name, 'channel:' + name]);
+        ref._setOps(util.findKeys(self.children['channel:' + name]));
+        callback.call( ref, name );
       }
     },
     getservice: function(name, callback){
@@ -52,7 +56,7 @@ function Bridge(options) {
   
   // Set logging level
   util.setLogLevel(this.options.log);
-  
+
   // Contains references to shared references
   this.children = {system: system};
 
@@ -157,42 +161,28 @@ Bridge.prototype.publishService = function(name, service, callback) {
 Bridge.prototype.createCallback = function(service) {
   var self = this;
   var name;
+  var ref;
   if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
     name = util.generateGuid();
-    service._getRef = function() { return self.getPathObj( ['client', self.getClientId(), name] ); };
+    ref = self.getPathObj( ['client', self.getClientId(), name] );
   } else {
+    ref = service._getRef();
     name = service.getLocalName();
   }
   this.children[name] = service;
-  return service._getRef();
+  return ref;
 };
 
 Bridge.prototype.joinChannel = function(name, handler, callback) {
-  var self = this;
-  // Detect clientId of owning hander
-  
-  
-  var foo = Serializer.serialize(this, handler);
-  var clientId = foo.ref[1];
+  this.connection.joinChannel(name, handler, callback);
+};
 
-  self.connection.joinChannel(name, handler, callback);
+Bridge.prototype.leaveChannel = function(name, handler, callback) {
+  this.connection.leaveChannel(name, handler, callback);
 };
 
 Bridge.prototype.send = function(args, destination) {
   this.connection.send(args, destination);
-};
-
-/* Public APIs */
-Bridge.prototype.ready = function(func) {
-  if(!this.connected) {
-    this.on('ready', func);
-  } else {
-    func();
-  }
-};
-
-Bridge.prototype.getClientId = function() {
-  return this.connection.clientId;
 };
 
 Bridge.prototype.getPathObj = function(pathchain) {
@@ -208,13 +198,27 @@ Bridge.prototype.get = function(pathStr)  {
   return this.getPathObj(pathchain, true);
 };
 
+
+/* Public APIs */
+Bridge.prototype.ready = function(func) {
+  if(!this.connected) {
+    this.on('ready', func);
+  } else {
+    func();
+  }
+};
+
+Bridge.prototype.getClientId = function() {
+  return this.connection.clientId;
+};
+
 Bridge.prototype.getService = function(name, callback) {
-  this.getPathObj(['named', name, 'system', 'getservice']).call(name, callback);
+  this.connection.getService(name, callback);
 };
 
 
-Bridge.prototype.getChannel = function(name) {
-  return this.getPathObj(['channel', name, 'channel:' + name]);
+Bridge.prototype.getChannel = function(name, callback) {
+  this.connection.getChannel(name, callback);
 };
 
 // if node
