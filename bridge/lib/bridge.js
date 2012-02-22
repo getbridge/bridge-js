@@ -1,7 +1,8 @@
 var defaultOptions = {
   protocol: 'http://',
-  host: 'localhost',
-  port: 8091,
+  /*host: 'localhost',
+  port: 8091,*/
+  redirector: 'http://localhost',
   reconnect: true,
   log: 2,
   tcp: false
@@ -16,7 +17,7 @@ var Serializer = require('./serializer.js');
 var Ref = require('./ref.js');
 
 util.extend(defaultOptions, {
-  port: 8090,
+  /*port: 8090,*/
   tcp: true
 });
 

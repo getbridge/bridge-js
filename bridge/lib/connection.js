@@ -1,5 +1,7 @@
 // if node
 var util = require('./util');
+var url = require('url');
+var http = require('http');
 var Serializer = require('./serializer.js');
 var TCP = require('./tcp').TCP;
 // end node
@@ -8,11 +10,57 @@ function Connection(Bridge) {
   var self = this;
   // Set associated Bridge object
   this.Bridge = Bridge;
-  
   // Set options
   this.options = Bridge.options;
+  if (!this.options.host) {
+    // Find host and port with redirector
+    if (this.options.redirector.charAt(this.options.redirector.length - 1) !== '/') {
+      this.options.redirector += '/';
+    }
+    if (this.options.tcp) {
+      var redirector = url.parse(this.options.redirector);
+      http.get({
+        host: redirector.hostname,
+        port: redirector.port,
+        path: '/' + this.options.apiKey + '/json'
+      }, function(res) {
+        var data = "";
+        res.on('data', function(chunk){
+          data += chunk;
+        });
+        res.on('end', function(){
+          try {
+            var info = JSON.parse(data);
+            self.options.host = info.bridge_host;
+            self.options.port = info.bridge_port;
+            self.establishConnection();
+          } catch (e) {
+            util.error('Unable to parse redirector response');
+          }
+        });
+      }).on('error', function(e) {
+      throw e
+        util.error('Unable to contact redirector');
+      });
+    } else {
+      console.log('jsonptime');
+      // JSONP
+      window.bridgeHost = function(host, port){ 
+        self.options.host = host;
+        self.options.port = port;
+        self.establishConnection();
+        delete window.bridgeHost;
+      };
+      var s = document.createElement('script');
+      s.setAttribute('src', this.options.redirector + this.options.apiKey + '/jsonp');
+      document.getElementsByTagName('head')[0].appendChild(s);
+    }
+  } else {
+    // Host and port is specified
+    this.establishConnection();
+  }
 
-  this.establishConnection();
+  
 
 }
 
