@@ -14,15 +14,12 @@ function Connection(Bridge) {
   this.options = Bridge.options;
   if (!this.options.host || !this.options.port) {
     // Find host and port with redirector
-    if (this.options.redirector.charAt(this.options.redirector.length - 1) !== '/') {
-      this.options.redirector += '/';
-    }
     if (this.options.tcp) {
       var redirector = url.parse(this.options.redirector);
       http.get({
         host: redirector.hostname,
         port: redirector.port,
-        path: '/' + this.options.apiKey + '/json'
+        path: '/' + this.options.apiKey
       }, function(res) {
         var data = "";
         res.on('data', function(chunk){
