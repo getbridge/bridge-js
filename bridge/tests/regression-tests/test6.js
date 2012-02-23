@@ -3,7 +3,7 @@ var failureMessage = 'This test tests if it is possible to publish a service bef
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
-var bridge = new Bridge({host: 'localhost'});
+var bridge = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
 
 try {
     var ConsoleLogServer = {
