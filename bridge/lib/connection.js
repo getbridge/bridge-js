@@ -40,16 +40,15 @@ function Connection(Bridge) {
         util.error('Unable to contact redirector');
       });
     } else {
-      console.log('jsonptime');
       // JSONP
-      window.bridgeHost = function(host, port){ 
+      window.bridgeHost = function(status, host, port){ 
         self.options.host = host;
-        self.options.port = port;
+        self.options.port = parseInt(port, 10);
         self.establishConnection();
         delete window.bridgeHost;
       };
       var s = document.createElement('script');
-      s.setAttribute('src', this.options.redirector + this.options.apiKey + '/jsonp');
+      s.setAttribute('src', this.options.redirector + '/redirect/' + this.options.apiKey + '/jsonp');
       document.getElementsByTagName('head')[0].appendChild(s);
     }
   } else {
