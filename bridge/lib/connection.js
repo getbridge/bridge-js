@@ -19,7 +19,7 @@ function Connection(Bridge) {
       http.get({
         host: redirector.hostname,
         port: redirector.port,
-        path: '/' + this.options.apiKey
+        path: '/redirect/' + this.options.apiKey
       }, function(res) {
         var data = "";
         res.on('data', function(chunk){
@@ -28,8 +28,8 @@ function Connection(Bridge) {
         res.on('end', function(){
           try {
             var info = JSON.parse(data);
-            self.options.host = info.bridge_host;
-            self.options.port = info.bridge_port;
+            self.options.host = info.data.bridge_host;
+            self.options.port = info.data.bridge_port;
             self.establishConnection();
           } catch (e) {
             util.error('Unable to parse redirector response');
