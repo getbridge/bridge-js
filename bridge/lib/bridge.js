@@ -2,7 +2,7 @@ var defaultOptions = {
   protocol: 'http://',
   /*host: 'localhost',
   port: 8091,*/
-  redirector: 'http://localhost',
+  redirector: 'http://redirector.flotype.com',
   reconnect: true,
   log: 2,
   tcp: false
