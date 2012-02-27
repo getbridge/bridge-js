@@ -30,9 +30,12 @@ function Connection(Bridge) {
             var info = JSON.parse(data);
             self.options.host = info.data.bridge_host;
             self.options.port = info.data.bridge_port;
+            if (!self.options.host || !self.options.port) {
+              throw "Could not find host and port in JSON";
+            }
             self.establishConnection();
           } catch (e) {
-            util.error('Unable to parse redirector response');
+            util.error('Unable to parse redirector response ' + data);
           }
         });
       }).on('error', function(e) {
