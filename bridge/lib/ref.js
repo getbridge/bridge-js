@@ -11,7 +11,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     for (var x in Ref._operations) {
       var op = Ref._operations[x];
       if (op !== null) {
-        Ref[op] = Ref.get(op).call;
+        Ref[op] = Ref._get(op).call;
       }
     }
   };
@@ -27,7 +27,7 @@ var Ref = function (bridgeRoot, pathchain, operations) {
     return {'ref': Ref._pathchain, 'operations': Ref._operations};
   };
 
-  Ref.get = function(pathadd) {
+  Ref._get = function(pathadd) {
     pathadd = pathadd.split('.');
     return Ref._bridgeRoot.getPathObj( Ref._pathchain.concat(pathadd) );
   };
