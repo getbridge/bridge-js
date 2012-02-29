@@ -192,7 +192,7 @@ Bridge.prototype.getRootRef = function() {
   return this.getPathObj(['client', this.getClientId()]);
 };
 
-Bridge.prototype.get = function(pathStr)  {
+Bridge.prototype._get = function(pathStr)  {
   var pathchain = pathStr.split('.');
   return this.getPathObj(pathchain, true);
 };
