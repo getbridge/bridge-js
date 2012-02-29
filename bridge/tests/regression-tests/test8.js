@@ -3,7 +3,7 @@ var failureMessage = 'This test tests Bridge Channels feature.\nExpected behavio
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
-var bridgeServer = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
+var bridgeServer = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
 bridgeServer.ready(function(){
     var joinCount = 0;
@@ -45,8 +45,8 @@ setTimeout(function() {
 }, 5000);
 
 function initClient() {
-    var b1 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
-    var b2 = new Bridge({host: 'localhost', apiKey: 'abcdefgh'});
+    var b1 = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
+    var b2 = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
     var handle = {
                 send: function(msg) {
