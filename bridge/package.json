@@ -11,8 +11,5 @@
   "engines": {
     "node": "~0.6.1"
   },
-  "dependencies": {
-    "iostream": ">=0.0.3"
-  },
   "devDependencies": {}
 }
