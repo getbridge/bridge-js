@@ -34,7 +34,12 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref.call = function() {
     var args = [].slice.apply(arguments);
     util.info('Calling', Ref._pathchain, args);
-    return Ref._bridgeRoot.send(args, Ref);
+    
+    refToSend = Ref;
+    if(Ref._pathchain.length == 3) {
+      refToSend = Ref._bridgeRoot.getPathObj(Ref._pathchain.concat("callback"));
+    }
+    return Ref._bridgeRoot.send(args, refToSend);
   };
   Ref.getLocalName = function() {
     return Ref._pathchain[2];
