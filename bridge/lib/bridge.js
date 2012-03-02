@@ -14,7 +14,7 @@ var util = require('./util.js');
 
 var Connection = require('./connection.js').Connection;
 var Serializer = require('./serializer.js');
-var Ref = require('./ref.js');
+var RefCtor = require('./ref.js');
 
 util.extend(defaultOptions, {
   /*port: 8090,*/
@@ -185,7 +185,7 @@ Bridge.prototype.send = function(args, destination) {
 };
 
 Bridge.prototype.getPathObj = function(pathchain) {
-  return new Ref(this, pathchain);
+  return new RefCtor(this, pathchain);
 };
 
 Bridge.prototype.getRootRef = function() {

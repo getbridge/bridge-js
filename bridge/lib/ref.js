@@ -2,7 +2,7 @@
 var util = require('./util.js');
 // end node
 
-var Ref = function (bridgeRoot, pathchain, operations) {
+var RefCtor = function (bridgeRoot, pathchain, operations) {
   function Ref() {
     var args = [].slice.apply(arguments);
     Ref.call.apply(Ref, args);
@@ -54,5 +54,5 @@ var Ref = function (bridgeRoot, pathchain, operations) {
 };
 
 // if node
-module.exports = Ref;
+module.exports = RefCtor;
 // end node
