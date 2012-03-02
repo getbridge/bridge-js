@@ -14,7 +14,7 @@ var util = require('./util.js');
 
 var Connection = require('./connection.js').Connection;
 var Serializer = require('./serializer.js');
-var Ref = require('./ref.js');
+var RefCtor = require('./ref.js');
 
 util.extend(defaultOptions, {
   /*port: 8090,*/
@@ -128,7 +128,6 @@ Bridge.prototype.execute = function(pathchain, args) {
   var obj = this.children[pathchain[2]];
   var func = obj[pathchain[3]];
 
-
   if (func) {
     func.apply( obj, args );
   } else {
@@ -147,15 +146,8 @@ Bridge.prototype.publishService = function(name, service, callback) {
 
   var self = this;
 
-  if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
-    service._getRef = function() { return self.getPathObj( ['named', name, name] ); };
-    this.connection.publishService(name, callback);
-  } else {
-    util.error("Service can't be renamed! " + name + ' old ' +  service._getRef().getLocalName() );
-    return;
-  }
   this.children[name] = service;
-  return service._getRef();
+  this.connection.publishService(name, callback);
 };
 
 Bridge.prototype.createCallback = function(service) {
@@ -185,7 +177,7 @@ Bridge.prototype.send = function(args, destination) {
 };
 
 Bridge.prototype.getPathObj = function(pathchain) {
-  return new Ref(this, pathchain);
+  return new RefCtor(this, pathchain);
 };
 
 Bridge.prototype.getRootRef = function() {

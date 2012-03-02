@@ -59,7 +59,8 @@ var Serializer = {
           var wrap = function WrapDummy(){};
           wrap.callback = pivot;
           var ref = bridgeRoot.createCallback(wrap);
-          target = ref._get('callback')._toDict();
+          ref._setOps(['callback']);
+          target = ref._toDict();
         }
         result = target;
         break;

@@ -2,7 +2,7 @@
 var util = require('./util.js');
 // end node
 
-var Ref = function (bridgeRoot, pathchain, operations) {
+var RefCtor = function (bridgeRoot, pathchain, operations) {
   function Ref() {
     var args = [].slice.apply(arguments);
     Ref.call.apply(Ref, args);
@@ -34,7 +34,12 @@ var Ref = function (bridgeRoot, pathchain, operations) {
   Ref.call = function() {
     var args = [].slice.apply(arguments);
     util.info('Calling', Ref._pathchain, args);
-    return Ref._bridgeRoot.send(args, Ref);
+    
+    refToSend = Ref;
+    if(Ref._pathchain.length == 3) {
+      refToSend = Ref._bridgeRoot.getPathObj(Ref._pathchain.concat("callback"));
+    }
+    return Ref._bridgeRoot.send(args, refToSend);
   };
   Ref.getLocalName = function() {
     return Ref._pathchain[2];
@@ -49,5 +54,5 @@ var Ref = function (bridgeRoot, pathchain, operations) {
 };
 
 // if node
-module.exports = Ref;
+module.exports = RefCtor;
 // end node
