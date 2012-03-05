@@ -11,22 +11,17 @@ var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
 
 bridge = new Bridge({apiKey: 'rI5cMTmi'});
 
-bridge.ready(function(){
-
-  var ChatServer = {
-    join: function(name, handler, callback){
-      console.log("RECEIVED JOIN REQUEST");
-      bridge.joinChannel('lobby', handler, callback);
-    },
-    leave: function(name, handler, callback){
-      console.log("RECEIVED LEAVE REQUEST");
-      bridge.leaveChannel('lobby', handler, callback);
-    }
+var ChatServer = {
+  join: function(name, handler, callback){
+    console.log("RECEIVED JOIN REQUEST");
+    bridge.joinChannel('lobby', handler, callback);
+  },
+  leave: function(name, handler, callback){
+    console.log("RECEIVED LEAVE REQUEST");
+    bridge.leaveChannel('lobby', handler, callback);
   }
+}
 
-  bridge.publishService('chatserver', ChatServer, function(){
-      console.log('started chatserver');
-  });
-
+bridge.publishService('chatserver', ChatServer, function(){
+    console.log('started chatserver');
 });
-
