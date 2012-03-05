@@ -12,6 +12,7 @@ function Connection(Bridge) {
   this.Bridge = Bridge;
   // Set options
   this.options = Bridge.options;
+  
   if (!this.options.host || !this.options.port) {
     // Find host and port with redirector
     if (this.options.tcp) {
@@ -59,8 +60,6 @@ function Connection(Bridge) {
     this.establishConnection();
   }
 
-  
-
 }
 
 Connection.prototype.reconnect = function () {
@@ -74,18 +73,20 @@ Connection.prototype.reconnect = function () {
 Connection.prototype.establishConnection = function () {
   var self = this,
       Bridge = this.Bridge;
+      
+  var sock;
   // Select between TCP and SockJS transports
   if (this.options.tcp) {
     util.info('Starting TCP connection', this.options.host, this.options.port);
-    this.sock = new TCP(this.options).sock;
+    sock = new TCP(this.options).sock;
   } else {
     util.info('Starting SockJS connection');
-    this.sock = new SockJS(this.options.protocol + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
+    sock = new SockJS(this.options.protocol + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
   
-  this.sock.Bridge = Bridge;
+  sock.Bridge = Bridge;
 
-  this.sock.onmessage = function (message) {
+  sock.onmessage = function (message) {
     var handleMessage = function(message){
       try {
         message = util.parse(message.data);
@@ -104,27 +105,28 @@ Connection.prototype.establishConnection = function () {
       self.clientId = ids[0];
       self.secret = ids[1];
       self.interval = 400;
+      self.sock.processQueue(sock, self.clientId);
+      self.sockBuffer = self.sock;
+      self.sock = sock;
       self.sock.onmessage = handleMessage;
       Bridge.onReady();
     }
   };
 
-  this.sock.onopen = function () {
+  sock.onopen = function () {
     util.info("Beginning handshake");
     var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
     msg = util.stringify(msg);
     
     // If TCP use _send to force send bypassing connect check
-    if (self.sock._send) {
-      self.sock._send(msg);
-    } else {
-      self.sock.send(msg);
-    }
-    
+    sock.send(msg); 
   };
 
-  this.sock.onclose = function () {
+  sock.onclose = function () {
     util.warn("Connection closed");
+    if (self.sockBuffer) {
+      self.sock = self.sockBuffer;
+    }
     self.connected = false;
     if (self.options.reconnect) {
       // do reconnect stuff. start at 100 ms.
@@ -182,6 +184,19 @@ Connection.prototype.leaveChannel = function (name, handler, callback) {
   var msg = {command: 'LEAVECHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
   msg = util.stringify(msg);
   this.sock.send(msg);
+};
+
+Connection.prototype.sock = {
+  buffer: [],
+  send: function(msg){
+    this.buffer.push(msg);
+  },
+  processQueue: function(sock, clientId) {
+    for(var i = 0, ii = this.buffer.length; i < ii; i++) {
+      sock.send(this.buffer[i].replace('"client",null', '"client","'+clientId+'"'));
+    }
+    this.buffer = [];
+  }
 };
 // if node
 exports.Connection = Connection;

@@ -36,15 +36,8 @@ function TCP(options) {
     
     
   };
-  sock.send = function (data) {
-    if(sock.Bridge.connected) {
-      sock._send(data);
-    } else {
-      throw "Not connected to server";
-    }
-  };
   
-  sock._send = function (data) {
+  sock.send = function (data) {
     util.info('Sending', data);
     var outstr = new Buffer( 'xxxx' + data );
     outstr.writeUInt32BE(Buffer.byteLength(data), 0);
