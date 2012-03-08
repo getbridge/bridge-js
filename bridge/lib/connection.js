@@ -40,7 +40,7 @@ function Connection(Bridge) {
           }
         });
       }).on('error', function(e) {
-      throw e
+        throw e
         util.error('Unable to contact redirector');
       });
     } else {
