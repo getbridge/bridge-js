@@ -9,7 +9,7 @@ require('http').createServer(function (request, response) {
 var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
 // bridge = new Bridge({host: 'ec2-50-19-181-20.compute-1.amazonaws.com'});
 
-bridge = new Bridge({apiKey: 'rI5cMTmi'});
+bridge = new Bridge({apiKey: 'abcdefgh'});
 
 var ChatServer = {
   join: function(name, handler, callback){
