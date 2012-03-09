@@ -36,6 +36,7 @@ var starttagIF = '// if node'
  */
 
 var base = [
+    'deps/sockjs.min.js'
   , 'util.js'
   , 'ref.js'
   , 'serializer.js'
