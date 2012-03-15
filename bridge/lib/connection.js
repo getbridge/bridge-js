@@ -11,7 +11,7 @@ function Connection(bridge) {
   // Set associated bridge object
   this.bridge = bridge;
   // Set options
-  this.options = bridge.options;
+  this.options = bridge._options;
   
   if (!this.options.host || !this.options.port) {
     this.redirector();
@@ -31,12 +31,12 @@ Connection.prototype.redirector = function () {
       host: redirector.hostname,
       port: redirector.port,
       path: '/redirect/' + this.options.apiKey
-    }, function(res) {
+    }, function (res) {
       var data = "";
-      res.on('data', function(chunk){
+      res.on('data', function (chunk){
         data += chunk;
       });
-      res.on('end', function(){
+      res.on('end', function (){
         try {
           var info = JSON.parse(data);
           self.options.host = info.data.bridge_host;
@@ -50,12 +50,12 @@ Connection.prototype.redirector = function () {
           util.error('Unable to parse redirector response ' + data);
         }
       });
-    }).on('error', function(e) {
+    }).on('error', function (e) {
       util.error('Unable to contact redirector');
     });
   } else {
     // JSONP
-    window.bridgeHost = function(status, host, port){ 
+    window.bridgeHost = function (status, host, port){ 
       self.options.host = host;
       self.options.port = parseInt(port, 10);
       if (!self.options.host || !self.options.port) {
@@ -75,7 +75,7 @@ Connection.prototype.reconnect = function () {
   util.info('Attempting reconnect');
   var self = this;
   if (!this.connected && this.interval < 12800) {
-    setTimeout(function(){self.establishConnection()}, this.interval *= 2);
+    setTimeout(function (){self.establishConnection()}, this.interval *= 2);
   }
 };
 
@@ -92,10 +92,12 @@ Connection.prototype.establishConnection = function () {
     sock = new SockJS('http://' + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
   
+  sock.bridge = this.bridge;
+  
   sock.onmessage = function (message) {
     util.info('clientId and secret received', message.data);
     var ids = message.data.toString().split('|');
-    if(ids.length !== 2) {
+    if (ids.length !== 2) {
       self._onMessage(message);
     } else {
       self.clientId = ids[0];
@@ -111,9 +113,8 @@ Connection.prototype.establishConnection = function () {
 
   sock.onopen = function () {
     util.info('Beginning handshake');
-    this.sendCommand('CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
-    msg = util.stringify(msg);
-    sock.send(msg); 
+    var msg = util.stringify({command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey} });
+    sock.send(msg);
   };
 
   sock.onclose = function () {
@@ -129,39 +130,35 @@ Connection.prototype.establishConnection = function () {
   };
 };
 
-Connection.prototype._onMessage = function(message) {
+Connection.prototype._onMessage = function (message) {
   try {
     message = util.parse(message.data);
     util.info('Received', message);
-    this._onMessage(message);
-    Serializer.unserialize(this, message);
-    var unser = message;
-    var destination = unser.destination;
+    Serializer.unserialize(this.bridge, message);
+    var destination = message.destination;
     // util.info('DECODED: ', unser.args );
     if (!destination) {
       util.warn('No destination in message', unser);
       return;
     }
-    var pathchain = unser.destination._pathchain;
-    var args = unser.args;
-
-    this.bridge._execute(pathchain, args);
+    this.bridge._execute(message.destination._address, message.args);
   } catch (e) {
     util.error('Message parsing failed: ', e.message, e.stack);
   }
 };
 
-Connection.prototype.sendCommand(command, data) {
-  var msg = util.stringify({command: command, data: data };);
+Connection.prototype.sendCommand = function (command, data) {
+  var msg = util.stringify({command: command, data: data });
+  util.info('Sending', msg);
   this.sock.send(msg);
 }
 
 Connection.prototype.sock = {
   buffer: [],
-  send: function(msg){
+  send: function (msg){
     this.buffer.push(msg);
   },
-  processQueue: function(sock, clientId) {
+  processQueue: function (sock, clientId) {
     for(var i = 0, ii = this.buffer.length; i < ii; i++) {
       sock.send(this.buffer[i].replace('"client",null', '"client","'+clientId+'"'));
     }

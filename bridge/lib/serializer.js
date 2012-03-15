@@ -1,5 +1,6 @@
 // if node
 var util = require('./util.js');
+var Reference = require('./reference.js');
 // end node
 
 var Serializer = {
@@ -8,7 +9,7 @@ var Serializer = {
     var result;
     switch(typ) {
       case 'object':
-        if(pivot === null) {
+        if (pivot === null) {
           result = null;
         } else if ('_toDict' in pivot) {
           result = pivot._toDict();
@@ -36,7 +37,7 @@ var Serializer = {
         if ( util.hasProp('_reference') ) {
           result = pivot._reference._toDict();
         } else {
-          var ref = bridge._storeObject({callback: pivot}, ['callback']]);
+          var ref = bridge._storeObject({callback: pivot}, ['callback']);
           result = ref._toDict();
         }
         break;
@@ -48,9 +49,9 @@ var Serializer = {
   unserialize: function(bridge, obj) {
     for(var key in obj) {
       var el = obj[key]
-      if(typeof el === "object") {
-        if(util.hasProp(el, 'ref')) {
-          obj[key] = bridge.getPathObj(el['ref'])._setOps(el['operations']);
+      if (typeof el === 'object') {
+        if (util.hasProp(el, 'ref')) {
+          obj[key] = new Reference(bridge, el['ref'], el['operations']);
         } else {
           Serializer.unserialize(bridge, el);
         }

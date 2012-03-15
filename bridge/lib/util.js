@@ -4,7 +4,7 @@ var window = global;
 
 // end node
 var log;
-if(window.console && console.log) {
+if (window.console && console.log) {
   log = function () {
     console.log.apply(console, arguments);
   };
@@ -18,7 +18,7 @@ var util = {
     return Object.prototype.hasOwnProperty.call(Object(obj), prop);
   },
   extend: function(child, parent) {
-    if(child === undefined || parent === undefined) return child;
+    if (child === undefined || parent === undefined) return child;
     for (var key in parent) {
       if (util.hasProp(parent, key)) child[key] = parent[key];
     }
@@ -87,13 +87,13 @@ var util = {
   },
   
   setLogLevel: function(level) {
-    if(level < 3) {
+    if (level < 3) {
       util.info = function(){};
     }
-    if(level < 2) {
+    if (level < 2) {
       util.warn = function(){};
     }
-    if(level < 1) {
+    if (level < 1) {
       util.error = function(){};
     }
   }

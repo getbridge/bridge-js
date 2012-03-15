@@ -13,7 +13,7 @@ var util = require('./util.js');
 
 var Connection = require('./connection.js').Connection;
 var Serializer = require('./serializer.js');
-var RefCtor = require('./ref.js');
+var Reference = require('./reference.js');
 
 util.extend(defaultOptions, {
   /*port: 8090,*/
@@ -71,7 +71,7 @@ function Bridge(options) {
 
 Bridge.prototype._onReady = function() {
   util.info('Handshake complete');
-  if(!this._ready) {
+  if (!this._ready) {
     this._ready = true;
     this.emit('ready');
   }
@@ -131,7 +131,7 @@ Bridge.prototype.send = function (args, destination) {
 };
 
 Bridge.prototype.publishService = function (name, service, callback) {
-  if(name === 'system') {
+  if (name === 'system') {
     util.error('Invalid service name: ' + name);
     return;
   }
@@ -146,7 +146,7 @@ Bridge.prototype.getService = function (name, callback) {
 Bridge.prototype.getChannel = function (name, callback) {
   var self = this;
   this._connection.sendCommand('GETCHANNEL', {name: name, callback: Serializer.serialize(this, function(service, err) {
-    if(err) {
+    if (err) {
       callback(null, err);
       return;
     }
@@ -166,7 +166,7 @@ Bridge.prototype.leaveChannel = function (name, handler, callback) {
 };
 
 Bridge.prototype.ready = function(func) {
-  if(!this._ready) {
+  if (!this._ready) {
     this.on('ready', func);
   } else {
     func();
