@@ -50,6 +50,16 @@ var util = {
     return s;
   },
   
+  findOps: function(obj) {
+    var result = [];
+    for (var key in obj) {
+      if (typeof(obj[key]) === 'function' && util.isValid(key)) {
+        result.push(key);
+      }
+    }
+    return result;
+  },
+  
   // Ignore private methods
   isValid: function(name) {
     return name.charAt(0) !== '_';
@@ -59,16 +69,6 @@ var util = {
     var f = function () {};
     f.prototype = ctor2.prototype;
     ctor.prototype = new f;
-  },
-  
-  findKeys: function(pivot) {
-    var operations = [];
-    for (key in pivot) {
-      if ( typeof(pivot[key]) === 'function' && util.isValid(key) ) {
-        operations.push(key);
-      }
-    }
-    return operations;
   },
 
   stringify: JSON.stringify,

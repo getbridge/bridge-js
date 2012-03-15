@@ -3,80 +3,56 @@ var util = require('./util.js');
 // end node
 
 var Serializer = {
-  serialize: function(bridgeRoot, pivot) {
+  serialize: function(bridge, pivot) {
     var typ = util.typeOf(pivot);
     var result;
     switch(typ) {
       case 'object':
-        var needs_wrap = false;
-        var recurse_queue = [];
-        var operations = [];
-        var key, val;
-        for (key in pivot) {
-          var val = pivot[key];
-          if ( typeof(val) === 'function' && util.isValid(key) ) {
-            operations.push(key);
-            needs_wrap = true;
-          } else {
-            recurse_queue.push(key);
-          }
-        }
-        if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
-          needs_wrap = true;
-        }
-        if (needs_wrap) {
-          var ref;
-          if (pivot._getRef && util.typeOf(pivot._getRef) === 'function') {
-            ref = pivot._getRef();
-          } else {
-            ref = bridgeRoot.createCallback(pivot);
-          }
-          var target = ref._setOps(operations)._toDict();          
-          result = target;
+        if(pivot === null) {
+          result = null;
+        } else if ('_toDict' in pivot) {
+          result = pivot._toDict();
         } else {
-          var tmp = {};
-          for (pos in recurse_queue) {
-            var key = recurse_queue[pos];
-            var val = pivot[key];
-            tmp[key] = Serializer.serialize(bridgeRoot, val);
+          var funcs = util.findOps(pivot)
+          if (funcs.length > 0) {
+            result = bridge._storeObject(pivot, funcs);
+          } else {
+            result = {};
+            for (var key in pivot) {
+              var val = pivot[key];
+              result[key] = Serializer.serialize(bridge, val);
+            }
           }
-          result = tmp;
         }
         break;
       case 'array':
-        var tmp = [];
-        for (pos in pivot) {
-          var val = pivot[pos];
-          tmp.push(Serializer.serialize(bridgeRoot, val));
+        result = [];
+        for (var i = 0, ii = pivot.length; i < ii; i++) {
+          var val = pivot[i];
+          result.push(Serializer.serialize(bridge, val));
         }
-        result = tmp;
         break;
       case 'function':
-        var target;
-        if ( pivot._getRef && util.typeOf(pivot._getRef) === 'function' ) {
-          target = pivot._getRef()._toDict();
+        if ( util.hasProp('_reference') ) {
+          result = pivot._reference._toDict();
         } else {
-          var wrap = function WrapDummy(){};
-          wrap.callback = pivot;
-          var ref = bridgeRoot.createCallback(wrap);
-          ref._setOps(['callback']);
-          target = ref._toDict();
+          var ref = bridge._storeObject({callback: pivot}, ['callback']]);
+          result = ref._toDict();
         }
-        result = target;
         break;
       default:
         result = pivot;
     }
     return result;
   },
-  unserialize: function(bridgeRoot, obj) {
+  unserialize: function(bridge, obj) {
     for(var key in obj) {
       var el = obj[key]
       if(typeof el === "object") {
         if(util.hasProp(el, 'ref')) {
-          obj[key] = bridgeRoot.getPathObj(el['ref'])._setOps(el['operations']);
+          obj[key] = bridge.getPathObj(el['ref'])._setOps(el['operations']);
         } else {
-          Serializer.unserialize(bridgeRoot, el);
+          Serializer.unserialize(bridge, el);
         }
       }
     }

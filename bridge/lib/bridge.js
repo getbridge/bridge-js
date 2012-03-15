@@ -1,5 +1,4 @@
 var defaultOptions = {
-  protocol: 'http://',
   /*host: 'localhost',
   port: 8091,*/
   redirector: 'http://redirector.flotype.com',
@@ -30,19 +29,19 @@ function Bridge(options) {
 
   // Initialize system call service
   var system = {
-    hook_channel_handler: function(name, handler, callback){
-      self.children['channel:' + name] = self.children[handler._getRef()._pathchain[2]];
+    hookChannelHandler: function(name, handler, callback){
+      var obj = self._store[handler._address[2]];
+      self._store['channel:' + name] = obj;
       if (callback) {
-        var ref = self.getPathObj(['channel', name, 'channel:' + name]);
-        ref._setOps(util.findKeys(self.children['channel:' + name]));
+        var ref = new Reference(self, ['channel', name, 'channel:' + name], util.findOps(obj));
         callback.call( ref, name );
       }
     },
-    getservice: function(name, callback){
-      if (util.hasProp(self.children, name)) {
-        callback.call(self.children[name]);
+    getService: function(name, callback){
+      if (util.hasProp(self._store, name)) {
+        callback.call(self._store[name], name);
       } else {
-        callback.call(null, "Cannot find service " + name);
+        callback.call(null, name);
       }
     },
     remoteError: function(msg) {
@@ -52,23 +51,50 @@ function Bridge(options) {
   };
 
   // Set configuration options
-  this.options = util.extend(defaultOptions, options);
+  this._options = util.extend(defaultOptions, options);
 
   // Set logging level
-  util.setLogLevel(this.options.log);
+  util.setLogLevel(this._options.log);
 
   // Contains references to shared references
-  this.children = {system: system};
+  this._store = {system: system};
 
   // Indicate whether connected
-  this.connected = false;
+  this._ready = false;
 
   // Communication layer
-  this.connection = new Connection(this);
+  this._connection = new Connection(this);
 
   // Store event handlers
   this._events = {};
 }
+
+Bridge.prototype._onReady = function() {
+  util.info('Handshake complete');
+  if(!this._ready) {
+    this._ready = true;
+    this.emit('ready');
+  }
+};
+
+Bridge.prototype._execute = function(address, args) {
+  var obj = this._store[address[2]];
+  var func = obj[address[3]];
+  if (func) {
+    func.apply( obj, args );
+  } else {
+    // TODO: Throw exception
+    util.warn('Could not find object to handle', address);
+  }
+};
+
+Bridge.prototype._storeObject = function(handler, ops) {
+  var name = util.generateGuid();
+  this._store[name] = handler;
+  return new Reference( this, ['client', this._connection.clientId, name], ops );
+};
+
+
 
 // Event emitter functions
 Bridge.prototype.on = function (name, fn) {
@@ -100,116 +126,51 @@ Bridge.prototype.removeEvent = function (name, fn) {
   return this;
 };
 
-
-Bridge.prototype.onReady = function() {
-  util.info('Handshake complete');
-  if(!this.connected) {
-    this.connected = true;
-    this.emit('ready');
-  }
+Bridge.prototype.send = function (args, destination) {
+  this._connection.sendCommand('SEND', { 'args': Serializer.serialize(this, args), 'destination': Serializer.serialize(this, destination)});
 };
 
-Bridge.prototype.onMessage = function(message) {
-  Serializer.unserialize(this, message);
-  var unser = message;
-  var destination = unser.destination;
-  // util.info('DECODED: ', unser.args );
-  if (!destination) {
-    util.warn('No destination in message', unser);
+Bridge.prototype.publishService = function (name, service, callback) {
+  if(name === 'system') {
+    util.error('Invalid service name: ' + name);
     return;
   }
-  var pathchain = unser.destination._pathchain;
-  var args = unser.args;
-
-  this.execute(pathchain, args);
+  this._store[name] = service;
+  this._connection.sendCommand('JOINWORKERPOOL', {name: name, callback: Serializer.serialize(this, callback)});
 };
 
-Bridge.prototype.execute = function(pathchain, args) {
-  var obj = this.children[pathchain[2]];
-  var func = obj[pathchain[3]];
-
-  if (func) {
-    func.apply( obj, args );
-  } else {
-    // TODO: Throw exception
-    util.warn('No Func nor Default Handler for', pathchain);
-  }
+Bridge.prototype.getService = function (name, callback) {
+  this._connection.sendCommand('GETOPS', {name: name, callback: Serializer.serialize(this, callback)});
 };
 
-
-Bridge.prototype.publishService = function(name, service, callback) {
-
-  if(name === "system") {
-    util.error("Invalid service name: " + name);
-    return;
-  }
-
+Bridge.prototype.getChannel = function (name, callback) {
   var self = this;
-
-  this.children[name] = service;
-  this.connection.publishService(name, callback);
+  this._connection.sendCommand('GETCHANNEL', {name: name, callback: Serializer.serialize(this, function(service, err) {
+    if(err) {
+      callback(null, err);
+      return;
+    }
+    // Callback with channel ref
+    callback(new Reference(self.bridge, ['channel', name, 'channel:' + name], service._operations), name);
+  })});
+  
 };
 
-Bridge.prototype.createCallback = function(service) {
-  var self = this;
-  var name;
-  var ref;
-  if ( (!service._getRef) || (util.typeOf(service._getRef) !== 'function') ) {
-    name = util.generateGuid();
-    ref = self.getPathObj( ['client', self.getClientId(), name] );
-    this.children[name] = service;
-  } else {
-    ref = service._getRef();
-  }
-  return ref;
+Bridge.prototype.joinChannel = function (name, handler, callback) {
+  this._connection.sendCommand('JOINCHANNEL', {name: name, handler: Serializer.serialize(this, handler), callback: Serializer.serialize(this, callback)});
+  
 };
 
-Bridge.prototype.joinChannel = function(name, handler, callback) {
-  this.connection.joinChannel(name, handler, callback);
+Bridge.prototype.leaveChannel = function (name, handler, callback) {
+  this._connection.sendCommand('LEAVECHANNEL', {name: name, handler: Serializer.serialize(this, handler), callback: Serializer.serialize(this, callback)});
 };
 
-Bridge.prototype.leaveChannel = function(name, handler, callback) {
-  this.connection.leaveChannel(name, handler, callback);
-};
-
-Bridge.prototype.send = function(args, destination) {
-  this.connection.send(args, destination);
-};
-
-Bridge.prototype.getPathObj = function(pathchain) {
-  return new RefCtor(this, pathchain);
-};
-
-Bridge.prototype.getRootRef = function() {
-  return this.getPathObj(['client', this.getClientId()]);
-};
-
-Bridge.prototype._get = function(pathStr)  {
-  var pathchain = pathStr.split('.');
-  return this.getPathObj(pathchain, true);
-};
-
-
-/* Public APIs */
 Bridge.prototype.ready = function(func) {
-  if(!this.connected) {
+  if(!this._ready) {
     this.on('ready', func);
   } else {
     func();
   }
-};
-
-Bridge.prototype.getClientId = function() {
-  return this.connection.clientId;
-};
-
-Bridge.prototype.getService = function(name, callback) {
-  this.connection.getService(name, callback);
-};
-
-
-Bridge.prototype.getChannel = function(name, callback) {
-  this.connection.getChannel(name, callback);
 };
 
 // if node

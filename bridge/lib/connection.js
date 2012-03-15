@@ -6,55 +6,15 @@ var Serializer = require('./serializer.js');
 var TCP = require('./tcp').TCP;
 // end node
 
-function Connection(Bridge) {
+function Connection(bridge) {
   var self = this;
-  // Set associated Bridge object
-  this.Bridge = Bridge;
+  // Set associated bridge object
+  this.bridge = bridge;
   // Set options
-  this.options = Bridge.options;
+  this.options = bridge.options;
   
   if (!this.options.host || !this.options.port) {
-    // Find host and port with redirector
-    if (this.options.tcp) {
-      var redirector = url.parse(this.options.redirector);
-      http.get({
-        host: redirector.hostname,
-        port: redirector.port,
-        path: '/redirect/' + this.options.apiKey
-      }, function(res) {
-        var data = "";
-        res.on('data', function(chunk){
-          data += chunk;
-        });
-        res.on('end', function(){
-          try {
-            var info = JSON.parse(data);
-            self.options.host = info.data.bridge_host;
-            self.options.port = info.data.bridge_port;
-            if (!self.options.host || !self.options.port) {
-              throw "Could not find host and port in JSON";
-            }
-            self.establishConnection();
-          } catch (e) {
-            util.error('Unable to parse redirector response ' + data);
-          }
-        });
-      }).on('error', function(e) {
-        throw e
-        util.error('Unable to contact redirector');
-      });
-    } else {
-      // JSONP
-      window.bridgeHost = function(status, host, port){ 
-        self.options.host = host;
-        self.options.port = parseInt(port, 10);
-        self.establishConnection();
-        delete window.bridgeHost;
-      };
-      var s = document.createElement('script');
-      s.setAttribute('src', this.options.redirector + '/redirect/' + this.options.apiKey + '/jsonp');
-      document.getElementsByTagName('head')[0].appendChild(s);
-    }
+    this.redirector();
   } else {
     // Host and port is specified
     this.establishConnection();
@@ -62,8 +22,57 @@ function Connection(Bridge) {
 
 }
 
+Connection.prototype.redirector = function () {
+  var self = this;
+  // Find host and port with redirector
+  if (this.options.tcp) {
+    var redirector = url.parse(this.options.redirector);
+    http.get({
+      host: redirector.hostname,
+      port: redirector.port,
+      path: '/redirect/' + this.options.apiKey
+    }, function(res) {
+      var data = "";
+      res.on('data', function(chunk){
+        data += chunk;
+      });
+      res.on('end', function(){
+        try {
+          var info = JSON.parse(data);
+          self.options.host = info.data.bridge_host;
+          self.options.port = info.data.bridge_port;
+          if (!self.options.host || !self.options.port) {
+            util.error('Could not find host and port in JSON');
+          } else {
+            self.establishConnection();
+          }
+        } catch (e) {
+          util.error('Unable to parse redirector response ' + data);
+        }
+      });
+    }).on('error', function(e) {
+      util.error('Unable to contact redirector');
+    });
+  } else {
+    // JSONP
+    window.bridgeHost = function(status, host, port){ 
+      self.options.host = host;
+      self.options.port = parseInt(port, 10);
+      if (!self.options.host || !self.options.port) {
+        util.error('Could not find host and port in JSON');
+      } else {
+        self.establishConnection();
+      }
+      delete window.bridgeHost;
+    };
+    var s = document.createElement('script');
+    s.setAttribute('src', this.options.redirector + '/redirect/' + this.options.apiKey + '/jsonp');
+    document.getElementsByTagName('head')[0].appendChild(s);
+  }
+}
+
 Connection.prototype.reconnect = function () {
-  util.info("Attempting reconnect");
+  util.info('Attempting reconnect');
   var self = this;
   if (!this.connected && this.interval < 12800) {
     setTimeout(function(){self.establishConnection()}, this.interval *= 2);
@@ -71,8 +80,7 @@ Connection.prototype.reconnect = function () {
 };
 
 Connection.prototype.establishConnection = function () {
-  var self = this,
-      Bridge = this.Bridge;
+  var self = this;
       
   var sock;
   // Select between TCP and SockJS transports
@@ -81,26 +89,14 @@ Connection.prototype.establishConnection = function () {
     sock = new TCP(this.options).sock;
   } else {
     util.info('Starting SockJS connection');
-    sock = new SockJS(this.options.protocol + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
+    sock = new SockJS('http://' + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
   
-  sock.Bridge = Bridge;
-
   sock.onmessage = function (message) {
-    var handleMessage = function(message){
-      try {
-        message = util.parse(message.data);
-        util.info('Received', message);
-        Bridge.onMessage(message);
-      } catch (e) {
-        util.error("Message parsing failed: ", e.message, e.stack);
-      }
-    };
-    
-    util.info("clientId and secret received", message.data);
+    util.info('clientId and secret received', message.data);
     var ids = message.data.toString().split('|');
     if(ids.length !== 2) {
-      handleMessage(message);
+      self._onMessage(message);
     } else {
       self.clientId = ids[0];
       self.secret = ids[1];
@@ -108,22 +104,20 @@ Connection.prototype.establishConnection = function () {
       self.sock.processQueue(sock, self.clientId);
       self.sockBuffer = self.sock;
       self.sock = sock;
-      self.sock.onmessage = handleMessage;
-      Bridge.onReady();
+      self.sock.onmessage = self._onMessage;
+      self.bridge._onReady();
     }
   };
 
   sock.onopen = function () {
-    util.info("Beginning handshake");
-    var msg = {command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
+    util.info('Beginning handshake');
+    this.sendCommand('CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey}};
     msg = util.stringify(msg);
-    
-    // If TCP use _send to force send bypassing connect check
     sock.send(msg); 
   };
 
   sock.onclose = function () {
-    util.warn("Connection closed");
+    util.warn('Connection closed');
     if (self.sockBuffer) {
       self.sock = self.sockBuffer;
     }
@@ -135,56 +129,32 @@ Connection.prototype.establishConnection = function () {
   };
 };
 
-Connection.prototype.send = function (args, destination) {
-  var msg = {command: 'SEND', data: { 'args': Serializer.serialize(this.Bridge, args), 'destination': Serializer.serialize(this.Bridge, destination)}};
-  msg = util.stringify(msg);
-  util.info('Sending', msg);
-  this.sock.send(msg);
-};
-
-Connection.prototype.publishService = function (name, callback) {
-  util.info('Joining worker pool', name);
-  var msg = {command: 'JOINWORKERPOOL', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
-  msg = util.stringify(msg);
-  this.sock.send(msg);
-};
-
-Connection.prototype.getService = function (name, callback) {
-  // Adding other client is not supported
-  var msg = {command: 'GETOPS', data: {name: name, callback: Serializer.serialize(this.Bridge, callback)} };
-  msg = util.stringify(msg);
-  this.sock.send(msg);
-};
-
-Connection.prototype.getChannel = function (name, callback) {
-  var self = this;
-  // Adding other client is not supported
-  var msg = {command: 'GETCHANNEL', data: {name: name, callback: Serializer.serialize(this.Bridge, function(service, err) {
-    if(err) {
-      callback(null, err);
+Connection.prototype._onMessage = function(message) {
+  try {
+    message = util.parse(message.data);
+    util.info('Received', message);
+    this._onMessage(message);
+    Serializer.unserialize(this, message);
+    var unser = message;
+    var destination = unser.destination;
+    // util.info('DECODED: ', unser.args );
+    if (!destination) {
+      util.warn('No destination in message', unser);
       return;
     }
-    // Callback with channel ref
-    callback(self.Bridge.getPathObj(['channel', name, 'channel:' + name])._setOps(service._operations), name);
+    var pathchain = unser.destination._pathchain;
+    var args = unser.args;
 
-  }) }};
-  msg = util.stringify(msg);
-  this.sock.send(msg);
+    this.bridge._execute(pathchain, args);
+  } catch (e) {
+    util.error('Message parsing failed: ', e.message, e.stack);
+  }
 };
 
-Connection.prototype.joinChannel = function (name, handler, callback) {
-  // Adding other client is not supported
-  var msg = {command: 'JOINCHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
-  msg = util.stringify(msg);
+Connection.prototype.sendCommand(command, data) {
+  var msg = util.stringify({command: command, data: data };);
   this.sock.send(msg);
-};
-
-Connection.prototype.leaveChannel = function (name, handler, callback) {
-  // Adding other client is not supported
-  var msg = {command: 'LEAVECHANNEL', data: {name: name, handler: Serializer.serialize(this.Bridge, handler), callback: Serializer.serialize(this.Bridge, callback)} };
-  msg = util.stringify(msg);
-  this.sock.send(msg);
-};
+}
 
 Connection.prototype.sock = {
   buffer: [],
