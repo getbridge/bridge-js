@@ -16,7 +16,7 @@ var Serializer = {
         } else {
           var funcs = util.findOps(pivot)
           if (funcs.length > 0) {
-            result = bridge._storeObject(pivot, funcs);
+            result = bridge._storeObject(pivot, funcs)._toDict();
           } else {
             result = {};
             for (var key in pivot) {
@@ -51,7 +51,12 @@ var Serializer = {
       var el = obj[key]
       if (typeof el === 'object') {
         if (util.hasProp(el, 'ref')) {
-          obj[key] = new Reference(bridge, el['ref'], el['operations']);
+          var ref = new Reference(bridge, el.ref, el.operations);
+          if(el.operations && el.operations.length === 1 && el.operations[0] === 'callback') {
+            obj[key] = util.refCallback(ref);
+          } else {
+            obj[key] = ref;
+          }
         } else {
           Serializer.unserialize(bridge, el);
         }

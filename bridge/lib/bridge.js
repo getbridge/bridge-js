@@ -34,14 +34,14 @@ function Bridge(options) {
       self._store['channel:' + name] = obj;
       if (callback) {
         var ref = new Reference(self, ['channel', name, 'channel:' + name], util.findOps(obj));
-        callback.call( ref, name );
+        callback(ref, name);
       }
     },
     getService: function(name, callback){
       if (util.hasProp(self._store, name)) {
-        callback.call(self._store[name], name);
+        callback(self._store[name], name);
       } else {
-        callback.call(null, name);
+        callback(null, name);
       }
     },
     remoteError: function(msg) {
@@ -127,7 +127,7 @@ Bridge.prototype.removeEvent = function (name, fn) {
 };
 
 Bridge.prototype.send = function (args, destination) {
-  this._connection.sendCommand('SEND', { 'args': Serializer.serialize(this, args), 'destination': Serializer.serialize(this, destination)});
+  this._connection.sendCommand('SEND', { 'args': Serializer.serialize(this, args), 'destination': destination});
 };
 
 Bridge.prototype.publishService = function (name, service, callback) {

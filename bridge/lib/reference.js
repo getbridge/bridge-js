@@ -8,24 +8,30 @@ function Reference(bridge, address, operations) {
   for (var key in operations) {
     var op = operations[key];
     if (op) {
-      this[op] = function() {
-        var args = [].slice.apply(arguments);
-        self.call(op, args);
-      }
+      this[op] = util.opFunc(this, op);
     }
   }
   this._operations = operations || [];
   this._bridge = bridge;
   this._address = address;
 }
-Reference.prototype._toDict = function() {
-  return {'ref': this._address, 'operations': this._operations};
+Reference.prototype._toDict = function(op) {
+  var result = {};
+  var address = this._address;
+  if (op) {
+    address = address.slice();
+    address.push(op);
+  }
+  result.ref = address;
+  if (address.length < 4 ) {
+    result.operations = this._operations;
+  }
+  return result;
 };
 Reference.prototype._call = function(op, args) {
   util.info('Calling', this._address, args);
-  var destination = this._address.slice();
-  destination.push(op);
-  this._bridge._connection.send(args, destination);
+  var destination = this._toDict(op);
+  this._bridge.send(args, destination);
 };
 Reference.prototype._getObjectId = function() {
   return this._address[2];

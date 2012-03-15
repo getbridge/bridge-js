@@ -96,6 +96,23 @@ var util = {
     if (level < 1) {
       util.error = function(){};
     }
+  },
+  
+  refCallback: function(ref) {
+    var func = function () {
+      var args = [].slice.apply(arguments);
+      ref._call('callback', args);
+    }
+    func._reference = ref;
+    func._callback = func;
+    return func;
+  },
+  
+  opFunc: function(ref, op) {
+    return function() {
+      var args = [].slice.apply(arguments);
+      ref._call(op, args);
+    }
   }
 };
 
