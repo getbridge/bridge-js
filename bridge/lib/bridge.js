@@ -23,7 +23,7 @@ util.extend(defaultOptions, {
 // end node
 
 
-function Bridge(options) {
+function Bridge(options, callback) {
 
   var self = this;
 
@@ -67,6 +67,10 @@ function Bridge(options) {
 
   // Store event handlers
   this._events = {};
+  
+  if (callback) {
+    this.ready(callback);
+  }
 }
 
 Bridge.prototype._onReady = function() {
