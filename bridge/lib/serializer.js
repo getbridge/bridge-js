@@ -1,6 +1,6 @@
 // if node
-var util = require('./util.js');
-var Reference = require('./reference.js');
+var util = require('./util');
+var Reference = require('./reference');
 // end node
 
 var Serializer = {
@@ -37,8 +37,7 @@ var Serializer = {
         if ( util.hasProp('_reference') ) {
           result = pivot._reference._toDict();
         } else {
-          var ref = bridge._storeObject({callback: pivot}, ['callback']);
-          result = ref._toDict();
+          result = bridge._storeObject({callback: pivot}, ['callback'])._toDict();
         }
         break;
       default:
@@ -47,6 +46,8 @@ var Serializer = {
     return result;
   },
   unserialize: function(bridge, obj) {
+    var result;
+    
     for(var key in obj) {
       var el = obj[key]
       if (typeof el === 'object') {

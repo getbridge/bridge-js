@@ -1,5 +1,5 @@
 var connect = require('net').connect;
-var util = require('./util.js');
+var util = require('./util');
 
 function TCP(options) {
 
@@ -38,7 +38,6 @@ function TCP(options) {
   };
   
   sock.send = function (data) {
-    util.info('Sending', data);
     var outstr = new Buffer( 'xxxx' + data );
     outstr.writeUInt32BE(Buffer.byteLength(data), 0);
     sock.write(outstr);

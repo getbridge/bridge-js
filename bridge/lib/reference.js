@@ -1,14 +1,18 @@
 // if node
-var util = require('./util.js');
+var util = require('./util');
 // end node
-
 
 function Reference(bridge, address, operations) {
   var self = this;
   for (var key in operations) {
     var op = operations[key];
     if (op) {
-      this[op] = util.opFunc(this, op);
+      this[op] = (function(ref, op){
+        return function() {
+          var args = [].slice.apply(arguments);
+          ref._call(op, args);
+        }
+      }(this, op));
     }
   }
   this._operations = operations || [];
@@ -32,9 +36,6 @@ Reference.prototype._call = function(op, args) {
   util.info('Calling', this._address, args);
   var destination = this._toDict(op);
   this._bridge.send(args, destination);
-};
-Reference.prototype._getObjectId = function() {
-  return this._address[2];
 };
 
 

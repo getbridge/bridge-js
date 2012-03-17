@@ -38,8 +38,8 @@ var starttagIF = '// if node'
 var base = [
     'deps/sockjs.min.js'
   , 'util.js'
-  , 'reference.js'
   , 'serializer.js'
+  , 'reference.js'
   , 'connection.js'
   , 'bridge.js'
 ];

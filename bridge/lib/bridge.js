@@ -9,17 +9,15 @@ var defaultOptions = {
 
 
 // if node
-var util = require('./util.js');
-
-var Connection = require('./connection.js').Connection;
-var Serializer = require('./serializer.js');
-var Reference = require('./reference.js');
+var util = require('./util');
+var Serializer = require('./serializer');
+var Reference = require('./reference');
+var Connection = require('./connection').Connection;
 
 util.extend(defaultOptions, {
   /*port: 8090,*/
   tcp: true
 });
-
 // end node
 
 
@@ -72,14 +70,6 @@ function Bridge(options, callback) {
     this.ready(callback);
   }
 }
-
-Bridge.prototype._onReady = function() {
-  util.info('Handshake complete');
-  if (!this._ready) {
-    this._ready = true;
-    this.emit('ready');
-  }
-};
 
 Bridge.prototype._execute = function(address, args) {
   var obj = this._store[address[2]];
@@ -134,13 +124,13 @@ Bridge.prototype.send = function (args, destination) {
   this._connection.sendCommand('SEND', { 'args': Serializer.serialize(this, args), 'destination': destination});
 };
 
-Bridge.prototype.publishService = function (name, service, callback) {
+Bridge.prototype.publishService = function (name, handler, callback) {
   if (name === 'system') {
     util.error('Invalid service name: ' + name);
-    return;
-  }
-  this._store[name] = service;
+  } else {
+  this._store[name] = handler;
   this._connection.sendCommand('JOINWORKERPOOL', {name: name, callback: Serializer.serialize(this, callback)});
+  }
 };
 
 Bridge.prototype.getService = function (name, callback) {

@@ -1,7 +1,6 @@
 // if node
 var window = global;
 
-
 // end node
 var log;
 if (window.console && console.log) {
@@ -104,15 +103,8 @@ var util = {
       ref._call('callback', args);
     }
     func._reference = ref;
-    func._callback = func;
+    func.callback = func;
     return func;
-  },
-  
-  opFunc: function(ref, op) {
-    return function() {
-      var args = [].slice.apply(arguments);
-      ref._call(op, args);
-    }
   }
 };
 

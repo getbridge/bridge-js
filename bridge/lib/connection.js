@@ -1,8 +1,8 @@
 // if node
-var util = require('./util');
 var url = require('url');
 var http = require('http');
-var Serializer = require('./serializer.js');
+var util = require('./util');
+var Serializer = require('./serializer');
 var TCP = require('./tcp').TCP;
 // end node
 
@@ -12,6 +12,8 @@ function Connection(bridge) {
   this.bridge = bridge;
   // Set options
   this.options = bridge._options;
+  
+  this.sock = this.sockBuffer;
   
   if (!this.options.host || !this.options.port) {
     this.redirector();
@@ -74,7 +76,7 @@ Connection.prototype.redirector = function () {
 Connection.prototype.reconnect = function () {
   util.info('Attempting reconnect');
   var self = this;
-  if (!this.connected && this.interval < 12800) {
+  if (this.interval < 12800) {
     setTimeout(function (){self.establishConnection()}, this.interval *= 2);
   }
 };
@@ -98,7 +100,7 @@ Connection.prototype.establishConnection = function () {
     util.info('clientId and secret received', message.data);
     var ids = message.data.toString().split('|');
     if (ids.length !== 2) {
-      self._onMessage(message);
+      self._processMessage(message);
     } else {
       self.clientId = ids[0];
       self.secret = ids[1];
@@ -106,8 +108,12 @@ Connection.prototype.establishConnection = function () {
       self.sock.processQueue(sock, self.clientId);
       self.sockBuffer = self.sock;
       self.sock = sock;
-      self.sock.onmessage = self._onMessage;
-      self.bridge._onReady();
+      self.sock.onmessage = self._processMessage;
+      util.info('Handshake complete');
+      if (!self.bridge._ready) {
+        self.bridge._ready = true;
+        self.bridge.emit('ready');
+      }
     }
   };
 
@@ -122,7 +128,6 @@ Connection.prototype.establishConnection = function () {
     if (self.sockBuffer) {
       self.sock = self.sockBuffer;
     }
-    self.connected = false;
     if (self.options.reconnect) {
       // do reconnect stuff. start at 100 ms.
       self.reconnect();
@@ -130,15 +135,14 @@ Connection.prototype.establishConnection = function () {
   };
 };
 
-Connection.prototype._onMessage = function (message) {
+Connection.prototype._processMessage = function (message) {
   try {
     message = util.parse(message.data);
     util.info('Received', message);
     Serializer.unserialize(this.bridge, message);
     var destination = message.destination;
-    // util.info('DECODED: ', unser.args );
     if (!destination) {
-      util.warn('No destination in message', unser);
+      util.warn('No destination in message', message);
       return;
     }
     this.bridge._execute(message.destination._address, message.args);
@@ -153,7 +157,7 @@ Connection.prototype.sendCommand = function (command, data) {
   this.sock.send(msg);
 }
 
-Connection.prototype.sock = {
+Connection.prototype.sockBuffer = {
   buffer: [],
   send: function (msg){
     this.buffer.push(msg);
