@@ -15,13 +15,14 @@ function Connection(bridge) {
   
   this.sock = this.sockBuffer;
   
+  this.interval = 400
+  
   if (!this.options.host || !this.options.port) {
     this.redirector();
   } else {
     // Host and port is specified
     this.establishConnection();
   }
-
 }
 
 Connection.prototype.redirector = function () {
@@ -76,7 +77,7 @@ Connection.prototype.redirector = function () {
 Connection.prototype.reconnect = function () {
   util.info('Attempting reconnect');
   var self = this;
-  if (this.interval < 12800) {
+  if (this.interval < 32768) {
     setTimeout(function (){self.establishConnection()}, this.interval *= 2);
   }
 };

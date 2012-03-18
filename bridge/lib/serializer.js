@@ -4,6 +4,7 @@ var Reference = require('./reference');
 // end node
 
 var Serializer = {
+
   serialize: function(bridge, pivot) {
     var typ = util.typeOf(pivot);
     var result;
@@ -45,9 +46,9 @@ var Serializer = {
     }
     return result;
   },
+  
   unserialize: function(bridge, obj) {
     var result;
-    
     for(var key in obj) {
       var el = obj[key]
       if (typeof el === 'object') {
@@ -64,6 +65,7 @@ var Serializer = {
       }
     }
   }
+  
 };
 
 // if node

@@ -4,6 +4,7 @@ var util = require('./util');
 
 function Reference(bridge, address, operations) {
   var self = this;
+
   for (var key in operations) {
     var op = operations[key];
     if (op) {
@@ -19,6 +20,7 @@ function Reference(bridge, address, operations) {
   this._bridge = bridge;
   this._address = address;
 }
+
 Reference.prototype._toDict = function(op) {
   var result = {};
   var address = this._address;
@@ -32,8 +34,9 @@ Reference.prototype._toDict = function(op) {
   }
   return result;
 };
+
 Reference.prototype._call = function(op, args) {
-  util.info('Calling', this._address, args);
+  util.info('Calling', this._address + '.' + op);
   var destination = this._toDict(op);
   this._bridge.send(args, destination);
 };

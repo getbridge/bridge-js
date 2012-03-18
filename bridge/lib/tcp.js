@@ -12,6 +12,7 @@ function TCP(options) {
     sock.on('close', sock.onclose);
     sock.onopen();
   });
+
   sock.onchunk = function(data){
     if (left == 0) {
       left = data.readUInt32BE(0);
@@ -32,9 +33,7 @@ function TCP(options) {
       data = data.slice(left);
       left = 0;
       sock.onchunk(data);
-    }
-    
-    
+    }  
   };
   
   sock.send = function (data) {
@@ -44,6 +43,7 @@ function TCP(options) {
   }
   
   this.sock = sock;
+  
 }
 
 exports.TCP = TCP;

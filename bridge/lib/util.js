@@ -13,9 +13,11 @@ if (window.console && console.log) {
 
 
 var util = {
+  
   hasProp: function (obj, prop) {
     return Object.prototype.hasOwnProperty.call(Object(obj), prop);
   },
+  
   extend: function(child, parent) {
     if (child === undefined || parent === undefined) return child;
     for (var key in parent) {
@@ -27,12 +29,15 @@ var util = {
     child.__super__ = parent.prototype;
     return child;
   },
+  
   generateGuid: function() {
-    var S4 = function() {
-      return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-    };
-    return "" + S4() + S4() + S4() + S4() + S4() + S4() + S4() + S4();
+    var text = "";
+    var possible = "abcdefghijklmnopqrstuvwxyz0123456789";
+    for( var i = 0; i < 12; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    return text;
   },
+  
   typeOf: function(value) {
     var s = typeof value;
     if (s === 'object') {
@@ -71,20 +76,23 @@ var util = {
   },
 
   stringify: JSON.stringify,
+  
   parse: JSON.parse,
 
   log: log,
-
-  error: function(){
-    util.log.apply(this, arguments);
-  },
-  warn: function(){
-    util.log.apply(this, arguments);
-  },
+  
   info: function(){
     util.log.apply(this, arguments);
   },
   
+  warn: function(){
+    util.log.apply(this, arguments);
+  },
+  
+  error: function(){
+    util.log.apply(this, arguments);
+  },
+
   setLogLevel: function(level) {
     if (level < 3) {
       util.info = function(){};
@@ -106,6 +114,7 @@ var util = {
     func.callback = func;
     return func;
   }
+  
 };
 
 // if node
