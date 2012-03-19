@@ -2,6 +2,7 @@
 var window = global;
 
 // end node
+
 var log;
 if (window.console && console.log) {
   log = function () {
