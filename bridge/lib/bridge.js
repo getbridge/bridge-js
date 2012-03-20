@@ -170,7 +170,7 @@ Bridge.prototype.removeEvent = function (name, fn) {
 /**
  * @private
  */
-Bridge.prototype.send = function (args, destination) {
+Bridge.prototype._send = function (args, destination) {
   this._connection.sendCommand('SEND', { 'args': Serializer.serialize(this, args), 'destination': destination});
 };
 

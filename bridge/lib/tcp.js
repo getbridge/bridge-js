@@ -4,7 +4,8 @@ var util = require('./util');
 function TCP(options) {
 
   var left = 0;
-  var chunk;
+  var chunk = '';
+  var headChunk = '';
   
   var sock = connect(options.port, options.host, function () {
     sock.setNoDelay(true);
@@ -14,21 +15,29 @@ function TCP(options) {
   });
 
   sock.onchunk = function(data){
+    data = data.toString();
     if (left == 0) {
-      left = data.readUInt32BE(0);
+      data = headChunk + data;
+      if (data.length >= 4) {
+      left = (new Buffer(data.slice(0, 4))).readUInt32BE(0);
       data = data.slice(4);
-      chunk = "";
+      chunk = '';
+      headChunk = '';
+      } else {
+        headChunk = data;
+        return;
+      }
     }
     
     if (data.length < left) {
-      chunk += data.toString();
+      chunk += data;
       left -= data.length;
     } else if (data.length == left ) {
-      chunk += data.toString();
+      chunk += data;
       sock.onmessage({data: chunk});
       left = 0;
     } else if (data.length > left ) {
-      chunk += data.toString('utf8', 0, left);
+      chunk += data.slice(0, left);
       sock.onmessage({data: chunk});
       data = data.slice(left);
       left = 0;

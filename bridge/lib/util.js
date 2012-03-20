@@ -112,6 +112,9 @@ var util = {
       ref._call('callback', args);
     }
     func._reference = ref;
+    func._toDict = function(){
+      return ref._toDict();
+    }
     func.callback = func;
     return func;
   }

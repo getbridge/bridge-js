@@ -38,7 +38,7 @@ Reference.prototype._toDict = function(op) {
 Reference.prototype._call = function(op, args) {
   util.info('Calling', this._address + '.' + op);
   var destination = this._toDict(op);
-  this._bridge.send(args, destination);
+  this._bridge._send(args, destination);
 };
 
 

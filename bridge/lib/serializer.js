@@ -36,7 +36,7 @@ var Serializer = {
         break;
       case 'function':
         if ( util.hasProp('_reference') ) {
-          result = pivot._reference._toDict();
+          result = pivot._toDict();
         } else {
           result = bridge._storeObject({callback: pivot}, ['callback'])._toDict();
         }
