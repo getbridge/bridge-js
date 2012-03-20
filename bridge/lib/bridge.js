@@ -213,13 +213,14 @@ Bridge.prototype.getService = function (name, callback) {
  */ 
 Bridge.prototype.getChannel = function (name, callback) {
   var self = this;
-  this._connection.sendCommand('GETCHANNEL', {name: name, callback: Serializer.serialize(this, function(service, err) {
-    if (err) {
-      callback(null, err);
+  this._connection.sendCommand('GETCHANNEL', {name: name, callback: Serializer.serialize(this, function(service, name) {
+    name = name.split(':')[1];
+    if (service === null) {
+      callback(null, name);
       return;
     }
     // Callback with channel ref
-    callback(new Reference(self.bridge, ['channel', name, 'channel:' + name], service._operations), name);
+    callback(new Reference(self, ['channel', name, 'channel:' + name], service._operations), name);
   })});
 };
 
