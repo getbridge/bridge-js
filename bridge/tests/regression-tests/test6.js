@@ -8,14 +8,14 @@ var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 try {
     var ConsoleLogServer = {
         log: function(msg) {
-            test.log('calling log, should not work without ready()');
-            test.fail();
+            test.log('calling log, should work without ready()');
+            test.pass();
         }
     }
     bridge.publishService('test6_consolelog', ConsoleLogServer, function() {
-        test.log('calling publishService, should not work without ready()');
-        test.fail();
+        test.log('calling publishService, should work without ready()');
+        test.pass();
     });
 } catch (e) {
-    test.pass();
+    test.fail();
 }
