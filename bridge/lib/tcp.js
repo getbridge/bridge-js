@@ -5,7 +5,7 @@ function TCP(options) {
 
   var left = 0;
   var chunk;
-
+  
   var sock = connect(options.port, options.host, function () {
     sock.setNoDelay(true);
     sock.on('data', sock.onchunk);
@@ -43,7 +43,6 @@ function TCP(options) {
   }
   
   this.sock = sock;
-  
 }
 
 exports.TCP = TCP;

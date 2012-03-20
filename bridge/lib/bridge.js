@@ -1,23 +1,8 @@
-var defaultOptions = {
-  /*host: 'localhost',
-  port: 8091,*/
-  redirector: 'http://redirector.flotype.com',
-  reconnect: true,
-  log: 2,
-  tcp: false
-};
-
-
 // if node
 var util = require('./util');
 var Serializer = require('./serializer');
 var Reference = require('./reference');
 var Connection = require('./connection').Connection;
-
-util.extend(defaultOptions, {
-  /*port: 8090,*/
-  tcp: true
-});
 // end node
 
 /** 
@@ -37,9 +22,26 @@ util.extend(defaultOptions, {
  * @constructor
  */  
 function Bridge(options, callback) {
-
+  
   var self = this;
 
+  var defaultOptions = {
+    /*host: 'localhost',
+    port: 8091,*/
+    redirector: 'http://redirector.flotype.com',
+    reconnect: true,
+    log: 2,
+    tcp: false
+  };
+
+  // if node
+  util.extend(defaultOptions, {
+    /*port: 8090,*/
+    tcp: true
+  });
+  // end node
+
+  
   // Initialize system call service
   var system = {
     hookChannelHandler: function(name, handler, callback){
@@ -177,7 +179,7 @@ Bridge.prototype.send = function (args, destination) {
  *
  * @param {string} name The name of the Bridge service the handler will be published with
  * @param {object} handler A Javascript object to publish 
- * @param {function(service, name)} [callback] Called with the published service and service name upon publish success
+ * @param {function(name)} [callback] Called with the name of the published service upon publish success
  * @function
  */  
 Bridge.prototype.publishService = function (name, handler, callback) {
@@ -219,7 +221,6 @@ Bridge.prototype.getChannel = function (name, callback) {
     // Callback with channel ref
     callback(new Reference(self.bridge, ['channel', name, 'channel:' + name], service._operations), name);
   })});
-  
 };
 
 /** 
@@ -233,7 +234,6 @@ Bridge.prototype.getChannel = function (name, callback) {
  */  
 Bridge.prototype.joinChannel = function (name, handler, callback) {
   this._connection.sendCommand('JOINCHANNEL', {name: name, handler: Serializer.serialize(this, handler), callback: Serializer.serialize(this, callback)});
-  
 };
 
 /** 

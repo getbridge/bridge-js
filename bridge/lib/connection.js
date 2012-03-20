@@ -13,6 +13,8 @@ function Connection(bridge) {
   // Set options
   this.options = bridge._options;
   
+  this.sockBuffer = new SockBuffer();
+  
   this.sock = this.sockBuffer;
   
   this.interval = 400
@@ -96,7 +98,6 @@ Connection.prototype.establishConnection = function () {
   }
   
   sock.bridge = this.bridge;
-  
   sock.onmessage = function (message) {
     util.info('clientId and secret received', message.data);
     var ids = message.data.toString().split('|');
@@ -117,7 +118,7 @@ Connection.prototype.establishConnection = function () {
       }
     }
   };
-
+  
   sock.onopen = function () {
     util.info('Beginning handshake');
     var msg = util.stringify({command: 'CONNECT', data: {session: [self.clientId || null, self.secret || null], api_key: self.options.apiKey} });
@@ -158,18 +159,21 @@ Connection.prototype.sendCommand = function (command, data) {
   this.sock.send(msg);
 }
 
-Connection.prototype.sockBuffer = {
-  buffer: [],
-  send: function (msg){
-    this.buffer.push(msg);
-  },
-  processQueue: function (sock, clientId) {
-    for(var i = 0, ii = this.buffer.length; i < ii; i++) {
-      sock.send(this.buffer[i].replace('"client",null', '"client","'+clientId+'"'));
-    }
-    this.buffer = [];
-  }
+function SockBuffer () {
+  this.buffer = [];
+}
+
+SockBuffer.prototype.send = function(msg) {
+  this.buffer.push(msg);  
 };
+
+SockBuffer.prototype.processQueue = function(sock, clientId) {
+  for(var i = 0, ii = this.buffer.length; i < ii; i++) {
+    sock.send(this.buffer[i].replace('"client",null', '"client","'+clientId+'"'));
+  }
+  this.buffer = [];
+};
+
 // if node
 exports.Connection = Connection;
 // end node
