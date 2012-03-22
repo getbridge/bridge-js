@@ -3,9 +3,9 @@ var util = require('./util');
 
 function TCP(options) {
 
-  var left = 0;
-  var chunk = '';
-  var headChunk = '';
+  var buffer;
+  var pos;
+  var callback;
   
   var sock = connect(options.port, options.host, function () {
     sock.setNoDelay(true);
@@ -15,41 +15,39 @@ function TCP(options) {
   });
 
   sock.onchunk = function(data){
-    data = data.toString();
-    if (left == 0) {
-      data = headChunk + data;
-      if (data.length >= 4) {
-      left = (new Buffer(data.slice(0, 4))).readUInt32BE(0);
-      data = data.slice(4);
-      chunk = '';
-      headChunk = '';
-      } else {
-        headChunk = data;
-        return;
-      }
+    var left = buffer.length - pos;
+    if (data.length >= left) {
+      data.copy(buffer, pos, 0, left);
+      callback(buffer);
+      sock.onchunk(data.slice(left));
+    } else {
+      data.copy(buffer, pos, 0, data.length);
+      pos += data.length;
     }
-    
-    if (data.length < left) {
-      chunk += data;
-      left -= data.length;
-    } else if (data.length == left ) {
-      chunk += data;
-      sock.onmessage({data: chunk});
-      left = 0;
-    } else if (data.length > left ) {
-      chunk += data.slice(0, left);
-      sock.onmessage({data: chunk});
-      data = data.slice(left);
-      left = 0;
-      sock.onchunk(data);
-    }  
   };
   
+  sock.read = function(len, cb) {
+    buffer = new Buffer(len);
+    pos = 0;
+    callback = cb;
+  }
+  
+  sock.start = function() {
+    sock.read(4, function(buffer){
+      sock.read(buffer.readUInt32BE(0), function(buffer){
+        sock.onmessage({data: buffer.toString()});
+        sock.start();
+      });
+    });
+  }
+
   sock.send = function (data) {
     var outstr = new Buffer( 'xxxx' + data );
     outstr.writeUInt32BE(Buffer.byteLength(data), 0);
     sock.write(outstr);
   }
+  
+  sock.start();
   
   this.sock = sock;
 }

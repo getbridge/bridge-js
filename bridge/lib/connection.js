@@ -102,15 +102,14 @@ Connection.prototype.establishConnection = function () {
     util.info('clientId and secret received', message.data);
     var ids = message.data.toString().split('|');
     if (ids.length !== 2) {
-      self._processMessage(message);
+      self.processMessage(message);
     } else {
       self.clientId = ids[0];
       self.secret = ids[1];
       self.interval = 400;
       self.sock.processQueue(sock, self.clientId);
-      self.sockBuffer = self.sock;
       self.sock = sock;
-      self.sock.onmessage = self._processMessage;
+      self.sock.onmessage = self.processMessage;
       util.info('Handshake complete');
       if (!self.bridge._ready) {
         self.bridge._ready = true;
@@ -127,9 +126,8 @@ Connection.prototype.establishConnection = function () {
 
   sock.onclose = function () {
     util.warn('Connection closed');
-    if (self.sockBuffer) {
-      self.sock = self.sockBuffer;
-    }
+    self.sock = self.sockBuffer;
+    
     if (self.options.reconnect) {
       // do reconnect stuff. start at 100 ms.
       self.reconnect();
@@ -137,10 +135,10 @@ Connection.prototype.establishConnection = function () {
   };
 };
 
-Connection.prototype._processMessage = function (message) {
+Connection.prototype.processMessage = function (message) {
   try {
+    util.info('Received', message.data);
     message = util.parse(message.data);
-    util.info('Received', message);
     Serializer.unserialize(this.bridge, message);
     var destination = message.destination;
     if (!destination) {

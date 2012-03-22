@@ -266,6 +266,5 @@ Bridge.prototype.ready = function(func) {
 };
 
 // if node
-
-exports.Bridge = Bridge;
+module.exports = Bridge;
 // end node
