@@ -1,4 +1,4 @@
-var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname+'/../../lib/bridge.js');
 
 bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
