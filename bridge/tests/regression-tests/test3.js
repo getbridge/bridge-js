@@ -2,7 +2,7 @@ var description = ' Test3: basic remote function calling';
 var failureMessage = 'This test tests the ability to send message between one instance of bridge in js.\nExpected behavior: If you can\'t pass this test, you\'ve done a pretty wrong thing.\n';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname + '/../../lib/bridge.js');
 var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
 bridge.ready(function(){

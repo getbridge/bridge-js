@@ -2,7 +2,7 @@ var description = ' Test4: non-existing service';
 var failureMessage = 'This test tests Bridge.getService in js.\nExpected behavior: If a service does not exist, the server should call the callback with a null service.\n';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname + '/../../lib/bridge.js');
 var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
 // turn off the test

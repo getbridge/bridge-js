@@ -2,7 +2,7 @@ var description = ' Test7: basic channels';
 var failureMessage = 'This test tests Bridge Channels feature.\nExpected behavior: The client can join a channel named "test7".\n';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname + '/../../lib/bridge.js');
 var bridgeServer = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 var bridgeClient = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 

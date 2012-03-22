@@ -2,7 +2,7 @@ var description = ' Test8: channels';
 var failureMessage = 'This test tests Bridge Channels feature.\nExpected behavior: The server broadcasts a messages to all clients. The clients must echo back to the server.\n';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname + '/../../lib/bridge.js');
 var bridgeServer = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
 bridgeServer.ready(function(){

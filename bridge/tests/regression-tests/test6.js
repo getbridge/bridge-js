@@ -2,7 +2,7 @@ var description = ' Test6: order of initialization';
 var failureMessage = 'This test tests if it is possible to publish a service before ready().\nExpected behavior: you can\'t.\n';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname+'/../../lib/bridge.js');
 var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
 try {

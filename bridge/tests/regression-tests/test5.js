@@ -2,7 +2,7 @@ var description = ' Test5: multiple instances of bridge';
 var failureMessage = 'This test tests the ability to create multiple instances of bridge in js.\nExpected behavior: should be able to create multiple instance, and send messages between them.\n';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname + '/../../lib/bridge.js');
 var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
 bridge.ready(function(){

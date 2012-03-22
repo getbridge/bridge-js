@@ -2,7 +2,7 @@ var description = ' Test9: multiple services';
 var failureMessage = '';
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
-var Bridge = require(__dirname + '/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname + '/../../lib/bridge.js');
 var _b1 = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 var _b2 = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
 
