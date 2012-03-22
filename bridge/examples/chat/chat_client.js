@@ -1,4 +1,4 @@
-var Bridge = require(__dirname+'/../../lib/bridge.js').Bridge;
+var Bridge = require(__dirname+'/../../lib/bridge.js');
 // bridge = new Bridge({host: 'ec2-50-19-181-20.compute-1.amazonaws.com'});
 
 bridge = new Bridge({apiKey: 'abcdefgh'});
