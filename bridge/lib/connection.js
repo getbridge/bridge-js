@@ -17,14 +17,7 @@ function Connection(bridge) {
   
   this.sock = this.sockBuffer;
   
-  this.interval = 400
-  
-  if (!this.options.host || !this.options.port) {
-    this.redirector();
-  } else {
-    // Host and port is specified
-    this.establishConnection();
-  }
+  this.interval = 400;
 }
 
 Connection.prototype.redirector = function () {
@@ -155,7 +148,16 @@ Connection.prototype.sendCommand = function (command, data) {
   var msg = util.stringify({command: command, data: data });
   util.info('Sending', msg);
   this.sock.send(msg);
-}
+};
+
+Connection.prototype.start = function () {
+  if (!this.options.host || !this.options.port) {
+    this.redirector();
+  } else {
+    // Host and port is specified
+    this.establishConnection();
+  }
+};
 
 function SockBuffer () {
   this.buffer = [];

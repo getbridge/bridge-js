@@ -7,7 +7,7 @@ var Connection = require('./connection').Connection;
 
 /** 
  * <p>Create an instance of the Bridge object. This object will be used for Bridge interactions</p>
- * <p>If a callback is given, calls the given callback when Bridge is connected and ready for use</p>
+ * <p>{@link Bridge#connect} must be called to connect to the Bridge server</p>
  *
  * @param {Object} [options={"redirector": "http://redirector.flotype.com", "reconnect": true, "log": 2}]
  *   Options object passed to constructor to modify Bridge behavior
@@ -18,10 +18,9 @@ var Connection = require('./connection').Connection;
  *     <li><tt>host: undefined</tt> The hostname of the Bridge server to connect to. Overrides <tt>redirector</tt> when both <tt>host</tt> and <tt>port</tt> are specified</li>
  *     <li><tt>port: undefined</tt> An integer specifying the port of the Bridge server to connect to. Overrides <tt>redirector</tt> when both <tt>host</tt> and <tt>port</tt> are specified</li>
  *   </ul>
- * @param {function} [callback] Called when Bridge is connected and ready for use
  * @constructor
  */  
-function Bridge(options, callback) {
+function Bridge(options) {
   
   var self = this;
 
@@ -82,10 +81,7 @@ function Bridge(options, callback) {
 
   // Store event handlers
   this._events = {};
-  
-  if (callback) {
-    this.ready(callback);
-  }
+
 }
 
 /**
@@ -251,18 +247,33 @@ Bridge.prototype.leaveChannel = function (name, handler, callback) {
 };
 
 /** 
- * <p>Calls the given block when Bridge is connected and ready.</p>
- * <p>Calls the given block immediately if Bridge is already ready</p>
+ * <p>Calls the given callback when Bridge is connected and ready.</p>
+ * <p>Calls the given callback immediately if Bridge is already ready</p>
  *
- * @param {function} [callback] Called with the joined channel and channel name upon success
+ * @param {function} callback Called when Bridge is connected and ready for use
  * @event
  */  
-Bridge.prototype.ready = function(func) {
+Bridge.prototype.ready = function (func) {
   if (!this._ready) {
     this.on('ready', func);
   } else {
     func();
   }
+};
+
+/** 
+ * <p>Starts the connection to the Bridge server.</p>
+ * <p>If a callback is given, calls the given callback when Bridge is connected and ready.</p>
+ *
+ * @param {function} [callback] Called when Bridge is connected and ready for use
+ * @function
+ */  
+Bridge.prototype.connect = function (callback) {
+  if (callback) {
+    this.ready(callback);
+  }  
+  this._connection.start();
+  return this;
 };
 
 // if node
