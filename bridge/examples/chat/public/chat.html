@@ -6,7 +6,7 @@
 <script>
 
 //var bridge = new Bridge({url: 'http://ec2-50-19-181-20.compute-1.amazonaws.com:8080/now'});
-var bridge = new Bridge({host: 'localhost', port: 8091, apiKey: "abcdefgh", log: 5});
+var bridge = new Bridge({host: 'localhost', port: 8091, apiKey: "abcdefgh"}).connect(function(){console.log('started')});
 // var name = prompt('Name?');
 var name = "someone";
 
@@ -18,18 +18,17 @@ var handler = {
   }
 };
 
-bridge.ready(function(){
   bridge.getService('chatserver', function(chat){
     console.log('chat found');
     chat.join('lobby', handler, function(lobbyRef) {
       lobby = lobbyRef;
     });
   });
-});
 
 function send(message) {
   lobby.msg(name, message);
 }
+
 
 </script>
 
