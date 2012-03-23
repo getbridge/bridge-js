@@ -232,7 +232,7 @@ ul.inheritsList
 						<td class="attributes">&nbsp;</td>
 						<td class="nameDescription" >
 							<div class="fixedFont">
-								<b><a href="../symbols/Bridge.html#constructor">Bridge</a></b>(options, callback)
+								<b><a href="../symbols/Bridge.html#constructor">Bridge</a></b>(options)
 							</div>
 							<div class="description"><p>Create an instance of the Bridge object.</div>
 						</td>
@@ -257,6 +257,15 @@ ul.inheritsList
 						</tr>
 					</thead>
 					<tbody>
+					
+						<tr>
+							<td class="attributes">&nbsp;</td>
+							<td class="nameDescription">
+								<div class="fixedFont"><b><a href="../symbols/Bridge.html#connect">connect</a></b>(callback)
+								</div>
+								<div class="description"><p>Starts the connection to the Bridge server.</div>
+							</td>
+						</tr>
 					
 						<tr>
 							<td class="attributes">&nbsp;</td>
@@ -346,7 +355,7 @@ ul.inheritsList
 							<td class="nameDescription">
 								<div class="fixedFont"><b><a href="../symbols/Bridge.html#event:ready">ready</a></b>(callback)
 								</div>
-								<div class="description"><p>Calls the given block when Bridge is connected and ready.</div>
+								<div class="description"><p>Calls the given callback when Bridge is connected and ready.</div>
 							</td>
 						</tr>
 					
@@ -365,11 +374,11 @@ ul.inheritsList
 				</div>
 				
 				<div class="fixedFont">
-						<b>Bridge</b>(options, callback)
+						<b>Bridge</b>(options)
 				</div>
 				
 				<div class="description">
-					<p>Create an instance of the Bridge object. This object will be used for Bridge interactions</p><p>If a callback is given, calls the given callback when Bridge is connected and ready for use</p>
+					<p>Create an instance of the Bridge object. This object will be used for Bridge interactions</p><p><a href="../symbols/Bridge.html#connect">Bridge#connect</a> must be called to connect to the Bridge server</p>
 					
 				</div>
 				
@@ -385,12 +394,6 @@ ul.inheritsList
 								<i>Optional, Default: {"redirector": "http://redirector.flotype.com", "reconnect": true, "log": 2}</i>
 							</dt>
 								<dd>Options object passed to constructor to modify Bridge behavior  <ul>    <li><tt>redirector: 'http://redirector.flotype.com'</tt> Address to specify Bridge redirector server. The redirector server helps route the client to the appropriate Bridge server </li>    <li><tt>reconnect: true</tt> Enable automatic reconnection to Bridge server</li>    <li><tt>log: 2</tt> An integer specifying log level. 3 => Log all, 2 => Log warnings, 1 => Log errors, 0 => No logging output</li>    <li><tt>host: undefined</tt> The hostname of the Bridge server to connect to. Overrides <tt>redirector</tt> when both <tt>host</tt> and <tt>port</tt> are specified</li>    <li><tt>port: undefined</tt> An integer specifying the port of the Bridge server to connect to. Overrides <tt>redirector</tt> when both <tt>host</tt> and <tt>port</tt> are specified</li>  </ul></dd>
-						
-							<dt>
-								<span class="light fixedFont">{function}</span>  <b>callback</b>
-								<i>Optional</i>
-							</dt>
-								<dd>Called when Bridge is connected and ready for use</dd>
 						
 						</dl>
 					
@@ -412,6 +415,42 @@ ul.inheritsList
 				<div class="sectionTitle">
 					Method Detail
 				</div>
+				
+					<a name="connect"> </a>
+					<div class="fixedFont">
+					
+					
+					<b>connect</b>(callback)
+					
+					</div>
+					<div class="description">
+						<p>Starts the connection to the Bridge server.</p><p>If a callback is given, calls the given callback when Bridge is connected and ready.</p>
+						
+						
+					</div>
+					
+					
+					
+						
+							<dl class="detailList">
+							<dt class="heading">Parameters:</dt>
+							
+								<dt>
+									<span class="light fixedFont">{function}</span> <b>callback</b>
+									<i>Optional</i>
+								</dt>
+								<dd>Called when Bridge is connected and ready for use</dd>
+							
+							</dl>
+						
+						
+						
+						
+						
+						
+						
+
+					<hr />
 				
 					<a name="getChannel"> </a>
 					<div class="fixedFont">
@@ -741,7 +780,7 @@ ul.inheritsList
 					
 					</div>
 					<div class="description">
-						<p>Calls the given block when Bridge is connected and ready.</p><p>Calls the given block immediately if Bridge is already ready</p>
+						<p>Calls the given callback when Bridge is connected and ready.</p><p>Calls the given callback immediately if Bridge is already ready</p>
 						
 						
 					</div>
@@ -754,9 +793,9 @@ ul.inheritsList
 							
 								<dt>
 									<span class="light fixedFont">{function}</span> <b>callback</b>
-									<i>Optional</i>
+									
 								</dt>
-								<dd>Called with the joined channel and channel name upon success</dd>
+								<dd>Called when Bridge is connected and ready for use</dd>
 							
 							</dl>
 						
@@ -778,7 +817,7 @@ ul.inheritsList
 <!-- ============================== footer ================================= -->
 		<div class="fineprint" style="clear:both">
 			
-			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Mon Mar 19 2012 18:46:43 GMT-0700 (PDT)
+			Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blank">JsDoc Toolkit</a> 2.4.0 on Thu Mar 22 2012 20:11:00 GMT-0700 (PDT)
 		</div>
 	</body>
 </html>
