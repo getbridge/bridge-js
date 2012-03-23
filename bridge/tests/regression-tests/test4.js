@@ -3,7 +3,7 @@ var failureMessage = 'This test tests Bridge.getService in js.\nExpected behavio
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js');
-var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
+var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'}).connect();
 
 // turn off the test
 // waiting for the feature to be implemented

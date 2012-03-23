@@ -3,8 +3,8 @@ var failureMessage = 'This test tests Bridge Channels feature.\nExpected behavio
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js');
-var bridgeServer = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
-var bridgeClient = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
+var bridgeServer = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'}).connect();
+var bridgeClient = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'}).connect();
 
 
 var ChatServer = {

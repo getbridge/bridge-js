@@ -3,7 +3,7 @@ var failureMessage = 'This test tests the ability to send message between one in
 
 var test = require(__dirname + '/../lib/test.js')(failureMessage, 1);
 var Bridge = require(__dirname + '/../../lib/bridge.js');
-var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'});
+var bridge = new Bridge({host: 'localhost', port: 8090, apiKey: 'abcdefgh'}).connect();
 
 bridge.ready(function(){
     var ConsoleLogServer = {
