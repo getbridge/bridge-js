@@ -10,19 +10,21 @@ function Connection(bridge) {
   var self = this;
   // Set associated bridge object
   this.bridge = bridge;
-  // Set options
+  
   this.options = bridge._options;
   
+  // Preconnect buffer
   this.sockBuffer = new SockBuffer();
-  
   this.sock = this.sockBuffer;
   
+  // Connection configuration
   this.interval = 400;
 }
 
+// Contact redirector for host and port
 Connection.prototype.redirector = function () {
   var self = this;
-  // Find host and port with redirector
+  // Use JSON to retrieve host and port
   if (this.options.tcp) {
     var redirector = url.parse(this.options.redirector);
     http.get({
@@ -52,7 +54,7 @@ Connection.prototype.redirector = function () {
       util.error('Unable to contact redirector');
     });
   } else {
-    // JSONP
+    // Use JSONP to retrieve host and port
     window.bridgeHost = function (status, host, port){ 
       self.options.host = host;
       self.options.port = parseInt(port, 10);
@@ -73,7 +75,11 @@ Connection.prototype.reconnect = function () {
   util.info('Attempting reconnect');
   var self = this;
   if (this.interval < 32768) {
-    setTimeout(function (){self.establishConnection()}, this.interval *= 2);
+    setTimeout(function (){
+      self.establishConnection();
+      // Grow timeout for next reconnect attempt
+      this.interval *= 2
+    }, this.interval);
   }
 };
 
@@ -91,19 +97,26 @@ Connection.prototype.establishConnection = function () {
   }
   
   sock.bridge = this.bridge;
+  // Set onmessage handler to handle connect response
   sock.onmessage = function (message) {
     util.info('clientId and secret received', message.data);
+    // Parse for client id and secret
     var ids = message.data.toString().split('|');
     if (ids.length !== 2) {
+      // Handle message normally if not a correct CONNECT response
       self.processMessage(message);
     } else {
       self.clientId = ids[0];
       self.secret = ids[1];
       self.interval = 400;
+      // Send preconnect queued messages
       self.sock.processQueue(sock, self.clientId);
+      // Set connection socket to connected socket
       self.sock = sock;
+      // Set onmessage handler to handle standard messages
       self.sock.onmessage = self.processMessage;
       util.info('Handshake complete');
+      //   Trigger ready callback
       if (!self.bridge._ready) {
         self.bridge._ready = true;
         self.bridge.emit('ready');
@@ -119,10 +132,9 @@ Connection.prototype.establishConnection = function () {
 
   sock.onclose = function () {
     util.warn('Connection closed');
+    // Restore preconnect buffer as socket connection
     self.sock = self.sockBuffer;
-    
     if (self.options.reconnect) {
-      // do reconnect stuff. start at 100 ms.
       self.reconnect();
     }
   };
@@ -132,7 +144,9 @@ Connection.prototype.processMessage = function (message) {
   try {
     util.info('Received', message.data);
     message = util.parse(message.data);
+    // Convert serialized ref objects to callable references
     Serializer.unserialize(this.bridge, message);
+    // Extract RPC destination address
     var destination = message.destination;
     if (!destination) {
       util.warn('No destination in message', message);
@@ -154,12 +168,13 @@ Connection.prototype.start = function () {
   if (!this.options.host || !this.options.port) {
     this.redirector();
   } else {
-    // Host and port is specified
+    // Host and port are specified
     this.establishConnection();
   }
 };
 
 function SockBuffer () {
+  // Buffer for preconnect messages
   this.buffer = [];
 }
 
@@ -169,6 +184,7 @@ SockBuffer.prototype.send = function(msg) {
 
 SockBuffer.prototype.processQueue = function(sock, clientId) {
   for(var i = 0, ii = this.buffer.length; i < ii; i++) {
+    // Replace null client ids with actual client_id after handshake
     sock.send(this.buffer[i].replace('"client",null', '"client","'+clientId+'"'));
   }
   this.buffer = [];

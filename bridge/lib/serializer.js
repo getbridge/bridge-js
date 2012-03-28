@@ -19,6 +19,7 @@ var Serializer = {
           if (funcs.length > 0) {
             result = bridge._storeObject(pivot, funcs)._toDict();
           } else {
+            // Enumerate hash and serialize each member
             result = {};
             for (var key in pivot) {
               var val = pivot[key];
@@ -28,6 +29,7 @@ var Serializer = {
         }
         break;
       case 'array':
+        // Enumerate array and serialize each member
         result = [];
         for (var i = 0, ii = pivot.length; i < ii; i++) {
           var val = pivot[i];
@@ -52,9 +54,12 @@ var Serializer = {
     for(var key in obj) {
       var el = obj[key]
       if (typeof el === 'object') {
+        // If object has ref key, convert to reference
         if (util.hasProp(el, 'ref')) {
+          // Create reference
           var ref = new Reference(bridge, el.ref, el.operations);
           if(el.operations && el.operations.length === 1 && el.operations[0] === 'callback') {
+            // Create callback wrapper
             obj[key] = util.refCallback(ref);
           } else {
             obj[key] = ref;

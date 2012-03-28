@@ -23,10 +23,9 @@ var Connection = require('./connection').Connection;
 function Bridge(options) {
   
   var self = this;
-
+  
+  // Set default options
   var defaultOptions = {
-    /*host: 'localhost',
-    port: 8091,*/
     redirector: 'http://redirector.flotype.com',
     reconnect: true,
     log: 2,
@@ -34,19 +33,22 @@ function Bridge(options) {
   };
 
   // if node
+  // Extend default options if platform is Node
   util.extend(defaultOptions, {
     /*port: 8090,*/
     tcp: true
   });
   // end node
-
   
   // Initialize system call service
   var system = {
     hookChannelHandler: function(name, handler, callback){
+      // Retrieve requested handler
       var obj = self._store[handler._address[2]];
+      // Store under channel name
       self._store['channel:' + name] = obj;
       if (callback) {
+        // Send callback with reference to channel and handler operations
         var ref = new Reference(self, ['channel', name, 'channel:' + name], util.findOps(obj));
         callback(ref, name);
       }
@@ -64,19 +66,17 @@ function Bridge(options) {
     }
   };
 
-  // Set configuration options
   this._options = util.extend(defaultOptions, options);
 
-  // Set logging level
   util.setLogLevel(this._options.log);
 
-  // Contains references to shared references
+  // Initialize system call service
   this._store = {system: system};
 
-  // Indicate whether connected
+  // Indicates whether server is connected and handshaken
   this._ready = false;
 
-  // Communication layer
+  // Create connection object
   this._connection = new Connection(this);
 
   // Store event handlers
@@ -88,7 +88,9 @@ function Bridge(options) {
  * @private
  */
 Bridge.prototype._execute = function(address, args) {
+  // Retrieve stored handler
   var obj = this._store[address[2]];
+  // Retrieve function in handler
   var func = obj[address[3]];
   if (func) {
     func.apply( obj, args );
@@ -102,8 +104,10 @@ Bridge.prototype._execute = function(address, args) {
  * @private
  */
 Bridge.prototype._storeObject = function(handler, ops) {
+  // Generate random id for callback being stored
   var name = util.generateGuid();
   this._store[name] = handler;
+  // Return reference to stored callback
   return new Reference( this, ['client', this._connection.clientId, name], ops );
 };
 
@@ -215,7 +219,7 @@ Bridge.prototype.getChannel = function (name, callback) {
       callback(null, name);
       return;
     }
-    // Callback with channel ref
+    // Callback with channel reference merged with operations from GETCHANNEL
     callback(new Reference(self, ['channel', name, 'channel:' + name], service._operations), name);
   })});
 };

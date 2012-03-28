@@ -4,7 +4,9 @@ var util = require('./util');
 
 function Reference(bridge, address, operations) {
   var self = this;
-
+  this._address = address;
+  // For each supported operation, create a dummy function 
+  // callable by user in order to start RPC call
   for (var key in operations) {
     var op = operations[key];
     if (op) {
@@ -16,19 +18,22 @@ function Reference(bridge, address, operations) {
       }(this, op));
     }
   }
+  // Store operations supported by this reference if any
   this._operations = operations || [];
   this._bridge = bridge;
-  this._address = address;
 }
 
 Reference.prototype._toDict = function(op) {
+  // Serialize the reference
   var result = {};
   var address = this._address;
+  // Add a method name to address if given
   if (op) {
     address = address.slice();
     address.push(op);
   }
   result.ref = address;
+  // Append operations only if address refers to a handler
   if (address.length < 4 ) {
     result.operations = this._operations;
   }

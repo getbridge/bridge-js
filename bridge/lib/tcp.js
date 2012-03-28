@@ -7,6 +7,7 @@ function TCP(options) {
   var pos;
   var callback;
   
+  // Start socket
   var sock = connect(options.port, options.host, function () {
     sock.setNoDelay(true);
     sock.on('data', sock.onchunk);
@@ -33,15 +34,20 @@ function TCP(options) {
   }
   
   sock.start = function() {
+    // Read header bytes
     sock.read(4, function(buffer){
+      // Read body bytes
       sock.read(buffer.readUInt32BE(0), function(buffer){
+        // Call message handler
         sock.onmessage({data: buffer.toString()});
+        // Await next message
         sock.start();
       });
     });
   }
 
   sock.send = function (data) {
+    // Prepend length header to message
     var outstr = new Buffer( 'xxxx' + data );
     outstr.writeUInt32BE(Buffer.byteLength(data), 0);
     sock.write(outstr);
