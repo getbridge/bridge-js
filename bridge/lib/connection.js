@@ -38,11 +38,11 @@ Connection.prototype.redirector = function () {
       });
       res.on('end', function (){
         try {
-          var info = JSON.parse(data);
-          self.options.host = info.data.bridge_host;
-          self.options.port = info.data.bridge_port;
+          var obj = JSON.parse(data);
+          self.options.host = obj.data.bridge_host;
+          self.options.port = obj.data.bridge_port;
           if (!self.options.host || !self.options.port) {
-            util.error('Could not find host and port in JSON');
+            util.error('Could not find host and port in JSON body');
           } else {
             self.establishConnection();
           }
@@ -92,20 +92,20 @@ Connection.prototype.establishConnection = function () {
     util.info('Starting TCP connection', this.options.host, this.options.port);
     sock = new TCP(this.options).sock;
   } else {
-    util.info('Starting SockJS connection');
+    util.info('Starting SockJS connection', this.options.host, this.options.port);
     sock = new SockJS('http://' + this.options.host + ':' + this.options.port + '/bridge', this.options.protocols, this.options.sockjs);
   }
   
   sock.bridge = this.bridge;
   // Set onmessage handler to handle connect response
   sock.onmessage = function (message) {
-    util.info('clientId and secret received', message.data);
     // Parse for client id and secret
     var ids = message.data.toString().split('|');
     if (ids.length !== 2) {
       // Handle message normally if not a correct CONNECT response
       self.processMessage(message);
     } else {
+      util.info('clientId received', ids[0]);
       self.clientId = ids[0];
       self.secret = ids[1];
       self.interval = 400;
@@ -144,18 +144,19 @@ Connection.prototype.processMessage = function (message) {
   try {
     util.info('Received', message.data);
     message = util.parse(message.data);
-    // Convert serialized ref objects to callable references
-    Serializer.unserialize(this.bridge, message);
-    // Extract RPC destination address
-    var destination = message.destination;
-    if (!destination) {
-      util.warn('No destination in message', message);
-      return;
-    }
-    this.bridge._execute(message.destination._address, message.args);
   } catch (e) {
-    util.error('Message parsing failed: ', e.message, e.stack);
+    util.error('Message parsing failed');
+    return;
   }
+  // Convert serialized ref objects to callable references
+  Serializer.unserialize(this.bridge, message);
+  // Extract RPC destination address
+  var destination = message.destination;
+  if (!destination) {
+    util.warn('No destination in message', message);
+    return;
+  }
+  this.bridge._execute(message.destination._address, message.args);
 };
 
 Connection.prototype.sendCommand = function (command, data) {

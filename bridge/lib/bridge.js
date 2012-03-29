@@ -184,7 +184,7 @@ Bridge.prototype._send = function (args, destination) {
  */  
 Bridge.prototype.publishService = function (name, handler, callback) {
   if (name === 'system') {
-    util.error('Invalid service name: ' + name);
+    util.error('Invalid service name', name);
   } else {
   this._store[name] = handler;
   this._connection.sendCommand('JOINWORKERPOOL', {name: name, callback: Serializer.serialize(this, callback)});
