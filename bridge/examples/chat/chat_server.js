@@ -9,7 +9,7 @@ require('http').createServer(function (request, response) {
 var Bridge = require(__dirname+'/../../lib/bridge.js');
 // bridge = new Bridge({host: 'ec2-50-19-181-20.compute-1.amazonaws.com'});
 
-bridge = new Bridge({host: 'localhost', port: '8090', apiKey: 'abcdefgh', log: 5}).connect(function(){
+bridge = new Bridge({apiKey: 'abcdefgh'}).connect(function(){
   console.log('Connected to Bridge');
 });
 
