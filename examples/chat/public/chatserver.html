@@ -1,0 +1,36 @@
+<html>
+<head>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script> 
+<script src="/js/bridge.min.js"></script>
+
+<script>
+
+
+var bridge = new Bridge({apiKey: "abcdefgh"}).connect();
+
+
+var ChatServer = {
+  join: function(name, handler, callback){
+    $('body').append('<br>' + 'RECEIVED JOIN REQUEST');
+    bridge.joinChannel('lobby', handler, callback);
+  }
+}
+
+bridge.publishService('chatserver', ChatServer, function(){
+  $('body').append('<br>started chatserver');
+});
+
+
+
+
+</script>
+
+
+</head>
+
+<body>
+
+</body>
+
+</html>
