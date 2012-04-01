@@ -63,7 +63,6 @@ Connection.prototype.redirector = function () {
       } else {
         self.establishConnection();
       }
-      delete window.bridgeHost;
     };
     var s = document.createElement('script');
     s.setAttribute('src', this.options.redirector + '/redirect/' + this.options.apiKey + '/jsonp');
@@ -78,7 +77,7 @@ Connection.prototype.reconnect = function () {
     setTimeout(function (){
       self.establishConnection();
       // Grow timeout for next reconnect attempt
-      this.interval *= 2
+      self.interval *= 2;
     }, this.interval);
   }
 };
