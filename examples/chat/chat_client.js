@@ -8,7 +8,11 @@ bridge = new Bridge({apiKey: 'abcdefgh'}).connect();
 
 bridge.getService('chatserver', function(chat){
 
-  chat.join('lobby', {msg: function(){console.log(arguments)}}, function(lobby){
+  chat.join('lobby', {
+    msg: function(){
+      console.log(arguments)
+    }
+  }, function(lobby){
     lobby.msg('hi');
   });
   
