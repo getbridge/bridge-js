@@ -1,33 +1,30 @@
 <html>
 <head>
 
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script> 
 <script src="/js/bridge.min.js"></script>
 
 <script>
 
-//var bridge = new Bridge({url: 'http://ec2-50-19-181-20.compute-1.amazonaws.com:8080/now'});
-var bridge = new Bridge({host: 'localhost', port: 8091, apiKey: "abcdefgh"}).connect();
-// var name = prompt('Name?');
+
+var bridge = new Bridge({apiKey: "abcdefgh"}).connect();
+
 var name = "someone";
 
-var lobby;
-
-var handler = {
-  msg: function(name, message) {
-    console.log(name + ': ' + message);
-  }
-};
+$(function(){
 
   bridge.getService('chatserver', function(chat){
-    console.log('chat found');
-    chat.join('lobby', handler, function(lobbyRef) {
-      lobby = lobbyRef;
+    chat.join('lobby', {msg: function(name, msg){
+      $('#messages').append(name + ': ' + msg + '<br>');
+    }}, function(lobby) {
+      $('#y').click(function(){
+        lobby.msg('someone', $('#x').val());
+        $('#x').val('');
+      });
     });
   });
 
-function send(message) {
-  lobby.msg(name, message);
-}
+});
 
 
 </script>
@@ -36,6 +33,13 @@ function send(message) {
 </head>
 
 <body>
+
+<div id="messages"></div>
+
+
+<input type="text" id="x">
+<input type="button" id="y" value="submit">
+
 </body>
 
 </html>
