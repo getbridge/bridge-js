@@ -1,4 +1,0 @@
-node_modules
-dist/*
-examples/*/public/js/bridge.js
-examples/*/public/js/bridge.min.js
