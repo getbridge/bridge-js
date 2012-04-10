@@ -1,5 +1,5 @@
 var Bridge = require('bridge');
-var bridge = new Bridge({apiKey: 'abcdefgh'});
+var bridge = new Bridge({apiKey: 'myapikey'});
 bridge.connect();
 
 

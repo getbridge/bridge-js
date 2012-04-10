@@ -12,7 +12,7 @@ var authHandler = {
   }
 }
 
-var bridge = new Bridge({apiKey:'abcdefgh'});
+var bridge = new Bridge({apiKey:'myapikey'});
 bridge.publishService('auth', authHandler);
 
 bridge.connect();
