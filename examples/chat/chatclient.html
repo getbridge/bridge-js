@@ -1,0 +1,54 @@
+<html>
+<head>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> 
+<script src="http://flotype.com/js/bridge.min.js"></script>
+
+<script>
+$(function(){
+  
+  var bridge = new Bridge({apiKey:'myapikey'})
+
+  var chatHandler = {
+    message: function(sender, message) {
+      $('#messages').append(sender + ':' + message + '<br>');
+    }
+  }
+
+  var chat_channel;
+
+  var joinCallback = function(channel, name) {
+    console.log('Joined channel : ', name); 
+    channel.message('steve', 'Flotype Bridge is nifty');
+    
+    chat_channel = channel;
+  }
+
+  bridge.getService('auth', function(auth){
+    auth.join('flotype-lovers', 'secret123', chatHandler, joinCallback);
+  });
+
+  bridge.connect();
+  
+  $('#submit').click(function(){
+    chat_channel.message('steve', $('#input').val());
+    $('#input').val('');
+  });
+  
+});
+</script>
+
+
+</head>
+
+<body>
+
+<div id="messages"></div>
+
+
+<input type="text" id="input">
+<input type="button" id="submit" value="submit">
+
+</body>
+
+</html>
