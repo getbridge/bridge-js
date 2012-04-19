@@ -1,5 +1,5 @@
 #Flotype Bridge for Javascript
-Flotype Bridge enables cross-language RPC for interserver and client-server communication.
+Flotype Bridge is a unified messaging system that allows you to easily build cross-language services to share data and realtime updates among your servers and your clients
 
 ##Node.js Installation
 Quick install: Using the [Node Package Manager](http://npmjs.org).
