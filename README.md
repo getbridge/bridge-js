@@ -19,8 +19,8 @@ To use Bridge in the browser, simply add a script tag in your html. `<script typ
 This library has no external dependencies.
 
 ##Documentation and Support
-* API Reference: http://www.flotype.com/resources/api
-* Getting Started: http://www.flotype.com/resources/gettingstarted
+* API Reference: http://flotype.com/docs/api/python/
+* Getting Started: http://www.flotype.com/docs/gettingstarted/js/
 * About Flotype and Flotype Bridge: http://www.flotype.com/
 
 The `examples` directory of this library contains sample applications for Flotype Bridge.
