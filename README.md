@@ -19,7 +19,7 @@ To use Bridge in the browser, simply add a script tag in your html. `<script typ
 This library has no external dependencies.
 
 ##Documentation and Support
-* API Reference: http://flotype.com/docs/api/python/
+* API Reference: http://flotype.com/docs/api/js/
 * Getting Started: http://www.flotype.com/docs/gettingstarted/js/
 * About Flotype and Flotype Bridge: http://www.flotype.com/
 
