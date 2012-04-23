@@ -11,15 +11,15 @@ Source install: Clone this repository using `git clone git@bitbucket.org:flotype
 ##Browser Use
 Flotype Bridge for Javascript can be used in the browser. The javascript is hosted on Flotype servers, but can be served from your own server or CDN of your choice.
 
-    http://flotype.com/js/bridge.min.js
+    http://www.flotype.com/js/bridge.min.js
     
-To use Bridge in the browser, simply add a script tag in your html. `<script type="text/javascript" src="    http://flotype.com/js/bridge.min.js
+To use Bridge in the browser, simply add a script tag in your html. `<script type="text/javascript" src="    http://www.flotype.com/js/bridge.min.js
 "></script>`
 ###Dependencies
 This library has no external dependencies.
 
 ##Documentation and Support
-* API Reference: http://flotype.com/docs/api/js/
+* API Reference: http://www.flotype.com/docs/api/js/
 * Getting Started: http://www.flotype.com/docs/gettingstarted/js/
 * About Flotype and Flotype Bridge: http://www.flotype.com/
 
