@@ -198,114 +198,129 @@
 <span class='line'>191</span> </span><span class="WHIT">  </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="STRN">'system'</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
 <span class='line'>192</span> </span><span class="WHIT">    </span><span class="NAME">util.error</span><span class="PUNC">(</span><span class="STRN">'Invalid service name'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
 <span class='line'>193</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>194</span> </span><span class="WHIT">  </span><span class="NAME">this._store</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>195</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'JOINWORKERPOOL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>194</span> </span><span class="WHIT">    </span><span class="NAME">this._store</span><span class="PUNC">[</span><span class="NAME">name</span><span class="PUNC">]</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>195</span> </span><span class="WHIT">    </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'JOINWORKERPOOL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
 <span class='line'>196</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT">
 <span class='line'>197</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
 <span class='line'>198</span> 
 <span class='line'>199</span> </span><span class="COMM">/** 
-<span class='line'>200</span>  * &lt;p>Retrives a service published to Bridge with the given name.&lt;/p>
-<span class='line'>201</span>  * &lt;p>If multiple Bridge clients have a published a service, the service is retrieved from one of the publishers round-robin.&lt;/p>
-<span class='line'>202</span>  *
-<span class='line'>203</span>  * @param {string} name The name of the Bridge service being requested
-<span class='line'>204</span>  * @param {function(service, name)} callback Called with the requested service and service name
-<span class='line'>205</span>  * @function
-<span class='line'>206</span>  */</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>207</span> </span><span class="NAME">Bridge.prototype.getService</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>208</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'GETOPS'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>209</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>210</span> 
-<span class='line'>211</span> </span><span class="COMM">/** 
-<span class='line'>212</span>  * &lt;p>Retrives a channel from Bridge with the given name.&lt;/p>
-<span class='line'>213</span>  * &lt;p>Calling a method on the channel object will result in the given method being executed on all clients that have been joined to the channel.&lt;/p>
-<span class='line'>214</span>  *
-<span class='line'>215</span>  * @param {string} name The name of the Bridge channel being requested
-<span class='line'>216</span>  * @param {function(channel, name)} callback Called with the requested channel and channel name
-<span class='line'>217</span>  * @function
-<span class='line'>218</span>  */</span><span class="WHIT"> </span><span class="WHIT">
-<span class='line'>219</span> </span><span class="NAME">Bridge.prototype.getChannel</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>220</span> </span><span class="WHIT">  </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">self</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">this</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>221</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'GETCHANNEL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">service</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>222</span> </span><span class="WHIT">    </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">name.split</span><span class="PUNC">(</span><span class="STRN">':'</span><span class="PUNC">)</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>223</span> </span><span class="WHIT">    </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">service</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>224</span> </span><span class="WHIT">      </span><span class="NAME">callback</span><span class="PUNC">(</span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>225</span> </span><span class="WHIT">      </span><span class="KEYW">return</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>226</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>227</span> </span><span class="WHIT">    </span><span class="COMM">// Callback with channel reference merged with operations from GETCHANNEL</span><span class="WHIT">
-<span class='line'>228</span> </span><span class="WHIT">    </span><span class="NAME">callback</span><span class="PUNC">(</span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Reference</span><span class="PUNC">(</span><span class="NAME">self</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="STRN">'channel'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">'channel:'</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">service._operations</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>229</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>230</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>231</span> 
-<span class='line'>232</span> </span><span class="COMM">/** 
-<span class='line'>233</span>  * &lt;p>Provides a remote object or Javascript object as a receiver for methods calls on a Bridge channel.&lt;/p>
-<span class='line'>234</span>  * &lt;p>The given handler can be a remote object, in which case the Bridge client that created the remote object will be joined to the channel. Method calls to the channel will be not be proxied through this client but go directly to the source of the remote object.&lt;/p>
-<span class='line'>235</span>  *
-<span class='line'>236</span>  * @param {string} name The name of the Bridge channel the handler will recieve methods calls for
-<span class='line'>237</span>  * @param {object} handler A remote object or Javascript object to handle method calls from the channel
-<span class='line'>238</span>  * @param {function(channel, name)} [callback] Called with the joined channel and channel name upon success
-<span class='line'>239</span>  * @function
-<span class='line'>240</span>  */</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>241</span> </span><span class="NAME">Bridge.prototype.joinChannel</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>242</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'JOINCHANNEL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>243</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>244</span> 
-<span class='line'>245</span> </span><span class="COMM">/** 
-<span class='line'>246</span>  * &lt;p>Leaves a Bridge channel with the given name and handler object.&lt;/p>
-<span class='line'>247</span>  * &lt;p>The given handler can be a remote object, in which case the Bridge client that created the remote object will be removed from the channel.&lt;/p>
-<span class='line'>248</span>  *
-<span class='line'>249</span>  * @param {string} name The name of the Bridge channel to leave
-<span class='line'>250</span>  * @param {object} handler A remote object or Javascript object that was used to handle moethod calls from the channel
-<span class='line'>251</span>  * @param {function(name)} [callback] Called with the name of the channel left
-<span class='line'>252</span>  * @function
-<span class='line'>253</span>  */</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>254</span> </span><span class="NAME">Bridge.prototype.leaveChannel</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>255</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'LEAVECHANNEL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>256</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>257</span> 
-<span class='line'>258</span> </span><span class="COMM">/** 
-<span class='line'>259</span>  * &lt;p>Calls the given callback when Bridge is connected and ready.&lt;/p>
-<span class='line'>260</span>  * &lt;p>Calls the given callback immediately if Bridge is already ready&lt;/p>
-<span class='line'>261</span>  * &lt;p>Not called on reconnection&lt;/p>
-<span class='line'>262</span>  *
-<span class='line'>263</span>  * @param {function} callback Called when Bridge is connected and ready for use
-<span class='line'>264</span>  * @event
-<span class='line'>265</span>  */</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>266</span> </span><span class="NAME">Bridge.prototype.ready</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">func</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>267</span> </span><span class="WHIT">  </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="PUNC">!</span><span class="NAME">this._ready</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>268</span> </span><span class="WHIT">    </span><span class="NAME">this.on</span><span class="PUNC">(</span><span class="STRN">'ready'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">func</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>269</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>270</span> </span><span class="WHIT">    </span><span class="NAME">func</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>271</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT">
-<span class='line'>272</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>273</span> 
-<span class='line'>274</span> </span><span class="COMM">/** 
-<span class='line'>275</span>  * &lt;p>Starts the connection to the Bridge server.&lt;/p>
-<span class='line'>276</span>  * &lt;p>If a callback is given, calls the given callback when Bridge is connected and ready.&lt;/p>
+<span class='line'>200</span>  * &lt;p>Stops publishing a Bridge service&lt;/p>
+<span class='line'>201</span>  *
+<span class='line'>202</span>  * @param {string} name The name of the Bridge service that this client will no longer publish
+<span class='line'>203</span>  * @param {function(name)} [callback] Called with the name of the unpublished service upon unpublish success
+<span class='line'>204</span>  * @function
+<span class='line'>205</span>  */</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>206</span> </span><span class="NAME">Bridge.prototype.unpublishService</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>207</span> </span><span class="WHIT">  </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="STRN">'system'</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>208</span> </span><span class="WHIT">    </span><span class="NAME">util.error</span><span class="PUNC">(</span><span class="STRN">'Invalid service name'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>209</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>210</span> </span><span class="WHIT">    </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'LEAVEWORKERPOOL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>211</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>212</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>213</span> 
+<span class='line'>214</span> </span><span class="COMM">/** 
+<span class='line'>215</span>  * &lt;p>Retrives a service published to Bridge with the given name.&lt;/p>
+<span class='line'>216</span>  * &lt;p>If multiple Bridge clients have a published a service, the service is retrieved from one of the publishers round-robin.&lt;/p>
+<span class='line'>217</span>  *
+<span class='line'>218</span>  * @param {string} name The name of the Bridge service being requested
+<span class='line'>219</span>  * @param {function(service, name)} callback Called with the requested service and service name
+<span class='line'>220</span>  * @function
+<span class='line'>221</span>  */</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>222</span> </span><span class="NAME">Bridge.prototype.getService</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>223</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'GETOPS'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>224</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>225</span> 
+<span class='line'>226</span> </span><span class="COMM">/** 
+<span class='line'>227</span>  * &lt;p>Retrives a channel from Bridge with the given name.&lt;/p>
+<span class='line'>228</span>  * &lt;p>Calling a method on the channel object will result in the given method being executed on all clients that have been joined to the channel.&lt;/p>
+<span class='line'>229</span>  *
+<span class='line'>230</span>  * @param {string} name The name of the Bridge channel being requested
+<span class='line'>231</span>  * @param {function(channel, name)} callback Called with the requested channel and channel name
+<span class='line'>232</span>  * @function
+<span class='line'>233</span>  */</span><span class="WHIT"> </span><span class="WHIT">
+<span class='line'>234</span> </span><span class="NAME">Bridge.prototype.getChannel</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>235</span> </span><span class="WHIT">  </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">self</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">this</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>236</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'GETCHANNEL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="PUNC">(</span><span class="NAME">service</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>237</span> </span><span class="WHIT">    </span><span class="NAME">name</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">name.split</span><span class="PUNC">(</span><span class="STRN">':'</span><span class="PUNC">)</span><span class="PUNC">[</span><span class="NUMB">1</span><span class="PUNC">]</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>238</span> </span><span class="WHIT">    </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">service</span><span class="WHIT"> </span><span class="PUNC">===</span><span class="WHIT"> </span><span class="KEYW">null</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>239</span> </span><span class="WHIT">      </span><span class="NAME">callback</span><span class="PUNC">(</span><span class="KEYW">null</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>240</span> </span><span class="WHIT">      </span><span class="KEYW">return</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>241</span> </span><span class="WHIT">    </span><span class="PUNC">}</span><span class="WHIT">
+<span class='line'>242</span> </span><span class="WHIT">    </span><span class="COMM">// Callback with channel reference merged with operations from GETCHANNEL</span><span class="WHIT">
+<span class='line'>243</span> </span><span class="WHIT">    </span><span class="NAME">callback</span><span class="PUNC">(</span><span class="KEYW">new</span><span class="WHIT"> </span><span class="NAME">Reference</span><span class="PUNC">(</span><span class="NAME">self</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">[</span><span class="STRN">'channel'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="STRN">'channel:'</span><span class="WHIT"> </span><span class="PUNC">+</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">]</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">service._operations</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>244</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>245</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>246</span> 
+<span class='line'>247</span> </span><span class="COMM">/** 
+<span class='line'>248</span>  * &lt;p>Provides a remote object or Javascript object as a receiver for methods calls on a Bridge channel.&lt;/p>
+<span class='line'>249</span>  * &lt;p>The given handler can be a remote object, in which case the Bridge client that created the remote object will be joined to the channel. Method calls to the channel will be not be proxied through this client but go directly to the source of the remote object.&lt;/p>
+<span class='line'>250</span>  *
+<span class='line'>251</span>  * @param {string} name The name of the Bridge channel the handler will recieve methods calls for
+<span class='line'>252</span>  * @param {object} handler A remote object or Javascript object to handle method calls from the channel
+<span class='line'>253</span>  * @param {function(channel, name)} [callback] Called with the joined channel and channel name upon success
+<span class='line'>254</span>  * @function
+<span class='line'>255</span>  */</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>256</span> </span><span class="NAME">Bridge.prototype.joinChannel</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>257</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'JOINCHANNEL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>258</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>259</span> 
+<span class='line'>260</span> </span><span class="COMM">/** 
+<span class='line'>261</span>  * &lt;p>Leaves a Bridge channel with the given name and handler object.&lt;/p>
+<span class='line'>262</span>  * &lt;p>The given handler can be a remote object, in which case the Bridge client that created the remote object will be removed from the channel.&lt;/p>
+<span class='line'>263</span>  *
+<span class='line'>264</span>  * @param {string} name The name of the Bridge channel to leave
+<span class='line'>265</span>  * @param {object} handler A remote object or Javascript object that was used to handle moethod calls from the channel
+<span class='line'>266</span>  * @param {function(name)} [callback] Called with the name of the channel left
+<span class='line'>267</span>  * @function
+<span class='line'>268</span>  */</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>269</span> </span><span class="NAME">Bridge.prototype.leaveChannel</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>270</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.sendCommand</span><span class="PUNC">(</span><span class="STRN">'LEAVECHANNEL'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="NAME">name</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">name</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">handler</span><span class="PUNC">)</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NAME">Serializer.serialize</span><span class="PUNC">(</span><span class="KEYW">this</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">}</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>271</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>272</span> 
+<span class='line'>273</span> </span><span class="COMM">/** 
+<span class='line'>274</span>  * &lt;p>Calls the given callback when Bridge is connected and ready.&lt;/p>
+<span class='line'>275</span>  * &lt;p>Calls the given callback immediately if Bridge is already ready&lt;/p>
+<span class='line'>276</span>  * &lt;p>Not called on reconnection&lt;/p>
 <span class='line'>277</span>  *
-<span class='line'>278</span>  * @param {function} [callback] Called when Bridge is connected and ready for use
-<span class='line'>279</span>  * @function
+<span class='line'>278</span>  * @param {function} callback Called when Bridge is connected and ready for use
+<span class='line'>279</span>  * @event
 <span class='line'>280</span>  */</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>281</span> </span><span class="NAME">Bridge.prototype.connect</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>282</span> </span><span class="WHIT">  </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'>283</span> </span><span class="WHIT">    </span><span class="NAME">this.ready</span><span class="PUNC">(</span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>284</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>285</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.start</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>286</span> </span><span class="WHIT">  </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">this</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>281</span> </span><span class="NAME">Bridge.prototype.ready</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">func</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>282</span> </span><span class="WHIT">  </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="PUNC">!</span><span class="NAME">this._ready</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>283</span> </span><span class="WHIT">    </span><span class="NAME">this.on</span><span class="PUNC">(</span><span class="STRN">'ready'</span><span class="PUNC">,</span><span class="WHIT"> </span><span class="NAME">func</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>284</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT"> </span><span class="KEYW">else</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>285</span> </span><span class="WHIT">    </span><span class="NAME">func</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>286</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT">
 <span class='line'>287</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
 <span class='line'>288</span> 
-<span class='line'>289</span> 
-<span class='line'>290</span> </span><span class="COMM">/** 
-<span class='line'>291</span>  * @name Bridge#remoteError
+<span class='line'>289</span> </span><span class="COMM">/** 
+<span class='line'>290</span>  * &lt;p>Starts the connection to the Bridge server.&lt;/p>
+<span class='line'>291</span>  * &lt;p>If a callback is given, calls the given callback when Bridge is connected and ready.&lt;/p>
 <span class='line'>292</span>  *
-<span class='line'>293</span>  * @description
-<span class='line'>294</span>  * &lt;p>Called when a remote error occurs in Bridge&lt;/p>
-<span class='line'>295</span>  * &lt;p>The error message is provided as an argument to the callback&lt;/p>
-<span class='line'>296</span>  *
-<span class='line'>297</span>  * @param {function(errorMessage)} callback when a remote error has occurred
-<span class='line'>298</span>  * @event
-<span class='line'>299</span>  */</span><span class="WHIT">  </span><span class="WHIT">
-<span class='line'>300</span> 
-<span class='line'>301</span> </span><span class="COMM">// if node</span><span class="WHIT">
-<span class='line'>302</span> </span><span class="NAME">module.exports</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Bridge</span><span class="PUNC">;</span><span class="WHIT">
-<span class='line'>303</span> </span><span class="COMM">// end node</span><span class="WHIT">
-<span class='line'>304</span> </span></pre></body></html>
+<span class='line'>293</span>  * @param {function} [callback] Called when Bridge is connected and ready for use
+<span class='line'>294</span>  * @function
+<span class='line'>295</span>  */</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>296</span> </span><span class="NAME">Bridge.prototype.connect</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="KEYW">function</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>297</span> </span><span class="WHIT">  </span><span class="KEYW">if</span><span class="WHIT"> </span><span class="PUNC">(</span><span class="NAME">callback</span><span class="PUNC">)</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
+<span class='line'>298</span> </span><span class="WHIT">    </span><span class="NAME">this.ready</span><span class="PUNC">(</span><span class="NAME">callback</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>299</span> </span><span class="WHIT">  </span><span class="PUNC">}</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>300</span> </span><span class="WHIT">  </span><span class="NAME">this._connection.start</span><span class="PUNC">(</span><span class="PUNC">)</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>301</span> </span><span class="WHIT">  </span><span class="KEYW">return</span><span class="WHIT"> </span><span class="KEYW">this</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>302</span> </span><span class="PUNC">}</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>303</span> 
+<span class='line'>304</span> 
+<span class='line'>305</span> </span><span class="COMM">/** 
+<span class='line'>306</span>  * @name Bridge#remoteError
+<span class='line'>307</span>  *
+<span class='line'>308</span>  * @description
+<span class='line'>309</span>  * &lt;p>Called when a remote error occurs in Bridge&lt;/p>
+<span class='line'>310</span>  * &lt;p>The error message is provided as an argument to the callback&lt;/p>
+<span class='line'>311</span>  *
+<span class='line'>312</span>  * @param {function(errorMessage)} callback when a remote error has occurred
+<span class='line'>313</span>  * @event
+<span class='line'>314</span>  */</span><span class="WHIT">  </span><span class="WHIT">
+<span class='line'>315</span> 
+<span class='line'>316</span> </span><span class="COMM">// if node</span><span class="WHIT">
+<span class='line'>317</span> </span><span class="NAME">module.exports</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="NAME">Bridge</span><span class="PUNC">;</span><span class="WHIT">
+<span class='line'>318</span> </span><span class="COMM">// end node</span><span class="WHIT">
+<span class='line'>319</span> </span></pre></body></html>
