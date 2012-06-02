@@ -8,7 +8,7 @@ var chatHandler = {
 }
 
 var joinCallback = function(channel, name) {
-  console.log('Joined channel : ', name); 
+  console.log('Joined channel : ', name);
   channel.message('steve', 'Flotype Bridge is nifty');
 }
 
