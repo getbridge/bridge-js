@@ -2,7 +2,7 @@ var vows = require('vows'),
     assert = require('assert'),
     Bridge = require('bridge');
 
-var opts = {apiKey: 'abcdefgh', host: 'localhost', port: 8090};
+var opts = {apiKey: 'abcdefgh', host: 'localhost', port: 8090, log: 100};
 
 var pingService = new Bridge(opts);
 pingService.publishService('ping', { sendPing: function (msg, cb) {
@@ -16,7 +16,6 @@ pingService.connect(function () {
       vows.describe('Individual client addressing').addBatch({
         'when discovering the client as a result of service discovery': {
           topic: function () {
-	    console.log('discover.');
             var cb = this.callback;
             bridge.getService('ping', function (ping) {
 	      /*
@@ -29,14 +28,20 @@ pingService.connect(function () {
           },
           'we can get the corresponding client,': {
             topic: function (context) {
-	      console.log('gots context.');
-              assert.ok(typeof context === 'string');
-              var client = bridge.getClient(context);
-              client.getService('ping', this.callback);
+              assert.ok(typeof context === 'object' &&
+			context.source !== undefined);
+              var client = bridge.getClient(context.source);
+	      var self = this;
+              client.getService('ping', function (svc) {
+		self.callback(null, svc);
+	      });
             },
             'and call its methods': {
               topic: function (svc) {
-                svc.sendPing('asdf', this.callback);
+		var self = this;
+                svc.sendPing('asdf', function (arg) {
+		  self.callback(null, arg);
+		});
               },
               '(pingggg)': function (res) {
 		assert.equal(res, 'Received "asdf"');
