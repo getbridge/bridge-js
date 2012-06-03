@@ -18,33 +18,37 @@ pingService.connect(function () {
           topic: function () {
             var cb = this.callback;
             bridge.getService('ping', function (ping) {
-	      /*
-	       * what is a meaningful result for context? Empty string when
-	       * not in any context? or "none"? Expected might be "last
-	       * context", which is certainly fine.
-	       */
+              /*
+               * what is a meaningful result for context? Empty string when
+               * not in any context? or "none"? Expected might be "last
+               * context", which is certainly fine.
+               */
               cb(null, bridge.context());
             });
           },
-          'we can get the corresponding client,': {
+          'we can get the corresponding client': {
             topic: function (context) {
-              assert.ok(typeof context === 'object' &&
-			context.source !== undefined);
-              var client = bridge.getClient(context.source);
-	      var self = this;
+              assert.isObject(context);
+              assert.isString(context.clientId);
+	      /*
+	       * Next line is Technically no longer necessary with the
+               * change to getClient's return value.
+	       */
+              var client = bridge.getClient(context.clientId);
+              var self = this;
               client.getService('ping', function (svc) {
-		self.callback(null, svc);
-	      });
+                self.callback(null, svc);
+              });
             },
             'and call its methods': {
               topic: function (svc) {
-		var self = this;
+                var self = this;
                 svc.sendPing('asdf', function (arg) {
-		  self.callback(null, arg);
-		});
+                  self.callback(null, arg);
+                });
               },
               '(pingggg)': function (res) {
-		assert.equal(res, 'Received "asdf"');
+                assert.equal(res, 'Received "asdf"');
               }
             }
           }
