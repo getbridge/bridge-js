@@ -1,11 +1,11 @@
 {
   "author": "",
   "name": "bridge-js",
-  "description": "Bridge for JS",
+  "description": "Bridge client for JS",
   "version": "0.1.1",
   "repository": {
     "type": "git",
-    "url": "git://github.com/Flotype/mqb-prototype.git"
+    "url": "git://github.com/getbridge/bridge-js.git"
   },
   "main": "lib/bridge.js",
   "engines": {
