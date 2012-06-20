@@ -9,7 +9,7 @@ var chatHandler = {
 
 var joinCallback = function(channel, name) {
   console.log('Joined channel : ', name);
-  channel.message('steve', 'Flotype Bridge is nifty');
+  channel.message('steve', 'Bridge is nifty');
 }
 
 bridge.getService('auth', function(auth){
