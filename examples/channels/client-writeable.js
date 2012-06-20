@@ -15,7 +15,7 @@ var joinCallback = function(channel, name) {
 };
 
 bridge.getService('auth', function(auth){
-  auth.join("flotype-lovers", "secret123", chatHandler, joinCallback);
+  auth.join("bridge-lovers", "secret123", chatHandler, joinCallback);
 });
 
 bridge.connect();

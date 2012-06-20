@@ -16,10 +16,10 @@
 <span class='line'>  9</span>  * &lt;p>Create an instance of the Bridge object. This object will be used for Bridge interactions&lt;/p>
 <span class='line'> 10</span>  * &lt;p>{@link Bridge#connect} must be called to connect to the Bridge server&lt;/p>
 <span class='line'> 11</span>  *
-<span class='line'> 12</span>  * @param {Object} [options={"redirector": "http://redirector.flotype.com", "reconnect": true, "log": 2}]
+<span class='line'> 12</span>  * @param {Object} [options={"redirector": "http://redirector.getbridge.com", "reconnect": true, "log": 2}]
 <span class='line'> 13</span>  *   Options object passed to constructor to modify Bridge behavior
 <span class='line'> 14</span>  *   &lt;ul>
-<span class='line'> 15</span>  *     &lt;li>&lt;tt>redirector: 'http://redirector.flotype.com'&lt;/tt> Address to specify Bridge redirector server. The redirector server helps route the client to the appropriate Bridge server &lt;/li>
+<span class='line'> 15</span>  *     &lt;li>&lt;tt>redirector: 'http://redirector.getbridge.com'&lt;/tt> Address to specify Bridge redirector server. The redirector server helps route the client to the appropriate Bridge server &lt;/li>
 <span class='line'> 16</span>  *     &lt;li>&lt;tt>reconnect: true&lt;/tt> Enable automatic reconnection to Bridge server&lt;/li>
 <span class='line'> 17</span>  *     &lt;li>&lt;tt>log: 2&lt;/tt> An integer specifying log level. 3 => Log all, 2 => Log warnings, 1 => Log errors, 0 => No logging output&lt;/li>
 <span class='line'> 18</span>  *     &lt;li>&lt;tt>host: undefined&lt;/tt> The hostname of the Bridge server to connect to. Overrides &lt;tt>redirector&lt;/tt> when both &lt;tt>host&lt;/tt> and &lt;tt>port&lt;/tt> are specified&lt;/li>
@@ -33,7 +33,7 @@
 <span class='line'> 26</span> </span><span class="WHIT">  </span><span class="WHIT">
 <span class='line'> 27</span> </span><span class="WHIT">  </span><span class="COMM">// Set default options</span><span class="WHIT">
 <span class='line'> 28</span> </span><span class="WHIT">  </span><span class="KEYW">var</span><span class="WHIT"> </span><span class="NAME">defaultOptions</span><span class="WHIT"> </span><span class="PUNC">=</span><span class="WHIT"> </span><span class="PUNC">{</span><span class="WHIT">
-<span class='line'> 29</span> </span><span class="WHIT">    </span><span class="NAME">redirector</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">'http://redirector.flotype.com'</span><span class="PUNC">,</span><span class="WHIT">
+<span class='line'> 29</span> </span><span class="WHIT">    </span><span class="NAME">redirector</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="STRN">'http://redirector.getbridge.com'</span><span class="PUNC">,</span><span class="WHIT">
 <span class='line'> 30</span> </span><span class="WHIT">    </span><span class="NAME">reconnect</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">true</span><span class="PUNC">,</span><span class="WHIT">
 <span class='line'> 31</span> </span><span class="WHIT">    </span><span class="NAME">log</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="NUMB">2</span><span class="PUNC">,</span><span class="WHIT">
 <span class='line'> 32</span> </span><span class="WHIT">    </span><span class="NAME">tcp</span><span class="PUNC">:</span><span class="WHIT"> </span><span class="KEYW">false</span><span class="WHIT">

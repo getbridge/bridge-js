@@ -2,7 +2,7 @@
 <head>
 
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> 
-<script src="http://flotype.com/js/bridge.min.js"></script>
+<script src="http://getbridge.com/js/bridge.min.js"></script>
 
 <script>
 $(function(){
@@ -25,7 +25,7 @@ $(function(){
   }
 
   bridge.getService('auth', function(auth){
-    auth.join('flotype-lovers', 'secret123', chatHandler, joinCallback);
+    auth.join('bridge-lovers', 'secret123', chatHandler, joinCallback);
   });
 
   bridge.connect();

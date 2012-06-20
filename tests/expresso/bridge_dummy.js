@@ -3,7 +3,7 @@ var ReferenceDummy = require(__dirname + '/reference_dummy.js');
 function BridgeDummy () {
 
   this.options = {
-    redirector: 'http://redirector.flotype.com',
+    redirector: 'http://redirector.getbridge.com',
     reconnect: true,
     log: 2
   } 

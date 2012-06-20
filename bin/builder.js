@@ -12,7 +12,7 @@ var fs = require('fs')
  * @api private
  */
 
-var template = '/*! bridge.%ext% build:' + package.version + ', %type%. Copyright(c) 2011 Flotype <team@flotype.com> MIT Licensed */\n'
+var template = '/*! bridge.%ext% build:' + package.version + ', %type%. Copyright(c) 2011 Flotype <team@getbridge.com> MIT Licensed */\n'
   , development = template.replace('%type%', 'development').replace('%ext%', 'js')
   , production = template.replace('%type%', 'production').replace('%ext%', 'min.js');
 
