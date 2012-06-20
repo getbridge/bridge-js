@@ -1,13 +1,19 @@
 var Bridge = require('bridge');
+var bridge = new Bridge({apiKey:'myapikey'});
 
 var authHandler = {
-  join: function(obj, callback) {
-    bridge.joinChannel('+rw', obj, callback);
-    bridge.joinChannel('+r', obj, false, callback);
+  join: function(channelName, obj, callback) {
+    // Passing false means the client cannot write to the channel
+    bridge.joinChannel(channelName, obj, false, callback);
+  },
+  joinWriteable: function(channelName, secretWord, obj, callback) {
+    if(secretWord == "secret123") {
+      // Passing true means the client can write to the channel as well as read from it
+      bridge.joinChannel(channelName, obj, true, callback);
+    }
   }
 };
 
-var bridge = new Bridge({apiKey:'abcdefgh', host: 'localhost', port: 8090});
 bridge.publishService('auth', authHandler);
 
 bridge.connect();

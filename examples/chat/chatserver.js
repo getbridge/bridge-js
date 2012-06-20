@@ -1,4 +1,5 @@
 var Bridge = require('bridge');
+var bridge = new Bridge({apiKey:'myapikey'});
   
 var authHandler = {
   join: function(room, password, obj, callback) {
@@ -12,7 +13,6 @@ var authHandler = {
   }
 }
 
-var bridge = new Bridge({apiKey:'myapikey'});
 bridge.publishService('auth', authHandler);
 
 bridge.connect();

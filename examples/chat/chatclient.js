@@ -1,5 +1,5 @@
 var Bridge = require('bridge');
-var bridge = new Bridge({apiKey:'myapikey'})
+var bridge = new Bridge({apiKey:'myapikey'});
 
 var chatHandler = {
   message: function(sender, message) {
