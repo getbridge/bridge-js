@@ -1,4 +1,4 @@
-var Bridge = require('bridge');
+var Bridge = require('bridge-js');
 var bridge = new Bridge({apiKey:'myapikey'});
 
 var chatHandler = {
