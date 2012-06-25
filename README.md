@@ -9,7 +9,7 @@ Quick install: Using the [Node Package Manager](http://npmjs.org).
     npm install bridge
 
 Source install: Clone this repository using `git clone
-git@github.org:getbridge/bridge-js.git` and install using the npm
+git@github.com:getbridge/bridge-js.git` and install using the npm
 installer, `npm install bridge-js/`
 
 ## Browser Use
