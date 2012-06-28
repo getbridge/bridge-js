@@ -42,6 +42,7 @@ var base = [
   , 'reference.js'
   , 'connection.js'
   , 'bridge.js'
+  , 'client.js'
 ];
 
 
