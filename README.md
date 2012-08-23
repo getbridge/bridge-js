@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/getbridge/bridge-js.png)](http://travis-ci.org/getbridge/bridge-js)
 # Bridge for Javascript
 Bridge is a unified messaging system that allows you to easily build
 cross-language services to share data and realtime updates among your
